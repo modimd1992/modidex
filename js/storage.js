@@ -75,3 +75,64 @@ export function loadPref(name, fallback) {
 export function savePref(name, value) {
   write(`pref:${name}`, value);
 }
+
+// ---- Dex (collection) ----
+// { caught: { [dexNo]: { date, athleteId, ball } }, seen: { [dexNo]: { date, athleteId } } }
+export function loadDex() {
+  const d = read('dex', null);
+  return { caught: {}, seen: {}, ...(d || {}) };
+}
+export function saveDex(dex) {
+  write('dex', dex);
+}
+
+// ---- Whole save (for syncing to a profile) ----
+const MODE_IDS = ['all', 'nfl', 'nba', 'mlb', 'nhl'];
+
+export function exportProgress() {
+  const stats = {};
+  const games = {};
+  for (const id of MODE_IDS) {
+    const s = read(`stats:${id}`, null);
+    if (s) stats[id] = s;
+    const g = read(`game:${id}`, null);
+    if (g) games[id] = g;
+  }
+  return { dex: loadDex(), stats, games };
+}
+
+export function importProgress({ dex, stats = {}, games = {} }) {
+  if (dex) saveDex(dex);
+  for (const [id, s] of Object.entries(stats)) write(`stats:${id}`, s);
+  for (const [id, g] of Object.entries(games)) write(`game:${id}`, g);
+}
+
+// Combine two saves without losing anything: union of the Dex,
+// the more-played stats per mode, and the further-along game for the same day.
+export function mergeProgress(a = {}, b = {}) {
+  const dex = { caught: {}, seen: {} };
+  for (const part of ['caught', 'seen']) {
+    for (const src of [a.dex?.[part] || {}, b.dex?.[part] || {}]) {
+      for (const [n, entry] of Object.entries(src)) {
+        const cur = dex[part][n];
+        if (!cur || (entry.date && entry.date < cur.date)) dex[part][n] = entry; // keep the earliest
+      }
+    }
+  }
+  const stats = {};
+  for (const id of new Set([...Object.keys(a.stats || {}), ...Object.keys(b.stats || {})])) {
+    const x = a.stats?.[id];
+    const y = b.stats?.[id];
+    stats[id] = !x ? y : !y ? x : ((y.played > x.played || (y.played === x.played && (y.lastPlayed || 0) > (x.lastPlayed || 0))) ? y : x);
+  }
+  const games = {};
+  const rank = (g) => (g.status !== 'playing' ? 100 : 0) + g.guesses.length;
+  for (const id of new Set([...Object.keys(a.games || {}), ...Object.keys(b.games || {})])) {
+    const x = a.games?.[id];
+    const y = b.games?.[id];
+    if (!x || !y) { games[id] = x || y; continue; }
+    if (x.date !== y.date) games[id] = x.date > y.date ? x : y;
+    else games[id] = rank(y) > rank(x) ? y : x;
+  }
+  return { dex, stats, games };
+}

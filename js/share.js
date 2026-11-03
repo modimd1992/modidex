@@ -3,9 +3,10 @@ import { GAME } from './config.js';
 
 const SQUARE = { hit: '🟩', close: '🟨', miss: '⬛' };
 
-export function shareText({ mode, puzzleNo, won, rows, cluesUsed, url }) {
+export function shareText({ mode, puzzleNo, won, rows, cluesUsed, url, catchLine = '' }) {
   const score = won ? `${rows.length}/${GAME.maxGuesses}` : `X/${GAME.maxGuesses}`;
   const lines = [`${GAME.name} #${puzzleNo} ${mode.emoji} ${mode.label} ${score}`];
+  if (catchLine) lines.push(catchLine);
   if (cluesUsed > 0) lines.push(`🔎 ${cluesUsed} clue${cluesUsed > 1 ? 's' : ''} used`);
   for (const cells of rows) lines.push(cells.map((c) => SQUARE[c.status]).join(''));
   lines.push('');
@@ -59,7 +60,7 @@ export function combinedShareText({ puzzleNo, entries, url }) {
       const near = r.cells.filter((c) => c.status !== 'miss').length;
       return near * 2 >= r.cells.length ? '🟨' : '⬛';
     }).join('');
-    lines.push(`${e.mode.emoji} ${score} ${squares}`);
+    lines.push(`${e.mode.emoji} ${score} ${squares}${e.caught ? ' 🎯' : ''}`);
   }
   lines.push('');
   lines.push(`${url}  ${GAME.hashtag}`);

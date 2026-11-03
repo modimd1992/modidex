@@ -11,6 +11,25 @@ Every day there's a mystery athlete for each sport, shown as a creature-style sc
 - Spoiler-free emoji share grid, plus streaks and stats per mode saved in the browser
 - Static site: no build step, no backend, no accounts
 
+### Catching and the Dex
+
+Each puzzle is a wild encounter with the creature on the card. Solve it to throw a ball. The faster you solve, the better the ball:
+
+| Solved on | Ball | Catch chance |
+|---|---|---|
+| Guess 1 | 🏆 Hall of Fame Ball | 100% |
+| Guess 2 | ⭐ All-Star Ball | 75% |
+| Guess 3 | 🎖️ Pro Ball | 50% |
+| Guess 4–5 | 🔰 Rookie Ball | 30% |
+| Guess 6 | none: registered as 👁 Seen | — |
+| Not solved | it flees | — |
+
+- If it breaks free, it's still registered as Seen. Each throw is rolled once and saved, so refreshing doesn't re-roll.
+- The goal is to catch all 151. Every original-151 creature is the comp of at least one NFL, NBA or MLB athlete, so all of them can be caught.
+- Ball names, icons and odds live in `CATCH` in `js/config.js`. They're original sports-themed names, not the trademarked ones.
+- The Dex is saved in the player's browser, like stats. Clearing site data or switching phones starts a new Dex. Accounts would be needed to sync it.
+- When adding athletes, run `node tools/validate.mjs`. It warns if any of the 151 creatures can't be caught.
+
 ---
 
 ## Run it on your computer
@@ -136,7 +155,23 @@ The data is a snapshot (`dataAsOf` at the top of `athletes.json`). Trades and si
 
 ---
 
-## Publishing updates
+## Turning on profiles (sign-in + cloud saves)
+
+Profiles let players sign in with Google or an emailed link so their Dex, stats and today's games sync across devices. The code is built in and switches on once you connect a free Firebase project:
+
+1. Go to https://console.firebase.google.com and click **Create a project**. Name it `modidex`; Google Analytics can be off.
+2. On the project home, click the **Web** icon (`</>`), name the app `ModiDex`, and skip Firebase Hosting. Copy the `firebaseConfig = { ... }` block it shows.
+3. **Build → Authentication → Get started → Sign-in method**:
+   - Enable **Google** (pick your support email).
+   - Enable **Email/Password**, then turn on **Email link (passwordless sign-in)**.
+4. **Authentication → Settings → Authorized domains → Add domain:** `modimd1992.github.io`
+5. **Build → Firestore Database → Create database** in production mode, location `nam5 (United States)`.
+6. In Firestore, open the **Rules** tab, replace everything with the contents of [`firestore.rules`](firestore.rules), and click **Publish**.
+7. Paste the config into [`js/firebase-config.js`](js/firebase-config.js) (`export const FIREBASE_CONFIG = { ... };`), run `node tools/bump-version.mjs`, then commit and push.
+
+The config values are meant to be public, so it's fine that they're in the repo. The rules make sure each player can only read and write their own save. The free tier covers thousands of daily players. A player's save is one document, written once per finished puzzle.
+
+
 
 - **Data only** (`data/*.json`): commit and push. Players get it on their next visit.
 - **Code or styling** (`js/`, `css/`): run `node tools/bump-version.mjs` first, then commit and push. It stamps a new version on every file so browsers never mix old and new code.

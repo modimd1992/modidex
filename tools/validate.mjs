@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path';
 import { validateAthletes } from '../js/validate.js';
 import { MODES, SPORTS, isSportEnabled } from '../js/config.js';
 import { answersForDate, dateKey, addDays, puzzleNumber } from '../js/daily.js';
+import { GEN1 } from '../js/gen1.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
@@ -37,6 +38,12 @@ for (const [date, picks] of Object.entries(schedule)) {
     if (!ids.has(id)) errors.push(`schedule.json ${date}: no athlete with id "${id}"`);
   }
 }
+
+// Every one of the 151 creatures must be catchable from an active sport.
+const activeComps = new Set(all.filter((a) => isSportEnabled(a.sport) && a.comp).map((a) => a.comp.dex));
+const uncatchable = GEN1.map((name, i) => ({ dex: i + 1, name })).filter((c) => !activeComps.has(c.dex));
+if (uncatchable.length) warnings.push(`${uncatchable.length} of 151 creatures can't be caught yet (no active athlete has them as a comp): ${uncatchable.map((c) => `#${c.dex} ${c.name}`).join(', ')}`);
+for (const a of all) if (a.comp && GEN1[a.comp.dex - 1] !== a.comp.name) errors.push(`${a.name}: comp "${a.comp.name}" doesn't match Dex #${a.comp.dex} (${GEN1[a.comp.dex - 1]})`);
 
 console.log(`\nModiDex data check (rosters as of ${file.dataAsOf || 'unknown'})`);
 for (const [sport, cfg] of Object.entries(SPORTS)) {

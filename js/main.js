@@ -1,14 +1,17 @@
 // App entry point: wires data, daily answers, storage and the screen together.
-import { GAME, MODES, SPORTS, STATS, CLUE_SCHEDULE, CLOSE, ENABLED_SPORTS } from './config.js';
+import { GAME, MODES, SPORTS, STATS, CLUE_SCHEDULE, CLOSE, ENABLED_SPORTS, CATCH } from './config.js';
 import { TYPES, typeInfo } from './types.js';
 import { loadData } from './data.js';
 import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay } from './daily.js';
 import { compareGuess, columnsFor } from './compare.js';
 import { cluesFor } from './clues.js';
-import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref } from './storage.js';
+import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex } from './storage.js';
 import { shareText, combinedShareText, shareOrCopy, copyText } from './share.js';
 import { renderCard, esc } from './card.js';
 import { attachAutocomplete } from './autocomplete.js';
+import { resolveCatch, tierForGuess, ballById } from './catch.js';
+import { GEN1, pad3 as dex3 } from './gen1.js';
+import { cloudEnabled, initCloud, onCloudChange, currentUser, cloudStatus, pushProgress, signInWithGoogle, emailSignInLink, signOut, deleteProfile } from './cloud.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -47,6 +50,17 @@ async function init() {
 
   $('#btn-help').addEventListener('click', openHelp);
   $('#btn-stats').addEventListener('click', () => openStats(S.mode.id));
+  $('#btn-dex').addEventListener('click', () => openDex());
+  if (cloudEnabled()) {
+    $('#btn-profile').hidden = false;
+    $('#btn-profile').addEventListener('click', openProfile);
+    onCloudChange((why) => {
+      renderProfileButton();
+      if ($('#dlg-profile').open) openProfile();
+      if (why === 'synced') { renderModes(); renderMode(); }
+    });
+    initCloud();
+  }
   window.addEventListener('hashchange', () => {
     const m = MODES.find((x) => x.id === location.hash.slice(1));
     if (m && m.id !== S.mode.id) selectMode(m.id, false);
@@ -129,6 +143,11 @@ function renderMode() {
   }
   S.game = loadGame(S.mode.id, S.key, a.id);
   S.compareId = null;
+  S.justFinished = false;
+  if (finished() && !S.game.catch) {
+    resolveCatch(S.game, a, S.key);
+    saveGame(S.mode.id, S.game);
+  }
   $('#app').innerHTML = `
     <section id="card-area" aria-live="polite"></section>
     <section id="play-area"></section>
@@ -150,7 +169,14 @@ function renderCardArea() {
     label: `${S.mode.short} No. ${pad3(S.puzzleNo)}`,
     showComp: true,
     compareWith: done ? null : compareTarget(),
+    dexStatus: dexStatusFor(a),
   });
+}
+
+function dexStatusFor(a) {
+  if (!a.comp) return null;
+  const dex = loadDex();
+  return dex.caught[a.comp.dex] ? 'caught' : dex.seen[a.comp.dex] ? 'seen' : 'new';
 }
 
 // The guess the stat bars compare against: the one the player tapped, else the latest.
@@ -186,7 +212,8 @@ function renderPlayArea() {
         </div>
         <button type="submit" class="btn btn-primary">Guess</button>
       </form>
-      <div class="guess-count"><span>Guess ${Math.min(used + 1, GAME.maxGuesses)} of ${GAME.maxGuesses}</span><span class="dots">${dots}</span></div>`;
+      <div class="guess-count"><span>Guess ${Math.min(used + 1, GAME.maxGuesses)} of ${GAME.maxGuesses}</span><span class="dots">${dots}</span></div>
+      ${nextThrowHtml(used + 1)}`;
     const input = $('#guess-input');
     // On phones, lift the box to the top so suggestions aren't hidden by the keyboard.
     input.addEventListener('focus', () => {
@@ -206,6 +233,13 @@ function renderPlayArea() {
   } else {
     renderResult(area);
   }
+}
+
+function nextThrowHtml(n) {
+  const t = tierForGuess(n);
+  return t
+    ? `<p class="next-throw">Solve now to throw a <b>${t.icon} ${esc(t.name)}</b> · ${Math.round(t.rate * 100)}% catch</p>`
+    : `<p class="next-throw">Last guess: no ball left. Solving registers it as <b>👁 Seen</b>.</p>`;
 }
 
 function guessRows() {
@@ -262,9 +296,12 @@ function submitGuess(athlete) {
   if (finished() && !S.game.recorded) {
     recordResult(S.mode.id, S.puzzleNo, won, S.game.guesses.length);
     S.game.recorded = true;
+    const caught = resolveCatch(S.game, answer(), S.key);
+    S.justFinished = true;
+    setTimeout(pushProgress, 0); // after the save below; syncs to the profile if signed in
     // Hook for future features (card collection, leaderboards).
     document.dispatchEvent(new CustomEvent('modidex:complete', {
-      detail: { modeId: S.mode.id, puzzleNo: S.puzzleNo, athleteId: S.game.answerId, won, guesses: S.game.guesses.length },
+      detail: { modeId: S.mode.id, puzzleNo: S.puzzleNo, athleteId: S.game.answerId, won, guesses: S.game.guesses.length, catch: caught },
     }));
   }
   saveGame(S.mode.id, S.game);
@@ -286,11 +323,20 @@ function submitGuess(athlete) {
 }
 
 // ---------- result ----------
+function catchShareLine(c) {
+  if (!c) return '';
+  const ball = ballById(c.ball);
+  if (c.outcome === 'caught') return `🎯 Caught with a ${ball?.icon || ''} ${ball?.name || 'ball'}!`;
+  if (c.outcome === 'escaped') return `💨 It broke free from my ${ball?.icon || ''} ${ball?.name || 'ball'}`;
+  if (c.outcome === 'seen') return '👁 Registered as Seen';
+  return '💨 It fled';
+}
+
 function currentShareText() {
   const rows = guessRows().map((r) => r.cells);
   const cluesUsed = cluesFor(answer(), S.mode, wrongCount(), false).filter((c) => c.unlocked).length;
   const url = `${location.origin}${location.pathname}#${S.mode.id}`;
-  return shareText({ mode: S.mode, puzzleNo: S.puzzleNo, won: S.game.status === 'won', rows, cluesUsed, url });
+  return shareText({ mode: S.mode, puzzleNo: S.puzzleNo, won: S.game.status === 'won', rows, cluesUsed, url, catchLine: catchShareLine(S.game.catch) });
 }
 
 // Every mode's result today, for the combined share.
@@ -301,7 +347,7 @@ function todayEntries() {
     const g = loadGame(m.id, S.key, ans.id);
     const rows = g.guesses.map((id) => S.data.byId.get(id)).filter(Boolean)
       .map((x) => ({ correct: x.id === ans.id, cells: compareGuess(x, ans, S.key, m) }));
-    return { mode: m, status: g.guesses.length ? g.status : 'none', rows };
+    return { mode: m, status: g.guesses.length ? g.status : 'none', rows, caught: g.catch?.outcome === 'caught' };
   });
 }
 
@@ -323,7 +369,8 @@ function renderResult(area) {
   const praise = ['Legendary!', 'Incredible!', 'Clutch!', 'Nice scouting!', 'Got it!', 'Phew!'][n - 1] || 'Got it!';
   area.innerHTML = `
     <div class="panel result ${won ? 'won' : 'lost'}">
-      <h2>${won ? `${praise} Scouted in ${n}/${GAME.maxGuesses}` : 'It got away!'}</h2>
+      ${catchHtml(S.game.catch, S.justFinished)}
+      <h2>${won ? `${praise} Scouted in ${n}/${GAME.maxGuesses}` : 'Out of guesses!'}</h2>
       <p>${won ? 'You named' : 'The mystery athlete was'} <b>${esc(a.name)}</b>${a.comp ? `, whose Gen 1 comp is <b>${esc(a.comp.name)}</b>` : ''}.</p>
       <div class="result-stats">
         <div><b>${stats.played}</b><span>Played</span></div>
@@ -365,6 +412,129 @@ function renderResult(area) {
   area.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => selectMode(b.dataset.go, true)));
 }
 
+// ---------- catching ----------
+function catchHtml(c, animate) {
+  if (!c) return '';
+  const who = `<b>#${dex3(c.dex)} ${esc(c.name)}</b>`;
+  const ball = ballById(c.ball);
+  let icon, msg, cls;
+  if (c.outcome === 'caught') {
+    icon = ball?.icon || '🎯'; cls = 'caught';
+    msg = c.newCatch ? `Caught! ${who} was added to your Dex.` : `Caught again! ${who} is already in your Dex.`;
+  } else if (c.outcome === 'escaped') {
+    icon = ball?.icon || '💨'; cls = 'escaped';
+    msg = c.alreadyCaught ? `${who} broke free, but it's already in your Dex.` : `Argh! ${who} broke free. Registered as 👁 Seen.`;
+  } else if (c.outcome === 'seen') {
+    icon = '👁'; cls = 'seen';
+    msg = `No ball left on the last guess. ${who} was registered as Seen.`;
+  } else {
+    icon = '💨'; cls = 'fled';
+    msg = `${who} fled before you could identify it.`;
+  }
+  const throwLine = ball ? `<span class="catch-throw">You threw a ${ball.icon} ${esc(ball.name)} (${Math.round(ball.rate * 100)}%)</span>` : '';
+  const dex = loadDex();
+  const caughtN = Object.keys(dex.caught).length;
+  const seenN = Object.keys(dex.seen).length;
+  return `<div class="catch ${cls}${animate && ball ? ' animate' : ''}">
+    ${throwLine}
+    <span class="catch-ball" aria-hidden="true">${icon}</span>
+    <p class="catch-msg">${msg}</p>
+    <button class="catch-dex" type="button" data-open-dex>📕 Dex: <b>${caughtN}</b> caught · ${seenN} seen of ${CATCH.total}</button>
+  </div>`;
+}
+
+function openDex(filter = 'all') {
+  const dex = loadDex();
+  const caughtN = Object.keys(dex.caught).length;
+  const seenN = Object.keys(dex.seen).length;
+  const cells = GEN1.map((name, i) => {
+    const n = i + 1;
+    const c = dex.caught[n];
+    const s = dex.seen[n];
+    const state = c ? 'caught' : s ? 'seen' : 'unknown';
+    if (filter === 'caught' && !c) return '';
+    if (filter === 'missing' && c) return '';
+    const via = c || s ? S.data.byId.get((c || s).athleteId)?.name : '';
+    const ball = c ? ballById(c.ball) : null;
+    return `<li class="dex-cell ${state}" title="${esc(via ? `${state === 'caught' ? 'Caught' : 'Seen'} via ${via}` : '')}">
+      <span class="dex-no">#${dex3(n)}${ball ? ` ${ball.icon}` : state === 'seen' ? ' 👁' : ''}</span>
+      <span class="dex-name">${state === 'unknown' ? '???' : esc(name)}</span>
+      ${via ? `<span class="dex-via">${esc(via)}</span>` : ''}
+    </li>`;
+  }).join('');
+  const pct = Math.round((caughtN / CATCH.total) * 100);
+  openDialog($('#dlg-dex'), `
+    <h2 id="dex-title">Your Dex</h2>
+    <p><b>${caughtN}</b> caught · ${seenN} seen · ${CATCH.total} total</p>
+    <div class="dex-bar" aria-label="${pct}% caught"><span style="width:${pct}%"></span></div>
+    <div class="chip-row">
+      ${[['all', 'All'], ['caught', 'Caught'], ['missing', 'Missing']].map(([id, label]) =>
+        `<button class="chip${filter === id ? ' is-active' : ''}" data-dex-filter="${id}">${label}</button>`).join('')}
+    </div>
+    <ul class="dex-grid">${cells || '<li class="small">Nothing here yet. Solve a puzzle to start catching!</li>'}</ul>
+    <p class="small">Solve faster for a better ball: ${CATCH.tiers.map((t) => `${t.icon} ${t.name} ${Math.round(t.rate * 100)}%`).join(' · ')}. Your Dex is saved in this browser.</p>`);
+  $('#dlg-dex').querySelectorAll('[data-dex-filter]').forEach((b) => (b.onclick = () => openDex(b.dataset.dexFilter)));
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-open-dex]')) openDex();
+});
+
+// ---------- profile ----------
+function renderProfileButton() {
+  const b = $('#btn-profile');
+  const u = currentUser();
+  b.textContent = u ? (u.displayName || u.email || '?').trim()[0].toUpperCase() : '👤';
+  b.classList.toggle('signed-in', !!u);
+  b.setAttribute('aria-label', u ? 'Your profile' : 'Sign in');
+}
+
+function openProfile() {
+  const u = currentUser();
+  const st = cloudStatus();
+  const dex = loadDex();
+  const caughtN = Object.keys(dex.caught).length;
+  let body;
+  if (st === 'loading') {
+    body = '<p>Connecting…</p>';
+  } else if (st === 'error') {
+    body = '<p>Profiles are unavailable right now. Your progress is still saved on this device.</p>';
+  } else if (u) {
+    body = `
+      <p>Signed in as <b>${esc(u.displayName || u.email || 'Trainer')}</b>${u.email && u.displayName ? `<br><span class="small">${esc(u.email)}</span>` : ''}</p>
+      <p>✅ Your Dex (<b>${caughtN}</b> caught), stats and today's games are saved to your profile and sync on any device where you sign in.</p>
+      <div class="btn-row"><button class="btn" id="btn-signout">Sign out</button></div>
+      <p class="small"><button class="link-btn" id="btn-delete-profile">Delete my profile</button> removes your saved data from our server. Progress on this device stays.</p>`;
+  } else {
+    body = `
+      <p>Sign in to save your Dex (<b>${caughtN}</b> caught so far) and stats to a profile. They'll sync on every device you use and survive clearing your browser. What you've caught on this device is kept and added to your profile.</p>
+      <button class="btn btn-primary btn-block" id="btn-google">Continue with Google</button>
+      <p class="or">or get a sign-in link by email</p>
+      <form class="email-form" id="email-form">
+        <input type="email" id="email-input" placeholder="you@example.com" required autocomplete="email" inputmode="email">
+        <button class="btn" type="submit">Email me a link</button>
+      </form>
+      <p class="small">We only store your sign-in email and your game progress. No passwords, no ads.</p>`;
+  }
+  openDialog($('#dlg-profile'), `<h2 id="profile-title">Profile</h2>${body}`);
+  const dlg = $('#dlg-profile');
+  dlg.querySelector('#btn-google')?.addEventListener('click', async () => {
+    try { await signInWithGoogle(); } catch (e) { if (e?.code !== 'auth/popup-closed-by-user') toast('Sign-in didn\'t work. Try the email link.'); }
+  });
+  dlg.querySelector('#email-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = dlg.querySelector('#email-input').value.trim();
+    try { await emailSignInLink(email); toast('Check your email for the sign-in link.'); dlg.close(); }
+    catch { toast('Could not send the email. Check the address.'); }
+  });
+  dlg.querySelector('#btn-signout')?.addEventListener('click', async () => { await signOut(); toast('Signed out. Progress stays on this device.'); });
+  dlg.querySelector('#btn-delete-profile')?.addEventListener('click', async () => {
+    if (!confirm('Delete your profile and its saved data? Progress on this device stays.')) return;
+    try { await deleteProfile(); toast('Profile deleted.'); dlg.close(); }
+    catch { toast('For security, sign out and back in, then try again.'); }
+  });
+}
+
 // ---------- dialogs ----------
 function openDialog(dlg, html) {
   dlg.innerHTML = `<div class="dialog-inner"><button class="dialog-x" aria-label="Close" autofocus>✕</button>${html}<button class="btn dialog-close">Let's play</button></div>`;
@@ -392,6 +562,11 @@ function openHelp() {
     </ul>
     ${CLUE_SCHEDULE.length ? `<h3>Bonus clues</h3>
     <p>A new clue unlocks after ${CLUE_SCHEDULE.map((c) => c.after).join(', ').replace(/, (\d+)$/, ' and $1')} misses: where they play, then their team, then their initials.</p>` : ''}
+    <h3>Catching</h3>
+    <p>Each puzzle is a wild encounter with the creature on the card. Solve it to throw a ball. The faster you solve, the better the ball:</p>
+    <ul class="legend">${CATCH.tiers.map((t) => `<li>${t.icon}&nbsp; <b>${esc(t.name)}</b>&nbsp;· guess ${t.guesses.join(' or ')} · ${Math.round(t.rate * 100)}% catch</li>`).join('')}
+      <li>👁&nbsp; Guess 6 · registered as Seen</li></ul>
+    <p>If it breaks free it's still registered as Seen. If you run out of guesses, it flees. Collect all ${CATCH.total} in your 📕 Dex!</p>
     <h3>Comparing stats</h3>
     <p>After each guess, the card's stat bars show a marker for your guess, and ▲ / ▼ tells you if the mystery athlete is higher or lower in each stat. Tap any earlier guess to compare against it instead.</p>
     <p>When the puzzle ends you'll also see <b>why</b> they play like that creature.</p>

@@ -19,6 +19,18 @@ export const GAME = {
 // Available ids (see clues.js): 'conference', 'team', 'number', 'initials'.
 export const CLUE_SCHEDULE = [];
 
+// Catching: which ball you throw depends on the guess you solve it on.
+// rate = chance to catch. Solving on the last guess only registers it as Seen; a loss means it flees.
+export const CATCH = {
+  tiers: [
+    { id: 'hof', guesses: [1], name: 'Hall of Fame Ball', icon: '🏆', rate: 1 },
+    { id: 'allstar', guesses: [2], name: 'All-Star Ball', icon: '⭐', rate: 0.75 },
+    { id: 'pro', guesses: [3], name: 'Pro Ball', icon: '🎖️', rate: 0.5 },
+    { id: 'rookie', guesses: [4, 5], name: 'Rookie Ball', icon: '🔰', rate: 0.3 },
+  ],
+  total: 151,
+};
+
 // Stats shown on every profile. Same six keys for every sport so mixed mode works.
 export const STATS = [
   { key: 'hp', label: 'HP' },

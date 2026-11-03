@@ -44,10 +44,10 @@ export function typeBadges(athlete) {
 }
 
 // The headline Gen 1 comparison. The "why" line stays hidden until the puzzle ends.
-export function compBanner(athlete, { revealWhy = true } = {}) {
+export function compBanner(athlete, { revealWhy = true, status = null } = {}) {
   if (!athlete.comp) return '';
   return `<div class="comp-banner">
-    <span class="comp-label">Plays like</span>
+    <span class="comp-label">Plays like${status ? ` <span class="dex-chip ${status}">${{ caught: '✅ In your Dex', seen: '👁 Seen', new: '✨ New' }[status]}</span>` : ''}</span>
     <span class="comp-name"><span class="comp-dex">#${String(athlete.comp.dex).padStart(3, '0')}</span> ${esc(athlete.comp.name)}</span>
     ${revealWhy ? `<span class="comp-why">${esc(athlete.comp.why)}</span>` : ''}
   </div>`;
@@ -94,7 +94,7 @@ export function statBars(athlete, compare = null) {
  * @param opts.showComp     show the Gen 1 comparison banner
  * @param opts.compareWith  another athlete whose stats are marked on the bars
  */
-export function renderCard(athlete, { hidden = false, showSport = true, label = '', showComp = true, compareWith = null } = {}) {
+export function renderCard(athlete, { hidden = false, showSport = true, label = '', showComp = true, compareWith = null, dexStatus = null } = {}) {
   const primary = typeInfo(athlete.type).color;
   const sport = SPORTS[athlete.sport];
   const sportBadge = showSport ? `${sport?.emoji || ''} ${esc(athlete.sport)}` : '❔ ???';
@@ -104,7 +104,7 @@ export function renderCard(athlete, { hidden = false, showSport = true, label = 
       <span class="card-no">${esc(label)}</span>
       <span class="card-sport">${sportBadge}</span>
     </div>
-    ${showComp ? compBanner(athlete, { revealWhy: !hidden }) : ''}
+    ${showComp ? compBanner(athlete, { revealWhy: !hidden, status: dexStatus }) : ''}
     <div class="card-hero">
       ${emblemSvg(athlete, { hidden })}
       <div class="card-id">
