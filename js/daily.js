@@ -89,45 +89,130 @@ export function poolForMode(athletes, mode) {
   return mode.sports ? athletes.filter((a) => mode.sports.includes(a.sport)) : athletes;
 }
 
-// Each mode walks through a shuffled deck of its athletes, one per day,
-// so nobody repeats until the whole pool has been used. Then it reshuffles.
-// schedule.json can pin a specific athlete to a date (great for video tie-ins).
-export function pickDaily({ pool, modeId, key, schedule = {}, exclude = new Set() }) {
-  if (!pool.length) return null;
-  const pinnedId = schedule[key]?.[modeId];
-  if (pinnedId) {
-    const pinned = pool.find((a) => a.id === pinnedId);
-    if (pinned) return pinned;
-  }
-  const sorted = [...pool].sort((a, b) => (a.id < b.id ? -1 : 1));
-  const idx = puzzleNumber(key) - 1;
-  const len = sorted.length;
-  const cycle = Math.floor(idx / len);
-  const pos = ((idx % len) + len) % len;
+// The daily schedule is built day by day from the launch date, so it's identical for
+// every player and needs no server.
+//  - Each sport walks through a shuffled deck of its athletes: nobody repeats until
+//    the whole pool has been used, then it reshuffles.
+//  - All Sports also walks its own deck, but skips (for now) anyone who is a
+//    single-sport answer within SPACING days, so the same answer never shows up in
+//    two modes close together.
+//  - schedule.json can pin an athlete to a date; a pinned athlete is taken out of
+//    that mode's current deck so they don't repeat later in the cycle.
+export const SPACING = 10;
+// When a deck reshuffles, anyone used this recently in the same mode goes to the back.
+const RECENT = 15;
+
+const cache = new Map();
+
+function refill(sorted, modeId, cycle, recentIds) {
   const deck = seededShuffle(sorted, hashString(`${GAME.name}:${modeId}:${cycle}`));
-  for (let i = 0; i < len; i++) {
-    const candidate = deck[(pos + i) % len];
-    if (!exclude.has(candidate.id)) return candidate;
-  }
-  return deck[pos];
+  return [...deck.filter((a) => !recentIds.has(a.id)), ...deck.filter((a) => recentIds.has(a.id))];
 }
 
-// Answers for every mode on a date. The mixed mode avoids repeating
-// any of that day's single-sport answers.
+const recentIn = (out, modeId, i) => {
+  const ids = new Set();
+  for (let j = Math.max(0, i - RECENT); j < i; j++) if (out[j][modeId]) ids.add(out[j][modeId].id);
+  return ids;
+};
+
+function buildSchedule(athletes, schedule, days) {
+  const hit = cache.get(athletes);
+  if (hit && hit.days >= days && hit.schedule === schedule) return hit.out;
+
+  const horizon = days + SPACING;
+  const out = Array.from({ length: horizon }, () => ({}));
+  const keyOf = (i) => addDays(GAME.launchDate, i);
+
+  // 1) Single-sport modes.
+  for (const mode of MODES.filter((m) => m.sports)) {
+    const pool = poolForMode(athletes, mode);
+    if (!pool.length) continue;
+    const sorted = [...pool].sort((a, b) => (a.id < b.id ? -1 : 1));
+    const byId = new Map(pool.map((a) => [a.id, a]));
+    let deck = [];
+    let cycle = 0;
+    for (let i = 0; i < horizon; i++) {
+      if (!deck.length) deck = refill(sorted, mode.id, cycle++, recentIn(out, mode.id, i));
+      const pinned = byId.get(schedule[keyOf(i)]?.[mode.id]);
+      let pick;
+      if (pinned) {
+        pick = pinned;
+        deck = deck.filter((a) => a.id !== pinned.id);
+      } else {
+        pick = deck.shift();
+      }
+      out[i][mode.id] = pick;
+    }
+  }
+
+  // 2) Mixed modes (All Sports), spaced away from nearby single-sport answers.
+  for (const mode of MODES.filter((m) => !m.sports)) {
+    const pool = poolForMode(athletes, mode);
+    if (!pool.length) continue;
+    const sorted = [...pool].sort((a, b) => (a.id < b.id ? -1 : 1));
+    const byId = new Map(pool.map((a) => [a.id, a]));
+    // Days between day i and this athlete's nearest single-sport appearance.
+    const distance = (i) => {
+      const d = new Map();
+      for (let j = Math.max(0, i - SPACING); j <= i + SPACING && j < horizon; j++) {
+        for (const [mid, a] of Object.entries(out[j])) {
+          if (mid === mode.id || !a) continue;
+          const gap = Math.abs(j - i);
+          if (!d.has(a.id) || gap < d.get(a.id)) d.set(a.id, gap);
+        }
+      }
+      return d;
+    };
+    let deck = [];
+    let cycle = 0;
+    const borrowed = new Set(); // taken early from the next deck; skipped when it's dealt
+    for (let i = 0; i < days; i++) {
+      if (!deck.length) {
+        deck = refill(sorted, mode.id, cycle++, recentIn(out, mode.id, i)).filter((a) => !borrowed.has(a.id));
+        borrowed.clear();
+        if (!deck.length) deck = refill(sorted, mode.id, cycle++, recentIn(out, mode.id, i));
+      }
+      const pinned = byId.get(schedule[keyOf(i)]?.[mode.id]);
+      let pick;
+      if (pinned) {
+        pick = pinned;
+        deck = deck.filter((a) => a.id !== pinned.id);
+      } else {
+        const near = distance(i);
+        if (!deck.some((a) => !near.has(a.id))) {
+          // Everyone left in this deck is near a single-sport answer. Borrow someone
+          // well-spaced from the next deck instead (they won't be dealt again then).
+          const inDeck = new Set(deck.map((a) => a.id));
+          const recent = recentIn(out, mode.id, i);
+          const next = seededShuffle(sorted, hashString(`${GAME.name}:${mode.id}:${cycle}`));
+          const extra = next.find((a) => !inDeck.has(a.id) && !borrowed.has(a.id) && !near.has(a.id) && !recent.has(a.id));
+          if (extra) {
+            borrowed.add(extra.id);
+            out[i][mode.id] = extra;
+            continue;
+          }
+        }
+        let k = deck.findIndex((a) => !near.has(a.id));
+        if (k < 0) {
+          // Everyone left is near a single-sport answer: take whoever is furthest away.
+          k = 0;
+          deck.forEach((a, idx) => { if (near.get(a.id) > near.get(deck[k].id)) k = idx; });
+        }
+        pick = deck.splice(k, 1)[0];
+      }
+      out[i][mode.id] = pick;
+    }
+  }
+
+  cache.set(athletes, { days, schedule, out });
+  return out;
+}
+
+// Answers for every mode on a date.
 export function answersForDate(athletes, key, schedule = {}) {
+  const n = Math.max(1, puzzleNumber(key)); // dates before launch use puzzle #1
+  const day = buildSchedule(athletes, schedule, n)[n - 1];
   const answers = {};
-  const used = new Set();
-  const singles = MODES.filter((m) => m.sports);
-  const mixed = MODES.filter((m) => !m.sports);
-  for (const mode of singles) {
-    const a = pickDaily({ pool: poolForMode(athletes, mode), modeId: mode.id, key, schedule });
-    answers[mode.id] = a;
-    if (a) used.add(a.id);
-  }
-  for (const mode of mixed) {
-    answers[mode.id] = pickDaily({
-      pool: poolForMode(athletes, mode), modeId: mode.id, key, schedule, exclude: used,
-    });
-  }
+  for (const m of MODES) answers[m.id] = day[m.id] || null;
   return answers;
 }

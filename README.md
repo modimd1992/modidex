@@ -126,6 +126,8 @@ It flags typos, invalid positions or divisions, duplicate IDs, out-of-range stat
 node tools/validate.mjs --upcoming 14
 ```
 
+**How the rotation works:** each sport cycles through all its players before anyone repeats. All Sports avoids anyone who is a single-sport answer within 10 days, so nobody gets the same answer twice in a week. Pinned dates count toward the rotation.
+
 **Heads up:** adding or removing athletes reshuffles the order of future puzzles. If players are mid-game when you deploy, today's puzzle may change for them. Deploy data changes late at night, or pin today's answer in `schedule.json` first.
 
 ### How the stats map
