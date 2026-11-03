@@ -59,8 +59,10 @@ export function validateAthletes(list) {
       if (!a.comp.name) err(`comp is missing "name"`);
       if (!Number.isInteger(a.comp.dex) || a.comp.dex < 1 || a.comp.dex > 151) err(`comp.dex must be 1-151 (original 151 only)`);
       if (a.comp.name) {
-        if (comps.has(a.comp.name)) warnings.push(`${who}: comp "${a.comp.name}" is also used by ${comps.get(a.comp.name)}`);
-        comps.set(a.comp.name, who);
+        // Sharing a creature across sports is fine; within one sport it makes the clue ambiguous.
+        const ck = `${a.sport}:${a.comp.name}`;
+        if (comps.has(ck)) warnings.push(`${who}: comp "${a.comp.name}" is also used by ${comps.get(ck)} (same sport)`);
+        comps.set(ck, who);
       }
     } else {
       warnings.push(`${who}: no Gen 1 comp yet`);
