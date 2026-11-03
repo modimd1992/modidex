@@ -1,0 +1,2511 @@
+{
+  "dataAsOf": "2026-11-02",
+  "notes": "Snapshot of rosters. Age is calculated from birthDate automatically. Stats are 1-150 ratings (see README for how each sport maps). 'comp' is a Gen 1 (#1-151) Pokemon comparison shown only after the puzzle ends.",
+  "athletes": [
+    {
+      "id": "mlb-shohei-ohtani",
+      "name": "Shohei Ohtani",
+      "aliases": [
+        "Shotime"
+      ],
+      "sport": "MLB",
+      "league": "NL",
+      "division": "West",
+      "team": "Los Angeles Dodgers",
+      "teamAbbr": "LAD",
+      "position": "TWP",
+      "number": 17,
+      "birthDate": "1994-07-05",
+      "type": "Dragon",
+      "type2": "Fire",
+      "category": "Two-Way Unicorn",
+      "stats": {
+        "hp": 120,
+        "atk": 148,
+        "def": 70,
+        "skl": 125,
+        "iq": 120,
+        "spe": 115
+      },
+      "bio": "A creature thought to be impossible. It hurls fire from the mound, then picks up a bat and launches the ball into orbit. Scholars still argue over which talent is its true form.",
+      "comp": {
+        "name": "Mew",
+        "dex": 151,
+        "why": "Said to know every move. Pitches and hits at an MVP level."
+      }
+    },
+    {
+      "id": "mlb-aaron-judge",
+      "name": "Aaron Judge",
+      "aliases": [
+        "All Rise"
+      ],
+      "sport": "MLB",
+      "league": "AL",
+      "division": "East",
+      "team": "New York Yankees",
+      "teamAbbr": "NYY",
+      "position": "RF",
+      "number": 99,
+      "birthDate": "1992-04-26",
+      "type": "Fighting",
+      "type2": "Rock",
+      "category": "Skyscraper Slugger",
+      "stats": {
+        "hp": 115,
+        "atk": 150,
+        "def": 85,
+        "skl": 110,
+        "iq": 125,
+        "spe": 70
+      },
+      "bio": "It stands six-foot-seven and leads its pack with quiet authority. When it connects, the crowd rises before the ball even lands.",
+      "comp": {
+        "name": "Machamp",
+        "dex": 68,
+        "why": "Pure, overwhelming power with the discipline to match."
+      }
+    },
+    {
+      "id": "mlb-juan-soto",
+      "name": "Juan Soto",
+      "sport": "MLB",
+      "league": "NL",
+      "division": "East",
+      "team": "New York Mets",
+      "teamAbbr": "NYM",
+      "position": "RF",
+      "number": 22,
+      "birthDate": "1998-10-25",
+      "type": "Psychic",
+      "category": "Strike Zone Seer",
+      "stats": {
+        "hp": 120,
+        "atk": 125,
+        "def": 60,
+        "skl": 120,
+        "iq": 150,
+        "spe": 65
+      },
+      "bio": "It reads every pitch before it leaves the hand. When it takes a ball, it shuffles its feet at the pitcher as if to say it knew all along.",
+      "comp": {
+        "name": "Starmie",
+        "dex": 121,
+        "why": "Its glowing core analyzes everything. Elite eye at the plate."
+      }
+    },
+    {
+      "id": "mlb-mookie-betts",
+      "name": "Mookie Betts",
+      "aliases": [
+        "Mookie"
+      ],
+      "sport": "MLB",
+      "league": "NL",
+      "division": "West",
+      "team": "Los Angeles Dodgers",
+      "teamAbbr": "LAD",
+      "position": "SS",
+      "number": 50,
+      "birthDate": "1992-10-07",
+      "type": "Normal",
+      "type2": "Fighting",
+      "category": "Shape-Shifter",
+      "stats": {
+        "hp": 100,
+        "atk": 100,
+        "def": 115,
+        "skl": 120,
+        "iq": 130,
+        "spe": 95
+      },
+      "bio": "Small in stature but able to master any role it is given. It has won awards in the outfield and then moved to the infield without missing a beat.",
+      "comp": {
+        "name": "Ditto",
+        "dex": 132,
+        "why": "Transforms into whatever the team needs: outfield, second base, shortstop."
+      }
+    },
+    {
+      "id": "mlb-bobby-witt-jr",
+      "name": "Bobby Witt Jr.",
+      "aliases": [
+        "Bobby Witt"
+      ],
+      "sport": "MLB",
+      "league": "AL",
+      "division": "Central",
+      "team": "Kansas City Royals",
+      "teamAbbr": "KC",
+      "position": "SS",
+      "number": 7,
+      "birthDate": "2000-06-14",
+      "type": "Electric",
+      "category": "Lightning Shortstop",
+      "stats": {
+        "hp": 110,
+        "atk": 115,
+        "def": 125,
+        "skl": 120,
+        "iq": 105,
+        "spe": 145
+      },
+      "bio": "It turns ordinary doubles into triples in a crackling blur. Its sprint speed is so high that infielders rush their throws just hearing it run.",
+      "comp": {
+        "name": "Jolteon",
+        "dex": 135,
+        "why": "Speed charged with electricity, plus sharp defense."
+      }
+    },
+    {
+      "id": "mlb-elly-de-la-cruz",
+      "name": "Elly De La Cruz",
+      "aliases": [
+        "EDLC",
+        "Elly"
+      ],
+      "sport": "MLB",
+      "league": "NL",
+      "division": "Central",
+      "team": "Cincinnati Reds",
+      "teamAbbr": "CIN",
+      "position": "SS",
+      "number": 44,
+      "birthDate": "2002-01-11",
+      "type": "Electric",
+      "type2": "Fire",
+      "category": "Storm Shortstop",
+      "stats": {
+        "hp": 100,
+        "atk": 120,
+        "def": 100,
+        "skl": 85,
+        "iq": 80,
+        "spe": 150
+      },
+      "bio": "Its throws across the diamond have been clocked faster than most fastballs. Every time it reaches base, the whole ballpark braces for a storm.",
+      "comp": {
+        "name": "Electabuzz",
+        "dex": 125,
+        "why": "Wild, crackling, raw tools that light up any game."
+      }
+    },
+    {
+      "id": "mlb-paul-skenes",
+      "name": "Paul Skenes",
+      "sport": "MLB",
+      "league": "NL",
+      "division": "Central",
+      "team": "Pittsburgh Pirates",
+      "teamAbbr": "PIT",
+      "position": "SP",
+      "number": 30,
+      "birthDate": "2002-05-29",
+      "type": "Fire",
+      "category": "Flamethrower",
+      "stats": {
+        "hp": 115,
+        "atk": 145,
+        "def": 70,
+        "skl": 130,
+        "iq": 120,
+        "spe": 60
+      },
+      "bio": "It fires pitches over 100 mph and then drops a splitter that vanishes in mid-air. It trained in a military academy before taking over big-league mounds.",
+      "comp": {
+        "name": "Charizard",
+        "dex": 6,
+        "why": "Breathes fire. Becomes an ace almost instantly."
+      }
+    },
+    {
+      "id": "mlb-garrett-crochet",
+      "name": "Garrett Crochet",
+      "sport": "MLB",
+      "league": "AL",
+      "division": "East",
+      "team": "Boston Red Sox",
+      "teamAbbr": "BOS",
+      "position": "SP",
+      "number": 35,
+      "birthDate": "1999-06-21",
+      "type": "Ice",
+      "category": "Glacier Lefty",
+      "stats": {
+        "hp": 110,
+        "atk": 140,
+        "def": 65,
+        "skl": 125,
+        "iq": 115,
+        "spe": 55
+      },
+      "bio": "A towering left-hander that freezes hitters in place. It piles up strikeouts so steadily that opponents are snowed under by the fifth inning.",
+      "comp": {
+        "name": "Dewgong",
+        "dex": 87,
+        "why": "Sleek, cold, and thrives in a chilly northeastern home."
+      }
+    },
+    {
+      "id": "mlb-vladimir-guerrero-jr",
+      "name": "Vladimir Guerrero Jr.",
+      "aliases": [
+        "Vlad Jr.",
+        "Vladdy"
+      ],
+      "sport": "MLB",
+      "league": "AL",
+      "division": "East",
+      "team": "Toronto Blue Jays",
+      "teamAbbr": "TOR",
+      "position": "1B",
+      "number": 27,
+      "birthDate": "1999-03-16",
+      "type": "Rock",
+      "type2": "Fighting",
+      "category": "Boulder Bat",
+      "stats": {
+        "hp": 125,
+        "atk": 135,
+        "def": 75,
+        "skl": 130,
+        "iq": 110,
+        "spe": 40
+      },
+      "bio": "Its father was a legend of the same kind. It smashes line drives so hard that infielders flinch, and it rarely swings and misses.",
+      "comp": {
+        "name": "Golem",
+        "dex": 76,
+        "why": "A solid boulder that hits the ball like a rockslide."
+      }
+    },
+    {
+      "id": "mlb-cal-raleigh",
+      "name": "Cal Raleigh",
+      "aliases": [
+        "Big Dumper"
+      ],
+      "sport": "MLB",
+      "league": "AL",
+      "division": "West",
+      "team": "Seattle Mariners",
+      "teamAbbr": "SEA",
+      "position": "C",
+      "number": 29,
+      "birthDate": "1996-11-26",
+      "type": "Steel",
+      "type2": "Fighting",
+      "category": "Armored Backstop",
+      "stats": {
+        "hp": 130,
+        "atk": 145,
+        "def": 120,
+        "skl": 85,
+        "iq": 120,
+        "spe": 40
+      },
+      "bio": "It crouches behind the plate wearing armor all game, then stands up and hits home runs like no catcher before it. Rivals call it by a nickname we can't print here.",
+      "comp": {
+        "name": "Kangaskhan",
+        "dex": 115,
+        "why": "A tough, protective guardian of its pitching staff."
+      }
+    },
+    {
+      "id": "mlb-jose-ramirez",
+      "name": "José Ramírez",
+      "aliases": [
+        "Jose Ramirez",
+        "JRam"
+      ],
+      "sport": "MLB",
+      "league": "AL",
+      "division": "Central",
+      "team": "Cleveland Guardians",
+      "teamAbbr": "CLE",
+      "position": "3B",
+      "number": 11,
+      "birthDate": "1992-09-17",
+      "type": "Ground",
+      "type2": "Fighting",
+      "category": "Switch-Hit Grinder",
+      "stats": {
+        "hp": 130,
+        "atk": 115,
+        "def": 105,
+        "skl": 120,
+        "iq": 125,
+        "spe": 110
+      },
+      "bio": "It hits from both sides of the plate and plays every inning like it's the last. Compact and tireless, it digs in and refuses to be moved.",
+      "comp": {
+        "name": "Sandslash",
+        "dex": 28,
+        "why": "Compact, tough, and always digging in."
+      }
+    },
+    {
+      "id": "mlb-francisco-lindor",
+      "name": "Francisco Lindor",
+      "aliases": [
+        "Mr. Smile",
+        "Lindor"
+      ],
+      "sport": "MLB",
+      "league": "NL",
+      "division": "East",
+      "team": "New York Mets",
+      "teamAbbr": "NYM",
+      "position": "SS",
+      "number": 12,
+      "birthDate": "1993-11-14",
+      "type": "Fairy",
+      "type2": "Normal",
+      "category": "Smiling Captain",
+      "stats": {
+        "hp": 125,
+        "atk": 105,
+        "def": 120,
+        "skl": 110,
+        "iq": 125,
+        "spe": 100
+      },
+      "bio": "Its grin is famous across the league, and its colorful hair changes with the seasons. Behind the charm is a switch-hitting shortstop who rarely leaves the lineup.",
+      "comp": {
+        "name": "Clefable",
+        "dex": 36,
+        "why": "Charming, beloved, and much tougher than it looks."
+      }
+    },
+    {
+      "id": "mlb-corbin-carroll",
+      "name": "Corbin Carroll",
+      "sport": "MLB",
+      "league": "NL",
+      "division": "West",
+      "team": "Arizona Diamondbacks",
+      "teamAbbr": "ARI",
+      "position": "RF",
+      "number": 7,
+      "birthDate": "2000-08-21",
+      "type": "Electric",
+      "type2": "Flying",
+      "category": "Desert Jet",
+      "stats": {
+        "hp": 95,
+        "atk": 100,
+        "def": 105,
+        "skl": 110,
+        "iq": 110,
+        "spe": 145
+      },
+      "bio": "It leads the league in triples by gliding around the bases like a desert wind. Small but fearless, it plays far bigger than its size.",
+      "comp": {
+        "name": "Pidgeot",
+        "dex": 18,
+        "why": "Swift flier that covers ground in a heartbeat."
+      }
+    },
+    {
+      "id": "mlb-julio-rodriguez",
+      "name": "Julio Rodríguez",
+      "aliases": [
+        "Julio Rodriguez",
+        "J-Rod"
+      ],
+      "sport": "MLB",
+      "league": "AL",
+      "division": "West",
+      "team": "Seattle Mariners",
+      "teamAbbr": "SEA",
+      "position": "CF",
+      "number": 44,
+      "birthDate": "2000-12-29",
+      "type": "Flying",
+      "type2": "Fairy",
+      "category": "Center Field Raptor",
+      "stats": {
+        "hp": 110,
+        "atk": 115,
+        "def": 120,
+        "skl": 100,
+        "iq": 95,
+        "spe": 130
+      },
+      "bio": "It soars across center field and snatches home runs out of the sky. Off the field it is a magnetic showman with a flair for style.",
+      "comp": {
+        "name": "Aerodactyl",
+        "dex": 142,
+        "why": "An ancient sky predator that robs fly balls."
+      }
+    },
+    {
+      "id": "mlb-fernando-tatis-jr",
+      "name": "Fernando Tatis Jr.",
+      "aliases": [
+        "Tatis",
+        "El Niño"
+      ],
+      "sport": "MLB",
+      "league": "NL",
+      "division": "West",
+      "team": "San Diego Padres",
+      "teamAbbr": "SD",
+      "position": "RF",
+      "number": 23,
+      "birthDate": "1999-01-02",
+      "type": "Fire",
+      "type2": "Fairy",
+      "category": "Showtime Blaze",
+      "stats": {
+        "hp": 100,
+        "atk": 130,
+        "def": 115,
+        "skl": 105,
+        "iq": 95,
+        "spe": 125
+      },
+      "bio": "It plays with flair, flipping bats and laser-throwing runners out from right field. Its father was also a big-league star with a famous swing.",
+      "comp": {
+        "name": "Arcanine",
+        "dex": 59,
+        "why": "Majestic, athletic, and fiery."
+      }
+    },
+    {
+      "id": "mlb-gunnar-henderson",
+      "name": "Gunnar Henderson",
+      "sport": "MLB",
+      "league": "AL",
+      "division": "East",
+      "team": "Baltimore Orioles",
+      "teamAbbr": "BAL",
+      "position": "SS",
+      "number": 2,
+      "birthDate": "2001-06-29",
+      "type": "Water",
+      "category": "Smooth Shortstop",
+      "stats": {
+        "hp": 110,
+        "atk": 120,
+        "def": 110,
+        "skl": 110,
+        "iq": 105,
+        "spe": 115
+      },
+      "bio": "A smooth left-handed swing flows out of this tall shortstop like a current. It grew up in the rural South before washing over the league as a young star.",
+      "comp": {
+        "name": "Wartortle",
+        "dex": 8,
+        "why": "Smooth, powerful, and still evolving."
+      }
+    },
+    {
+      "id": "mlb-bryce-harper",
+      "name": "Bryce Harper",
+      "sport": "MLB",
+      "league": "NL",
+      "division": "East",
+      "team": "Philadelphia Phillies",
+      "teamAbbr": "PHI",
+      "position": "1B",
+      "number": 3,
+      "birthDate": "1992-10-16",
+      "type": "Fire",
+      "type2": "Fighting",
+      "category": "Blazing Phoenix",
+      "stats": {
+        "hp": 105,
+        "atk": 130,
+        "def": 80,
+        "skl": 115,
+        "iq": 125,
+        "spe": 80
+      },
+      "bio": "Since its teenage years it was called the chosen one. It thrives in the loudest moments, and its home crowd roars every time it steps in.",
+      "comp": {
+        "name": "Moltres",
+        "dex": 146,
+        "why": "A legendary blaze that rises again in big moments."
+      }
+    },
+    {
+      "id": "mlb-yordan-alvarez",
+      "name": "Yordan Alvarez",
+      "sport": "MLB",
+      "league": "AL",
+      "division": "West",
+      "team": "Houston Astros",
+      "teamAbbr": "HOU",
+      "position": "DH",
+      "number": 44,
+      "birthDate": "1997-06-27",
+      "type": "Rock",
+      "category": "Calm Colossus",
+      "stats": {
+        "hp": 105,
+        "atk": 145,
+        "def": 40,
+        "skl": 125,
+        "iq": 120,
+        "spe": 35
+      },
+      "bio": "Huge and completely calm, it barely seems to move until the bat whips through the zone. Its October home runs are the stuff of legend.",
+      "comp": {
+        "name": "Snorlax",
+        "dex": 143,
+        "why": "Enormous, relaxed, and devastating once it wakes up."
+      }
+    },
+    {
+      "id": "mlb-ronald-acuna-jr",
+      "name": "Ronald Acuña Jr.",
+      "aliases": [
+        "Ronald Acuna Jr.",
+        "Acuña"
+      ],
+      "sport": "MLB",
+      "league": "NL",
+      "division": "East",
+      "team": "Atlanta Braves",
+      "teamAbbr": "ATL",
+      "position": "RF",
+      "number": 13,
+      "birthDate": "1997-12-18",
+      "type": "Electric",
+      "type2": "Fire",
+      "category": "Forty-Seventy Spark",
+      "stats": {
+        "hp": 95,
+        "atk": 130,
+        "def": 95,
+        "skl": 115,
+        "iq": 100,
+        "spe": 140
+      },
+      "bio": "It once did something no one had ever done: dozens of homers and over seventy steals in one season. Every swing and every step crackles with energy.",
+      "comp": {
+        "name": "Raichu",
+        "dex": 26,
+        "why": "Explosive power stored in a small, speedy frame."
+      }
+    },
+    {
+      "id": "mlb-yoshinobu-yamamoto",
+      "name": "Yoshinobu Yamamoto",
+      "aliases": [
+        "Yamamoto"
+      ],
+      "sport": "MLB",
+      "league": "NL",
+      "division": "West",
+      "team": "Los Angeles Dodgers",
+      "teamAbbr": "LAD",
+      "position": "SP",
+      "number": 18,
+      "birthDate": "1998-08-17",
+      "type": "Psychic",
+      "category": "Many-Pitch Mystic",
+      "stats": {
+        "hp": 105,
+        "atk": 120,
+        "def": 75,
+        "skl": 145,
+        "iq": 140,
+        "spe": 60
+      },
+      "bio": "Not big for an ace, but it carries a whole arsenal of pitches and commands each one perfectly. It once dominated the biggest stage, winning game after game.",
+      "comp": {
+        "name": "Ninetales",
+        "dex": 38,
+        "why": "Each tail is a different pitch. Mystical and precise."
+      }
+    },
+    {
+      "id": "nba-nikola-jokic",
+      "name": "Nikola Jokić",
+      "aliases": [
+        "Nikola Jokic",
+        "Joker"
+      ],
+      "sport": "NBA",
+      "league": "West",
+      "division": "Northwest",
+      "team": "Denver Nuggets",
+      "teamAbbr": "DEN",
+      "position": "C",
+      "number": 15,
+      "birthDate": "1995-02-19",
+      "type": "Psychic",
+      "type2": "Rock",
+      "category": "Gentle Genius",
+      "stats": {
+        "hp": 130,
+        "atk": 135,
+        "def": 85,
+        "skl": 145,
+        "iq": 150,
+        "spe": 40
+      },
+      "bio": "It looks slow and unbothered, yet it sees passing lanes no one else can. Away from the court it is happiest racing horses back home.",
+      "comp": {
+        "name": "Slowbro",
+        "dex": 80,
+        "why": "Looks sleepy, then bends the game with its mind."
+      }
+    },
+    {
+      "id": "nba-shai-gilgeous-alexander",
+      "name": "Shai Gilgeous-Alexander",
+      "aliases": [
+        "SGA",
+        "Shai"
+      ],
+      "sport": "NBA",
+      "league": "West",
+      "division": "Northwest",
+      "team": "Oklahoma City Thunder",
+      "teamAbbr": "OKC",
+      "position": "PG",
+      "number": 2,
+      "birthDate": "1998-07-12",
+      "type": "Ice",
+      "type2": "Ghost",
+      "category": "Cold-Blooded Glider",
+      "stats": {
+        "hp": 115,
+        "atk": 140,
+        "def": 110,
+        "skl": 140,
+        "iq": 130,
+        "spe": 115
+      },
+      "bio": "It slips past defenders with herky-jerky footwork and sinks mid-range jumpers with ice in its veins. It is known for arriving in very bold outfits.",
+      "comp": {
+        "name": "Persian",
+        "dex": 53,
+        "why": "Sleek, stylish, and slips away from anyone."
+      }
+    },
+    {
+      "id": "nba-victor-wembanyama",
+      "name": "Victor Wembanyama",
+      "aliases": [
+        "Wemby"
+      ],
+      "sport": "NBA",
+      "league": "West",
+      "division": "Southwest",
+      "team": "San Antonio Spurs",
+      "teamAbbr": "SAS",
+      "position": "C",
+      "number": 1,
+      "birthDate": "2004-01-04",
+      "type": "Dragon",
+      "type2": "Steel",
+      "category": "Alien Unicorn",
+      "stats": {
+        "hp": 105,
+        "atk": 125,
+        "def": 150,
+        "skl": 120,
+        "iq": 115,
+        "spe": 90
+      },
+      "bio": "Over seven feet tall with the moves of a guard. Researchers believe it came from another planet. It swats shots from places that should not be possible.",
+      "comp": {
+        "name": "Mewtwo",
+        "dex": 150,
+        "why": "Like nothing the league has ever seen."
+      }
+    },
+    {
+      "id": "nba-luka-doncic",
+      "name": "Luka Dončić",
+      "aliases": [
+        "Luka Doncic",
+        "Luka"
+      ],
+      "sport": "NBA",
+      "league": "West",
+      "division": "Pacific",
+      "team": "Los Angeles Lakers",
+      "teamAbbr": "LAL",
+      "position": "PG",
+      "number": 77,
+      "birthDate": "1999-02-28",
+      "type": "Dark",
+      "type2": "Psychic",
+      "category": "Step-Back Sorcerer",
+      "stats": {
+        "hp": 125,
+        "atk": 145,
+        "def": 70,
+        "skl": 140,
+        "iq": 145,
+        "spe": 70
+      },
+      "bio": "It lulls defenders to sleep with a slow dribble, then steps back into a shot they never saw coming. It turned pro in Europe as a teenager.",
+      "comp": {
+        "name": "Hypno",
+        "dex": 97,
+        "why": "Hypnotizes defenders before the step-back."
+      }
+    },
+    {
+      "id": "nba-stephen-curry",
+      "name": "Stephen Curry",
+      "aliases": [
+        "Steph Curry",
+        "Chef Curry"
+      ],
+      "sport": "NBA",
+      "league": "West",
+      "division": "Pacific",
+      "team": "Golden State Warriors",
+      "teamAbbr": "GSW",
+      "position": "PG",
+      "number": 30,
+      "birthDate": "1988-03-14",
+      "type": "Water",
+      "category": "Splash Cannon",
+      "stats": {
+        "hp": 100,
+        "atk": 140,
+        "def": 75,
+        "skl": 150,
+        "iq": 140,
+        "spe": 105
+      },
+      "bio": "It fires water cannons from far beyond the arc and changed how the game is played. Even at an advanced age, a single hot streak can flood an arena.",
+      "comp": {
+        "name": "Blastoise",
+        "dex": 9,
+        "why": "Long-range cannons that never stop firing."
+      }
+    },
+    {
+      "id": "nba-jayson-tatum",
+      "name": "Jayson Tatum",
+      "sport": "NBA",
+      "league": "East",
+      "division": "Atlantic",
+      "team": "Boston Celtics",
+      "teamAbbr": "BOS",
+      "position": "SF",
+      "number": 0,
+      "birthDate": "1998-03-03",
+      "type": "Fighting",
+      "type2": "Normal",
+      "category": "Two-Way Wing",
+      "stats": {
+        "hp": 120,
+        "atk": 130,
+        "def": 115,
+        "skl": 120,
+        "iq": 115,
+        "spe": 95
+      },
+      "bio": "A long, polished wing that scores from every level and defends multiple positions. It has already raised a championship banner.",
+      "comp": {
+        "name": "Hitmonchan",
+        "dex": 107,
+        "why": "Polished technique and a complete set of moves."
+      }
+    },
+    {
+      "id": "nba-anthony-edwards",
+      "name": "Anthony Edwards",
+      "aliases": [
+        "Ant",
+        "Ant-Man"
+      ],
+      "sport": "NBA",
+      "league": "West",
+      "division": "Northwest",
+      "team": "Minnesota Timberwolves",
+      "teamAbbr": "MIN",
+      "position": "SG",
+      "number": 5,
+      "birthDate": "2001-08-05",
+      "type": "Fire",
+      "type2": "Electric",
+      "category": "Trash-Talk Torch",
+      "stats": {
+        "hp": 115,
+        "atk": 140,
+        "def": 100,
+        "skl": 115,
+        "iq": 100,
+        "spe": 130
+      },
+      "bio": "Brash, loud, and explosive, it dunks on anyone who stands in its way and tells them about it afterward. Its confidence burns hotter than any arena.",
+      "comp": {
+        "name": "Primeape",
+        "dex": 57,
+        "why": "Fiery energy and a fearless attitude."
+      }
+    },
+    {
+      "id": "nba-joel-embiid",
+      "name": "Joel Embiid",
+      "aliases": [
+        "The Process"
+      ],
+      "sport": "NBA",
+      "league": "East",
+      "division": "Atlantic",
+      "team": "Philadelphia 76ers",
+      "teamAbbr": "PHI",
+      "position": "C",
+      "number": 21,
+      "birthDate": "1994-03-16",
+      "type": "Rock",
+      "category": "Process Behemoth",
+      "stats": {
+        "hp": 70,
+        "atk": 145,
+        "def": 125,
+        "skl": 125,
+        "iq": 115,
+        "spe": 50
+      },
+      "bio": "A giant from Central Africa that once played volleyball and soccer. When healthy, it is an unstoppable force in the post who fans were told to trust.",
+      "comp": {
+        "name": "Rhydon",
+        "dex": 112,
+        "why": "Massive, armored, and dominant near the basket."
+      }
+    },
+    {
+      "id": "nba-jalen-brunson",
+      "name": "Jalen Brunson",
+      "sport": "NBA",
+      "league": "East",
+      "division": "Atlantic",
+      "team": "New York Knicks",
+      "teamAbbr": "NYK",
+      "position": "PG",
+      "number": 11,
+      "birthDate": "1996-08-31",
+      "type": "Ground",
+      "type2": "Ice",
+      "category": "Footwork Mole",
+      "stats": {
+        "hp": 120,
+        "atk": 135,
+        "def": 70,
+        "skl": 135,
+        "iq": 140,
+        "spe": 85
+      },
+      "bio": "Small for its position, it uses low-to-the-ground footwork to burrow into the paint. In the fourth quarter its shots turn ice cold for the other team.",
+      "comp": {
+        "name": "Marowak",
+        "dex": 105,
+        "why": "Undersized but gritty and battle-tested."
+      }
+    },
+    {
+      "id": "nba-donovan-mitchell",
+      "name": "Donovan Mitchell",
+      "aliases": [
+        "Spida"
+      ],
+      "sport": "NBA",
+      "league": "East",
+      "division": "Central",
+      "team": "Cleveland Cavaliers",
+      "teamAbbr": "CLE",
+      "position": "SG",
+      "number": 45,
+      "birthDate": "1996-09-07",
+      "type": "Electric",
+      "category": "Spider Spark",
+      "stats": {
+        "hp": 110,
+        "atk": 135,
+        "def": 85,
+        "skl": 120,
+        "iq": 110,
+        "spe": 125
+      },
+      "bio": "Its nickname comes from a crawling creature, but its game is pure electricity. It explodes to the rim and has exploded for 70 points in a single night.",
+      "comp": {
+        "name": "Pikachu",
+        "dex": 25,
+        "why": "Small, electric, and a fan favorite."
+      }
+    },
+    {
+      "id": "nba-tyrese-haliburton",
+      "name": "Tyrese Haliburton",
+      "aliases": [
+        "Hali"
+      ],
+      "sport": "NBA",
+      "league": "East",
+      "division": "Central",
+      "team": "Indiana Pacers",
+      "teamAbbr": "IND",
+      "position": "PG",
+      "number": 0,
+      "birthDate": "2000-02-29",
+      "type": "Flying",
+      "type2": "Psychic",
+      "category": "Lob Hawk",
+      "stats": {
+        "hp": 80,
+        "atk": 110,
+        "def": 75,
+        "skl": 130,
+        "iq": 145,
+        "spe": 115
+      },
+      "bio": "Born on a day that only exists every four years, it sends passes soaring the length of the court. It hit several game-winners in one unforgettable playoff run.",
+      "comp": {
+        "name": "Fearow",
+        "dex": 22,
+        "why": "Long wingspan and sends the ball flying."
+      }
+    },
+    {
+      "id": "nba-cade-cunningham",
+      "name": "Cade Cunningham",
+      "aliases": [
+        "Cade"
+      ],
+      "sport": "NBA",
+      "league": "East",
+      "division": "Central",
+      "team": "Detroit Pistons",
+      "teamAbbr": "DET",
+      "position": "PG",
+      "number": 2,
+      "birthDate": "2001-09-25",
+      "type": "Psychic",
+      "type2": "Normal",
+      "category": "Motor City Mind",
+      "stats": {
+        "hp": 115,
+        "atk": 125,
+        "def": 95,
+        "skl": 120,
+        "iq": 135,
+        "spe": 85
+      },
+      "bio": "A big, unhurried point guard that carried a rebuilding franchise back into the light. It grows stronger every season and controls the pace of every game.",
+      "comp": {
+        "name": "Kadabra",
+        "dex": 64,
+        "why": "Already powerful and still on the way to its final form."
+      }
+    },
+    {
+      "id": "nba-jaylen-brown",
+      "name": "Jaylen Brown",
+      "aliases": [
+        "JB"
+      ],
+      "sport": "NBA",
+      "league": "East",
+      "division": "Atlantic",
+      "team": "Philadelphia 76ers",
+      "teamAbbr": "PHI",
+      "position": "SG",
+      "number": 7,
+      "birthDate": "1996-10-24",
+      "type": "Fighting",
+      "category": "Downhill Brawler",
+      "stats": {
+        "hp": 115,
+        "atk": 130,
+        "def": 115,
+        "skl": 105,
+        "iq": 110,
+        "spe": 115
+      },
+      "bio": "Muscular and relentless, it attacks the rim in straight lines and doesn't back down from contact. It once claimed a Finals MVP trophy before moving down the coast to a new home.",
+      "comp": {
+        "name": "Machoke",
+        "dex": 67,
+        "why": "Strong, physical, and built to attack."
+      }
+    },
+    {
+      "id": "nba-devin-booker",
+      "name": "Devin Booker",
+      "aliases": [
+        "Book"
+      ],
+      "sport": "NBA",
+      "league": "West",
+      "division": "Pacific",
+      "team": "Phoenix Suns",
+      "teamAbbr": "PHX",
+      "position": "SG",
+      "number": 1,
+      "birthDate": "1996-10-30",
+      "type": "Water",
+      "type2": "Fire",
+      "category": "Desert Shotmaker",
+      "stats": {
+        "hp": 110,
+        "atk": 140,
+        "def": 75,
+        "skl": 140,
+        "iq": 120,
+        "spe": 95
+      },
+      "bio": "Even in the desert heat its jumper flows like water. It once poured in 70 points in a single game as a young pup.",
+      "comp": {
+        "name": "Golduck",
+        "dex": 55,
+        "why": "Smooth, skilled, and full of buckets."
+      }
+    },
+    {
+      "id": "nba-kevin-durant",
+      "name": "Kevin Durant",
+      "aliases": [
+        "KD",
+        "Slim Reaper"
+      ],
+      "sport": "NBA",
+      "league": "West",
+      "division": "Southwest",
+      "team": "Houston Rockets",
+      "teamAbbr": "HOU",
+      "position": "PF",
+      "number": 7,
+      "birthDate": "1988-09-29",
+      "type": "Ghost",
+      "category": "Slim Reaper",
+      "stats": {
+        "hp": 95,
+        "atk": 145,
+        "def": 95,
+        "skl": 150,
+        "iq": 125,
+        "spe": 85
+      },
+      "bio": "Tall and thin as a shadow, it rises over defenders and its shot simply cannot be blocked. It has haunted defenses for nearly two decades.",
+      "comp": {
+        "name": "Gengar",
+        "dex": 94,
+        "why": "A ghostly scorer nobody can stop."
+      }
+    },
+    {
+      "id": "nba-paolo-banchero",
+      "name": "Paolo Banchero",
+      "aliases": [
+        "Paolo"
+      ],
+      "sport": "NBA",
+      "league": "East",
+      "division": "Southeast",
+      "team": "Orlando Magic",
+      "teamAbbr": "ORL",
+      "position": "PF",
+      "number": 5,
+      "birthDate": "2002-11-17",
+      "type": "Fighting",
+      "type2": "Grass",
+      "category": "Young Bulldozer",
+      "stats": {
+        "hp": 120,
+        "atk": 130,
+        "def": 95,
+        "skl": 110,
+        "iq": 105,
+        "spe": 85
+      },
+      "bio": "A strong young forward that plows through defenders on the way to the rim. It was the top pick of its draft class and keeps getting stronger.",
+      "comp": {
+        "name": "Nidorino",
+        "dex": 33,
+        "why": "Powerful and still evolving into a king."
+      }
+    },
+    {
+      "id": "nba-bam-adebayo",
+      "name": "Bam Adebayo",
+      "aliases": [
+        "Bam"
+      ],
+      "sport": "NBA",
+      "league": "East",
+      "division": "Southeast",
+      "team": "Miami Heat",
+      "teamAbbr": "MIA",
+      "position": "C",
+      "number": 13,
+      "birthDate": "1997-07-18",
+      "type": "Steel",
+      "category": "Switch Shell",
+      "stats": {
+        "hp": 125,
+        "atk": 110,
+        "def": 145,
+        "skl": 100,
+        "iq": 120,
+        "spe": 90
+      },
+      "bio": "It can guard every position on the floor, from tiny guards to giant centers. Its hard shell is built from a famously tough team culture.",
+      "comp": {
+        "name": "Cloyster",
+        "dex": 91,
+        "why": "An almost impenetrable defensive shell."
+      }
+    },
+    {
+      "id": "nba-chet-holmgren",
+      "name": "Chet Holmgren",
+      "aliases": [
+        "Chet"
+      ],
+      "sport": "NBA",
+      "league": "West",
+      "division": "Northwest",
+      "team": "Oklahoma City Thunder",
+      "teamAbbr": "OKC",
+      "position": "PF",
+      "number": 7,
+      "birthDate": "2002-05-01",
+      "type": "Steel",
+      "type2": "Grass",
+      "category": "Rim Protector",
+      "stats": {
+        "hp": 90,
+        "atk": 110,
+        "def": 140,
+        "skl": 115,
+        "iq": 110,
+        "spe": 85
+      },
+      "bio": "Its long, wiry frame stretches toward the rim to erase shots. It can also step out and hit threes, which confuses opposing big men.",
+      "comp": {
+        "name": "Onix",
+        "dex": 95,
+        "why": "Long, slender, and blocks everything in its path."
+      }
+    },
+    {
+      "id": "nba-cooper-flagg",
+      "name": "Cooper Flagg",
+      "sport": "NBA",
+      "league": "West",
+      "division": "Southwest",
+      "team": "Dallas Mavericks",
+      "teamAbbr": "DAL",
+      "position": "SF",
+      "number": 32,
+      "birthDate": "2006-12-21",
+      "type": "Grass",
+      "type2": "Normal",
+      "category": "Rising Sprout",
+      "stats": {
+        "hp": 115,
+        "atk": 115,
+        "def": 120,
+        "skl": 105,
+        "iq": 115,
+        "spe": 105
+      },
+      "bio": "This prodigy from the northern woods was the number one pick and already does a bit of everything. Experts say it is only beginning to grow.",
+      "comp": {
+        "name": "Dratini",
+        "dex": 147,
+        "why": "Rare young talent destined to become a superstar."
+      }
+    },
+    {
+      "id": "nba-karl-anthony-towns",
+      "name": "Karl-Anthony Towns",
+      "aliases": [
+        "KAT"
+      ],
+      "sport": "NBA",
+      "league": "East",
+      "division": "Atlantic",
+      "team": "New York Knicks",
+      "teamAbbr": "NYK",
+      "position": "C",
+      "number": 32,
+      "birthDate": "1995-11-15",
+      "type": "Water",
+      "category": "Floating Big",
+      "stats": {
+        "hp": 115,
+        "atk": 130,
+        "def": 85,
+        "skl": 140,
+        "iq": 105,
+        "spe": 70
+      },
+      "bio": "A giant that floats out to the three-point line and shoots like a guard. Few creatures its size have ever had such a soft touch.",
+      "comp": {
+        "name": "Lapras",
+        "dex": 131,
+        "why": "A gentle giant that glides across the water."
+      }
+    },
+    {
+      "id": "nfl-patrick-mahomes",
+      "name": "Patrick Mahomes",
+      "aliases": [
+        "Mahomes"
+      ],
+      "sport": "NFL",
+      "league": "AFC",
+      "division": "West",
+      "team": "Kansas City Chiefs",
+      "teamAbbr": "KC",
+      "position": "QB",
+      "number": 15,
+      "birthDate": "1995-09-17",
+      "type": "Psychic",
+      "type2": "Dark",
+      "category": "No-Look Wizard",
+      "stats": {
+        "hp": 115,
+        "atk": 135,
+        "def": 60,
+        "skl": 145,
+        "iq": 150,
+        "spe": 90
+      },
+      "bio": "It throws sidearm, no-look, and on the run, often all in the same game. Its father was a big-league pitcher, which may explain the arm.",
+      "comp": {
+        "name": "Alakazam",
+        "dex": 65,
+        "why": "Genius-level mind that solves any defense."
+      }
+    },
+    {
+      "id": "nfl-josh-allen",
+      "name": "Josh Allen",
+      "sport": "NFL",
+      "league": "AFC",
+      "division": "East",
+      "team": "Buffalo Bills",
+      "teamAbbr": "BUF",
+      "position": "QB",
+      "number": 17,
+      "birthDate": "1996-05-21",
+      "type": "Fighting",
+      "type2": "Ground",
+      "category": "Snowstorm Bull",
+      "stats": {
+        "hp": 125,
+        "atk": 145,
+        "def": 65,
+        "skl": 120,
+        "iq": 120,
+        "spe": 100
+      },
+      "bio": "A huge-armed passer that would rather hurdle or truck a linebacker than slide. It thrives in blizzards near a great lake.",
+      "comp": {
+        "name": "Tauros",
+        "dex": 128,
+        "why": "Charges ahead and runs people over."
+      }
+    },
+    {
+      "id": "nfl-lamar-jackson",
+      "name": "Lamar Jackson",
+      "aliases": [
+        "Lamar"
+      ],
+      "sport": "NFL",
+      "league": "AFC",
+      "division": "North",
+      "team": "Baltimore Ravens",
+      "teamAbbr": "BAL",
+      "position": "QB",
+      "number": 8,
+      "birthDate": "1997-01-07",
+      "type": "Electric",
+      "category": "Lightning Passer",
+      "stats": {
+        "hp": 105,
+        "atk": 120,
+        "def": 60,
+        "skl": 120,
+        "iq": 125,
+        "spe": 150
+      },
+      "bio": "The most dangerous runner ever to play its position. Defenders who try to tackle it often grab only the air where it was a moment ago.",
+      "comp": {
+        "name": "Electrode",
+        "dex": 101,
+        "why": "Explosive and among the fastest of its kind."
+      }
+    },
+    {
+      "id": "nfl-joe-burrow",
+      "name": "Joe Burrow",
+      "aliases": [
+        "Joe Cool",
+        "Joe Shiesty"
+      ],
+      "sport": "NFL",
+      "league": "AFC",
+      "division": "North",
+      "team": "Cincinnati Bengals",
+      "teamAbbr": "CIN",
+      "position": "QB",
+      "number": 9,
+      "birthDate": "1996-12-10",
+      "type": "Ice",
+      "type2": "Psychic",
+      "category": "Cool Operator",
+      "stats": {
+        "hp": 85,
+        "atk": 125,
+        "def": 60,
+        "skl": 145,
+        "iq": 140,
+        "spe": 65
+      },
+      "bio": "Nothing rattles it. It arrives at stadiums in stylish outfits and dark sunglasses, then picks apart defenses with surgical calm.",
+      "comp": {
+        "name": "Articuno",
+        "dex": 144,
+        "why": "A legendary bird made of pure cool."
+      }
+    },
+    {
+      "id": "nfl-jalen-hurts",
+      "name": "Jalen Hurts",
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "East",
+      "team": "Philadelphia Eagles",
+      "teamAbbr": "PHI",
+      "position": "QB",
+      "number": 1,
+      "birthDate": "1998-08-07",
+      "type": "Ground",
+      "type2": "Fighting",
+      "category": "Push Engine",
+      "stats": {
+        "hp": 125,
+        "atk": 125,
+        "def": 65,
+        "skl": 110,
+        "iq": 120,
+        "spe": 110
+      },
+      "bio": "Squat, strong, and stoic. Short-yardage plays seem hopeless for defenses, because its team simply shoves it forward until it crosses the line.",
+      "comp": {
+        "name": "Rhyhorn",
+        "dex": 111,
+        "why": "Charges forward in a straight line and can't be stopped."
+      }
+    },
+    {
+      "id": "nfl-brock-purdy",
+      "name": "Brock Purdy",
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "West",
+      "team": "San Francisco 49ers",
+      "teamAbbr": "SF",
+      "position": "QB",
+      "number": 13,
+      "birthDate": "1999-12-27",
+      "type": "Grass",
+      "category": "Last-Pick Sprout",
+      "stats": {
+        "hp": 100,
+        "atk": 105,
+        "def": 60,
+        "skl": 130,
+        "iq": 130,
+        "spe": 80
+      },
+      "bio": "It was the very last pick of its draft class, a title meant to be a joke. It grew steadily and calmly into a franchise starter anyway.",
+      "comp": {
+        "name": "Bulbasaur",
+        "dex": 1,
+        "why": "The humble starter that keeps growing."
+      }
+    },
+    {
+      "id": "nfl-justin-jefferson",
+      "name": "Justin Jefferson",
+      "aliases": [
+        "JJettas",
+        "Jefferson"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "North",
+      "team": "Minnesota Vikings",
+      "teamAbbr": "MIN",
+      "position": "WR",
+      "number": 18,
+      "birthDate": "1999-06-16",
+      "type": "Flying",
+      "type2": "Fairy",
+      "category": "Route Blade",
+      "stats": {
+        "hp": 110,
+        "atk": 130,
+        "def": 55,
+        "skl": 145,
+        "iq": 130,
+        "spe": 130
+      },
+      "bio": "Its routes are so sharp they slice cornerbacks in half. After a big catch, it celebrates with a famous dance.",
+      "comp": {
+        "name": "Scyther",
+        "dex": 123,
+        "why": "Razor-sharp cuts and blinding speed."
+      }
+    },
+    {
+      "id": "nfl-jamarr-chase",
+      "name": "Ja'Marr Chase",
+      "aliases": [
+        "Jamarr Chase"
+      ],
+      "sport": "NFL",
+      "league": "AFC",
+      "division": "North",
+      "team": "Cincinnati Bengals",
+      "teamAbbr": "CIN",
+      "position": "WR",
+      "number": 1,
+      "birthDate": "2000-03-01",
+      "type": "Fire",
+      "category": "Blaze Receiver",
+      "stats": {
+        "hp": 115,
+        "atk": 140,
+        "def": 55,
+        "skl": 130,
+        "iq": 115,
+        "spe": 135
+      },
+      "bio": "Catch a short pass, break one tackle, and suddenly it's gone in a streak of flame. It shares a special bond with its college quarterback.",
+      "comp": {
+        "name": "Flareon",
+        "dex": 136,
+        "why": "Burns hot after the catch."
+      }
+    },
+    {
+      "id": "nfl-ceedee-lamb",
+      "name": "CeeDee Lamb",
+      "aliases": [
+        "Ceedee Lamb"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "East",
+      "team": "Dallas Cowboys",
+      "teamAbbr": "DAL",
+      "position": "WR",
+      "number": 88,
+      "birthDate": "1999-04-08",
+      "type": "Fairy",
+      "type2": "Flying",
+      "category": "Star Wideout",
+      "stats": {
+        "hp": 110,
+        "atk": 125,
+        "def": 55,
+        "skl": 140,
+        "iq": 120,
+        "spe": 125
+      },
+      "bio": "It wears a legendary number for its famous franchise and plays with a showman's flair. It is a magnet for targets on every down.",
+      "comp": {
+        "name": "Rapidash",
+        "dex": 78,
+        "why": "Flashy, fast, and blazing down the field."
+      }
+    },
+    {
+      "id": "nfl-puka-nacua",
+      "name": "Puka Nacua",
+      "aliases": [
+        "Puka"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "West",
+      "team": "Los Angeles Rams",
+      "teamAbbr": "LAR",
+      "position": "WR",
+      "number": 12,
+      "birthDate": "2001-05-29",
+      "type": "Fighting",
+      "category": "Iron-Grip Catcher",
+      "stats": {
+        "hp": 115,
+        "atk": 125,
+        "def": 60,
+        "skl": 135,
+        "iq": 125,
+        "spe": 110
+      },
+      "bio": "Overlooked until late in its draft, it went on to break rookie records. It catches everything and loves to throw blocks.",
+      "comp": {
+        "name": "Kingler",
+        "dex": 99,
+        "why": "Crushing grip and loves contact."
+      }
+    },
+    {
+      "id": "nfl-amon-ra-st-brown",
+      "name": "Amon-Ra St. Brown",
+      "aliases": [
+        "Amon-Ra",
+        "Sun God"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "North",
+      "team": "Detroit Lions",
+      "teamAbbr": "DET",
+      "position": "WR",
+      "number": 14,
+      "birthDate": "1999-10-24",
+      "type": "Bug",
+      "type2": "Fighting",
+      "category": "Relentless Hornet",
+      "stats": {
+        "hp": 120,
+        "atk": 120,
+        "def": 60,
+        "skl": 140,
+        "iq": 130,
+        "spe": 105
+      },
+      "bio": "It carries a nickname tied to the sun and keeps a list of every receiver drafted before it. It attacks the middle of the field with a relentless motor.",
+      "comp": {
+        "name": "Beedrill",
+        "dex": 15,
+        "why": "Relentless, swarming, never stops working."
+      }
+    },
+    {
+      "id": "nfl-saquon-barkley",
+      "name": "Saquon Barkley",
+      "aliases": [
+        "Saquon"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "East",
+      "team": "Philadelphia Eagles",
+      "teamAbbr": "PHI",
+      "position": "RB",
+      "number": 26,
+      "birthDate": "1997-02-09",
+      "type": "Flying",
+      "type2": "Fighting",
+      "category": "Reverse Hurdler",
+      "stats": {
+        "hp": 115,
+        "atk": 135,
+        "def": 60,
+        "skl": 115,
+        "iq": 110,
+        "spe": 140
+      },
+      "bio": "It once hurdled a defender backwards, without even looking. It flew past 2,000 rushing yards in a single season.",
+      "comp": {
+        "name": "Dragonite",
+        "dex": 149,
+        "why": "Powerful body that can still take flight."
+      }
+    },
+    {
+      "id": "nfl-derrick-henry",
+      "name": "Derrick Henry",
+      "aliases": [
+        "King Henry"
+      ],
+      "sport": "NFL",
+      "league": "AFC",
+      "division": "North",
+      "team": "Baltimore Ravens",
+      "teamAbbr": "BAL",
+      "position": "RB",
+      "number": 22,
+      "birthDate": "1994-01-04",
+      "type": "Rock",
+      "type2": "Fighting",
+      "category": "Royal Boulder",
+      "stats": {
+        "hp": 135,
+        "atk": 145,
+        "def": 65,
+        "skl": 95,
+        "iq": 105,
+        "spe": 120
+      },
+      "bio": "A huge back with a famously devastating stiff-arm. It grows stronger as the game goes on, and defenders dread tackling it in the fourth quarter.",
+      "comp": {
+        "name": "Nidoking",
+        "dex": 34,
+        "why": "A king that bulldozes everything in its path."
+      }
+    },
+    {
+      "id": "nfl-bijan-robinson",
+      "name": "Bijan Robinson",
+      "aliases": [
+        "Bijan"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "South",
+      "team": "Atlanta Falcons",
+      "teamAbbr": "ATL",
+      "position": "RB",
+      "number": 7,
+      "birthDate": "2002-01-30",
+      "type": "Ghost",
+      "type2": "Electric",
+      "category": "Phantom Back",
+      "stats": {
+        "hp": 110,
+        "atk": 125,
+        "def": 55,
+        "skl": 130,
+        "iq": 115,
+        "spe": 135
+      },
+      "bio": "Defenders swear they had it wrapped up, but it phases through tackles like a spirit. It wears a number rarely seen on running backs.",
+      "comp": {
+        "name": "Haunter",
+        "dex": 93,
+        "why": "Slips through tackles like it isn't there."
+      }
+    },
+    {
+      "id": "nfl-christian-mccaffrey",
+      "name": "Christian McCaffrey",
+      "aliases": [
+        "CMC"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "West",
+      "team": "San Francisco 49ers",
+      "teamAbbr": "SF",
+      "position": "RB",
+      "number": 23,
+      "birthDate": "1996-06-07",
+      "type": "Normal",
+      "type2": "Electric",
+      "category": "Do-It-All Back",
+      "stats": {
+        "hp": 100,
+        "atk": 125,
+        "def": 55,
+        "skl": 140,
+        "iq": 135,
+        "spe": 120
+      },
+      "bio": "It runs inside, catches passes like a wide receiver, and reads blocks perfectly. Its father caught passes in the league too.",
+      "comp": {
+        "name": "Eevee",
+        "dex": 133,
+        "why": "Adapts into whatever form the offense needs."
+      }
+    },
+    {
+      "id": "nfl-brock-bowers",
+      "name": "Brock Bowers",
+      "sport": "NFL",
+      "league": "AFC",
+      "division": "West",
+      "team": "Las Vegas Raiders",
+      "teamAbbr": "LV",
+      "position": "TE",
+      "number": 89,
+      "birthDate": "2002-12-09",
+      "type": "Fighting",
+      "type2": "Grass",
+      "category": "Desert Tank",
+      "stats": {
+        "hp": 110,
+        "atk": 125,
+        "def": 70,
+        "skl": 130,
+        "iq": 115,
+        "spe": 115
+      },
+      "bio": "It broke rookie receiving records for its position in its very first season. It blocks like a lineman and runs like a receiver.",
+      "comp": {
+        "name": "Poliwrath",
+        "dex": 62,
+        "why": "A muscular swimmer that's both strong and quick."
+      }
+    },
+    {
+      "id": "nfl-myles-garrett",
+      "name": "Myles Garrett",
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "West",
+      "team": "Los Angeles Rams",
+      "teamAbbr": "LAR",
+      "position": "DE",
+      "number": 95,
+      "birthDate": "1995-12-29",
+      "type": "Dragon",
+      "type2": "Fighting",
+      "category": "Freak Rusher",
+      "stats": {
+        "hp": 125,
+        "atk": 140,
+        "def": 145,
+        "skl": 110,
+        "iq": 110,
+        "spe": 125
+      },
+      "bio": "A rare beast with impossible size and speed. It writes poetry and studies dinosaurs in its spare time, and it recently migrated west to terrorize a new set of quarterbacks.",
+      "comp": {
+        "name": "Gyarados",
+        "dex": 130,
+        "why": "Furious, unstoppable rampage off the edge."
+      }
+    },
+    {
+      "id": "nfl-aidan-hutchinson",
+      "name": "Aidan Hutchinson",
+      "aliases": [
+        "Hutch"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "North",
+      "team": "Detroit Lions",
+      "teamAbbr": "DET",
+      "position": "DE",
+      "number": 97,
+      "birthDate": "2000-08-09",
+      "type": "Bug",
+      "type2": "Fighting",
+      "category": "Hometown Pincer",
+      "stats": {
+        "hp": 115,
+        "atk": 130,
+        "def": 135,
+        "skl": 110,
+        "iq": 115,
+        "spe": 110
+      },
+      "bio": "Born and raised near the city it now defends, it clamps onto quarterbacks with a relentless motor. It plays every snap like it's personal.",
+      "comp": {
+        "name": "Pinsir",
+        "dex": 127,
+        "why": "Crushing grip that wraps up quarterbacks."
+      }
+    },
+    {
+      "id": "nfl-patrick-surtain-ii",
+      "name": "Patrick Surtain II",
+      "aliases": [
+        "Pat Surtain"
+      ],
+      "sport": "NFL",
+      "league": "AFC",
+      "division": "West",
+      "team": "Denver Broncos",
+      "teamAbbr": "DEN",
+      "position": "CB",
+      "number": 2,
+      "birthDate": "2000-04-14",
+      "type": "Steel",
+      "category": "Island Magnet",
+      "stats": {
+        "hp": 115,
+        "atk": 85,
+        "def": 150,
+        "skl": 120,
+        "iq": 130,
+        "spe": 120
+      },
+      "bio": "It shadows the best receiver on every team and sticks to him like a magnet. Its father was also a star cornerback.",
+      "comp": {
+        "name": "Magneton",
+        "dex": 82,
+        "why": "Locks on and won't let go."
+      }
+    },
+    {
+      "id": "nfl-brandon-aubrey",
+      "name": "Brandon Aubrey",
+      "aliases": [
+        "Aubrey"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "East",
+      "team": "Dallas Cowboys",
+      "teamAbbr": "DAL",
+      "position": "K",
+      "number": 17,
+      "birthDate": "1995-03-14",
+      "type": "Ice",
+      "category": "Long-Range Freezer",
+      "stats": {
+        "hp": 100,
+        "atk": 135,
+        "def": 30,
+        "skl": 145,
+        "iq": 110,
+        "spe": 40
+      },
+      "bio": "Once a professional soccer player, it now drills kicks from more than 60 yards with ice in its veins. Opposing coaches start worrying once it crosses midfield.",
+      "comp": {
+        "name": "Hitmonlee",
+        "dex": 106,
+        "why": "The legendary kicking specialist."
+      }
+    },
+    {
+      "id": "nhl-connor-mcdavid",
+      "name": "Connor McDavid",
+      "aliases": [
+        "McJesus",
+        "McDavid"
+      ],
+      "sport": "NHL",
+      "league": "West",
+      "division": "Pacific",
+      "team": "Edmonton Oilers",
+      "teamAbbr": "EDM",
+      "position": "C",
+      "number": 97,
+      "birthDate": "1997-01-13",
+      "type": "Electric",
+      "type2": "Psychic",
+      "category": "Thunder Skater",
+      "stats": {
+        "hp": 120,
+        "atk": 135,
+        "def": 85,
+        "skl": 150,
+        "iq": 145,
+        "spe": 150
+      },
+      "bio": "The fastest creature on ice. It carries the puck at full speed in a way that leaves defenders frozen and broadcasters out of words.",
+      "comp": {
+        "name": "Zapdos",
+        "dex": 145,
+        "why": "A legendary bolt of lightning."
+      }
+    },
+    {
+      "id": "nhl-leon-draisaitl",
+      "name": "Leon Draisaitl",
+      "aliases": [
+        "Drai"
+      ],
+      "sport": "NHL",
+      "league": "West",
+      "division": "Pacific",
+      "team": "Edmonton Oilers",
+      "teamAbbr": "EDM",
+      "position": "C",
+      "number": 29,
+      "birthDate": "1995-10-27",
+      "type": "Fighting",
+      "type2": "Fire",
+      "category": "One-Timer Blade",
+      "stats": {
+        "hp": 125,
+        "atk": 140,
+        "def": 85,
+        "skl": 140,
+        "iq": 135,
+        "spe": 90
+      },
+      "bio": "A big centre from Germany with a one-timer from its off wing that slices through goalies. It scores in bunches every spring.",
+      "comp": {
+        "name": "Kabutops",
+        "dex": 141,
+        "why": "Slashing blades and a lethal shot."
+      }
+    },
+    {
+      "id": "nhl-nathan-mackinnon",
+      "name": "Nathan MacKinnon",
+      "aliases": [
+        "MacK",
+        "MacKinnon"
+      ],
+      "sport": "NHL",
+      "league": "West",
+      "division": "Central",
+      "team": "Colorado Avalanche",
+      "teamAbbr": "COL",
+      "position": "C",
+      "number": 29,
+      "birthDate": "1995-09-01",
+      "type": "Fire",
+      "type2": "Electric",
+      "category": "Mountain Inferno",
+      "stats": {
+        "hp": 125,
+        "atk": 140,
+        "def": 90,
+        "skl": 135,
+        "iq": 125,
+        "spe": 145
+      },
+      "bio": "It burns with an intensity teammates call scary. Each rush builds like a fire racing down a mountain slope.",
+      "comp": {
+        "name": "Magmar",
+        "dex": 126,
+        "why": "Burning intensity on every shift."
+      }
+    },
+    {
+      "id": "nhl-auston-matthews",
+      "name": "Auston Matthews",
+      "aliases": [
+        "Matthews"
+      ],
+      "sport": "NHL",
+      "league": "East",
+      "division": "Atlantic",
+      "team": "Toronto Maple Leafs",
+      "teamAbbr": "TOR",
+      "position": "C",
+      "number": 34,
+      "birthDate": "1997-09-17",
+      "type": "Water",
+      "type2": "Fighting",
+      "category": "Desert Sniper",
+      "stats": {
+        "hp": 105,
+        "atk": 145,
+        "def": 110,
+        "skl": 140,
+        "iq": 120,
+        "spe": 95
+      },
+      "bio": "Raised in the desert, far from any frozen pond, it became the most feared sniper in hockey. It once scored 69 goals in a season.",
+      "comp": {
+        "name": "Seadra",
+        "dex": 117,
+        "why": "Fires shots with pinpoint accuracy."
+      }
+    },
+    {
+      "id": "nhl-sidney-crosby",
+      "name": "Sidney Crosby",
+      "aliases": [
+        "Sid the Kid",
+        "Sid"
+      ],
+      "sport": "NHL",
+      "league": "East",
+      "division": "Metropolitan",
+      "team": "Pittsburgh Penguins",
+      "teamAbbr": "PIT",
+      "position": "C",
+      "number": 87,
+      "birthDate": "1987-08-07",
+      "type": "Psychic",
+      "type2": "Steel",
+      "category": "Ageless Captain",
+      "stats": {
+        "hp": 120,
+        "atk": 120,
+        "def": 115,
+        "skl": 140,
+        "iq": 150,
+        "spe": 95
+      },
+      "bio": "Captain since it was barely an adult, it has led its kind for two decades. Its number matches its birthday.",
+      "comp": {
+        "name": "Venusaur",
+        "dex": 3,
+        "why": "A fully evolved original that never fades."
+      }
+    },
+    {
+      "id": "nhl-nikita-kucherov",
+      "name": "Nikita Kucherov",
+      "aliases": [
+        "Kuch"
+      ],
+      "sport": "NHL",
+      "league": "East",
+      "division": "Atlantic",
+      "team": "Tampa Bay Lightning",
+      "teamAbbr": "TBL",
+      "position": "RW",
+      "number": 86,
+      "birthDate": "1993-06-17",
+      "type": "Dark",
+      "type2": "Psychic",
+      "category": "Illusion Playmaker",
+      "stats": {
+        "hp": 115,
+        "atk": 130,
+        "def": 75,
+        "skl": 145,
+        "iq": 150,
+        "spe": 95
+      },
+      "bio": "Quiet and mysterious, it disguises every pass as a shot and every shot as a pass. Goalies rarely know which is coming.",
+      "comp": {
+        "name": "Mr. Mime",
+        "dex": 122,
+        "why": "Master of illusions with the puck."
+      }
+    },
+    {
+      "id": "nhl-cale-makar",
+      "name": "Cale Makar",
+      "aliases": [
+        "Makar"
+      ],
+      "sport": "NHL",
+      "league": "West",
+      "division": "Central",
+      "team": "Colorado Avalanche",
+      "teamAbbr": "COL",
+      "position": "D",
+      "number": 8,
+      "birthDate": "1998-10-30",
+      "type": "Water",
+      "type2": "Electric",
+      "category": "Liquid Defender",
+      "stats": {
+        "hp": 115,
+        "atk": 120,
+        "def": 125,
+        "skl": 140,
+        "iq": 135,
+        "spe": 135
+      },
+      "bio": "It skates so smoothly that it seems to melt into the ice. A defender by title, it attacks like a forward.",
+      "comp": {
+        "name": "Vaporeon",
+        "dex": 134,
+        "why": "So fluid it seems to dissolve into the ice."
+      }
+    },
+    {
+      "id": "nhl-kirill-kaprizov",
+      "name": "Kirill Kaprizov",
+      "aliases": [
+        "Kaprizov",
+        "Kirill the Thrill"
+      ],
+      "sport": "NHL",
+      "league": "West",
+      "division": "Central",
+      "team": "Minnesota Wild",
+      "teamAbbr": "MIN",
+      "position": "LW",
+      "number": 97,
+      "birthDate": "1997-04-26",
+      "type": "Ghost",
+      "type2": "Dark",
+      "category": "Phantom Winger",
+      "stats": {
+        "hp": 110,
+        "atk": 135,
+        "def": 70,
+        "skl": 140,
+        "iq": 125,
+        "spe": 115
+      },
+      "bio": "It appears out of nowhere in front of the net, scores, and vanishes again. It became a legend in another league before crossing the ocean.",
+      "comp": {
+        "name": "Gastly",
+        "dex": 92,
+        "why": "A sneaky phantom that pops up to score."
+      }
+    },
+    {
+      "id": "nhl-david-pastrnak",
+      "name": "David Pastrňák",
+      "aliases": [
+        "David Pastrnak",
+        "Pasta"
+      ],
+      "sport": "NHL",
+      "league": "East",
+      "division": "Atlantic",
+      "team": "Boston Bruins",
+      "teamAbbr": "BOS",
+      "position": "RW",
+      "number": 88,
+      "birthDate": "1996-05-25",
+      "type": "Fairy",
+      "type2": "Water",
+      "category": "Pasta Sniper",
+      "stats": {
+        "hp": 115,
+        "atk": 140,
+        "def": 65,
+        "skl": 135,
+        "iq": 115,
+        "spe": 110
+      },
+      "bio": "Its nickname is a famous noodle dish, and it is known for goofy outfits and a big smile. Its one-timer is no joke.",
+      "comp": {
+        "name": "Clefairy",
+        "dex": 35,
+        "why": "Playful and beloved, with surprising power."
+      }
+    },
+    {
+      "id": "nhl-jack-hughes",
+      "name": "Jack Hughes",
+      "sport": "NHL",
+      "league": "East",
+      "division": "Metropolitan",
+      "team": "New Jersey Devils",
+      "teamAbbr": "NJD",
+      "position": "C",
+      "number": 86,
+      "birthDate": "2001-05-14",
+      "type": "Electric",
+      "category": "Edgework Spark",
+      "stats": {
+        "hp": 90,
+        "atk": 120,
+        "def": 70,
+        "skl": 145,
+        "iq": 125,
+        "spe": 140
+      },
+      "bio": "One of a set of hockey-playing brothers. Its edgework is so slick that defenders often end up skating the wrong way.",
+      "comp": {
+        "name": "Ponyta",
+        "dex": 77,
+        "why": "Young, fast, and full of fire."
+      }
+    },
+    {
+      "id": "nhl-connor-bedard",
+      "name": "Connor Bedard",
+      "aliases": [
+        "Bedard"
+      ],
+      "sport": "NHL",
+      "league": "West",
+      "division": "Central",
+      "team": "Chicago Blackhawks",
+      "teamAbbr": "CHI",
+      "position": "C",
+      "number": 98,
+      "birthDate": "2005-07-17",
+      "type": "Grass",
+      "type2": "Fire",
+      "category": "Prodigy Sprout",
+      "stats": {
+        "hp": 100,
+        "atk": 125,
+        "def": 60,
+        "skl": 140,
+        "iq": 120,
+        "spe": 105
+      },
+      "bio": "It was given special status to join a top junior league at only 15. Its quick-release shot keeps growing stronger.",
+      "comp": {
+        "name": "Charmander",
+        "dex": 4,
+        "why": "Young flame destined to become something huge."
+      }
+    },
+    {
+      "id": "nhl-igor-shesterkin",
+      "name": "Igor Shesterkin",
+      "aliases": [
+        "Shesty"
+      ],
+      "sport": "NHL",
+      "league": "East",
+      "division": "Metropolitan",
+      "team": "New York Rangers",
+      "teamAbbr": "NYR",
+      "position": "G",
+      "number": 31,
+      "birthDate": "1995-12-30",
+      "type": "Steel",
+      "category": "Armored Wall",
+      "stats": {
+        "hp": 120,
+        "atk": 30,
+        "def": 150,
+        "skl": 140,
+        "iq": 130,
+        "spe": 115
+      },
+      "bio": "It guards the net with lightning reflexes and a hard shell. Shooters sometimes skate away shaking their heads in disbelief.",
+      "comp": {
+        "name": "Omastar",
+        "dex": 139,
+        "why": "Hard shell and lightning-quick tentacles."
+      }
+    },
+    {
+      "id": "nhl-andrei-vasilevskiy",
+      "name": "Andrei Vasilevskiy",
+      "aliases": [
+        "Vasy",
+        "Big Cat"
+      ],
+      "sport": "NHL",
+      "league": "East",
+      "division": "Atlantic",
+      "team": "Tampa Bay Lightning",
+      "teamAbbr": "TBL",
+      "position": "G",
+      "number": 88,
+      "birthDate": "1994-07-25",
+      "type": "Rock",
+      "type2": "Steel",
+      "category": "Big Cat Boulder",
+      "stats": {
+        "hp": 135,
+        "atk": 30,
+        "def": 145,
+        "skl": 130,
+        "iq": 125,
+        "spe": 105
+      },
+      "bio": "Nicknamed after a big jungle cat, it fills the whole net. It has backstopped multiple championship runs.",
+      "comp": {
+        "name": "Graveler",
+        "dex": 75,
+        "why": "A rock-solid wall that doesn't move."
+      }
+    },
+    {
+      "id": "nhl-matthew-tkachuk",
+      "name": "Matthew Tkachuk",
+      "aliases": [
+        "Chucky"
+      ],
+      "sport": "NHL",
+      "league": "East",
+      "division": "Atlantic",
+      "team": "Florida Panthers",
+      "teamAbbr": "FLA",
+      "position": "LW",
+      "number": 19,
+      "birthDate": "1997-12-11",
+      "type": "Poison",
+      "type2": "Fighting",
+      "category": "Agitator Serpent",
+      "stats": {
+        "hp": 125,
+        "atk": 125,
+        "def": 90,
+        "skl": 125,
+        "iq": 135,
+        "spe": 85
+      },
+      "bio": "It gets under opponents' skin, chirping them all game until they snap. Its father and brother also play the same physical style.",
+      "comp": {
+        "name": "Arbok",
+        "dex": 24,
+        "why": "An intimidating pest that wears you down."
+      }
+    },
+    {
+      "id": "nhl-brady-tkachuk",
+      "name": "Brady Tkachuk",
+      "sport": "NHL",
+      "league": "East",
+      "division": "Atlantic",
+      "team": "Florida Panthers",
+      "teamAbbr": "FLA",
+      "position": "LW",
+      "number": 8,
+      "birthDate": "1999-09-16",
+      "type": "Fighting",
+      "type2": "Poison",
+      "category": "Net-Front Brawler",
+      "stats": {
+        "hp": 130,
+        "atk": 125,
+        "def": 90,
+        "skl": 105,
+        "iq": 110,
+        "spe": 90
+      },
+      "bio": "It parks itself in front of the net and refuses to be moved. After forcing its way out of its old den, it now shares a locker room with its older brother.",
+      "comp": {
+        "name": "Mankey",
+        "dex": 56,
+        "why": "Quick to anger and always ready to fight."
+      }
+    },
+    {
+      "id": "nhl-mitch-marner",
+      "name": "Mitch Marner",
+      "aliases": [
+        "Marner"
+      ],
+      "sport": "NHL",
+      "league": "West",
+      "division": "Pacific",
+      "team": "Vegas Golden Knights",
+      "teamAbbr": "VGK",
+      "position": "RW",
+      "number": 93,
+      "birthDate": "1997-05-05",
+      "type": "Psychic",
+      "category": "Telepathic Passer",
+      "stats": {
+        "hp": 110,
+        "atk": 110,
+        "def": 100,
+        "skl": 140,
+        "iq": 145,
+        "spe": 105
+      },
+      "bio": "It threads passes through tiny gaps that seem impossible. It left its hometown team and headed for the desert lights.",
+      "comp": {
+        "name": "Abra",
+        "dex": 63,
+        "why": "Teleports the puck to open teammates."
+      }
+    },
+    {
+      "id": "nhl-jack-eichel",
+      "name": "Jack Eichel",
+      "aliases": [
+        "Eichel"
+      ],
+      "sport": "NHL",
+      "league": "West",
+      "division": "Pacific",
+      "team": "Vegas Golden Knights",
+      "teamAbbr": "VGK",
+      "position": "C",
+      "number": 9,
+      "birthDate": "1996-10-28",
+      "type": "Normal",
+      "type2": "Fighting",
+      "category": "Complete Centre",
+      "stats": {
+        "hp": 105,
+        "atk": 125,
+        "def": 110,
+        "skl": 135,
+        "iq": 130,
+        "spe": 115
+      },
+      "bio": "A big, complete centre that does a bit of everything. It overcame a serious neck injury and then lifted the championship trophy.",
+      "comp": {
+        "name": "Dodrio",
+        "dex": 85,
+        "why": "Three heads, three skills, all at once."
+      }
+    },
+    {
+      "id": "nhl-zach-werenski",
+      "name": "Zach Werenski",
+      "aliases": [
+        "Werenski"
+      ],
+      "sport": "NHL",
+      "league": "East",
+      "division": "Metropolitan",
+      "team": "Columbus Blue Jackets",
+      "teamAbbr": "CBJ",
+      "position": "D",
+      "number": 8,
+      "birthDate": "1997-07-19",
+      "type": "Water",
+      "type2": "Steel",
+      "category": "Tide Defender",
+      "stats": {
+        "hp": 125,
+        "atk": 115,
+        "def": 120,
+        "skl": 125,
+        "iq": 125,
+        "spe": 110
+      },
+      "bio": "It logs huge minutes and pushes the play forward like a rising tide. It became the heart of its team through a very hard time.",
+      "comp": {
+        "name": "Poliwhirl",
+        "dex": 61,
+        "why": "A tireless swimmer that never leaves the water."
+      }
+    },
+    {
+      "id": "nhl-macklin-celebrini",
+      "name": "Macklin Celebrini",
+      "aliases": [
+        "Celebrini"
+      ],
+      "sport": "NHL",
+      "league": "West",
+      "division": "Pacific",
+      "team": "San Jose Sharks",
+      "teamAbbr": "SJS",
+      "position": "C",
+      "number": 71,
+      "birthDate": "2006-06-13",
+      "type": "Grass",
+      "type2": "Psychic",
+      "category": "Fast-Growing Sprout",
+      "stats": {
+        "hp": 110,
+        "atk": 120,
+        "def": 95,
+        "skl": 130,
+        "iq": 135,
+        "spe": 110
+      },
+      "bio": "A first-overall pick whose father worked as a team trainer in another sport. It grows into a franchise leader faster than anyone expected.",
+      "comp": {
+        "name": "Ivysaur",
+        "dex": 2,
+        "why": "Rapidly growing toward its final form."
+      }
+    },
+    {
+      "id": "nhl-kyle-connor",
+      "name": "Kyle Connor",
+      "sport": "NHL",
+      "league": "West",
+      "division": "Central",
+      "team": "Winnipeg Jets",
+      "teamAbbr": "WPG",
+      "position": "LW",
+      "number": 81,
+      "birthDate": "1996-12-09",
+      "type": "Water",
+      "type2": "Ice",
+      "category": "Quiet Sniper",
+      "stats": {
+        "hp": 120,
+        "atk": 130,
+        "def": 70,
+        "skl": 130,
+        "iq": 115,
+        "spe": 115
+      },
+      "bio": "Quiet and steady, it scores 40 goals in one of the coldest cities in the league with very little noise. Its release is smooth as a stream.",
+      "comp": {
+        "name": "Staryu",
+        "dex": 120,
+        "why": "Quiet, steady, and always on target."
+      }
+    }
+  ]
+}

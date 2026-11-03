@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ModiDex · Daily Athlete Scouting Game</title>
+  <meta name="description" content="A free daily sports guessing game from JediModi Sports Network. Read the creature-style scouting card, then name the mystery NFL, NBA or MLB athlete in 6 guesses.">
+  <meta name="theme-color" content="#0b1020">
+  <meta property="og:title" content="ModiDex · Daily Athlete Scouting Game">
+  <meta property="og:description" content="Name the mystery athlete from a creature-style scouting card. New puzzles every day.">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <button class="icon-btn" id="btn-help" aria-label="How to play">?</button>
+    <div class="brand">
+      <img src="assets/icon.svg" alt="" width="34" height="34">
+      <div>
+        <h1>Modi<span>Dex</span></h1>
+        <p class="brand-sub">by JediModi Sports Network</p>
+      </div>
+    </div>
+    <button class="icon-btn" id="btn-stats" aria-label="Stats">📊</button>
+  </header>
+
+  <nav class="modes" id="modes" aria-label="Choose a sport"></nav>
+
+  <main id="app">
+    <p class="loading">Loading today's scouting reports…</p>
+  </main>
+
+  <footer class="footer">
+    <p>New puzzles every day at midnight. <span id="data-asof"></span></p>
+    <p class="legal">Fan-made game. Not affiliated with or endorsed by Nintendo, The Pokémon Company, Game Freak, the NFL, NBA, MLB, NHL, or any team or player. Pokémon names are trademarks of their owners and are mentioned only for comparison.</p>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="dlg-help" class="dialog" aria-labelledby="help-title"></dialog>
+  <dialog id="dlg-stats" class="dialog" aria-labelledby="stats-title"></dialog>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
