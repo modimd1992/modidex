@@ -5,7 +5,8 @@ import { loadData } from './data.js';
 import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay } from './daily.js';
 import { compareGuess, columnsFor } from './compare.js';
 import { cluesFor } from './clues.js';
-import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex, sportDex, dexCounts } from './storage.js';
+import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex, sportDex, dexCounts, loadHistory, recordHistory } from './storage.js';
+import { pointsFor, weekTotals, weekStart, allTimeTotals } from './leaderboard.js';
 import { shareText, combinedShareText, shareOrCopy, copyText, guessSquares } from './share.js';
 import { renderCard, esc } from './card.js';
 import { attachAutocomplete } from './autocomplete.js';
@@ -70,7 +71,7 @@ async function init() {
       }
       renderProfileButton();
       if ($('#dlg-profile').open) openProfile();
-      if (why === 'synced') { renderModes(); renderMode(); }
+      if (why === 'synced') { backfillHistory(); renderModes(); renderMode(); }
       if (why === 'auth' || why === 'synced') handlePendingLink();
     });
     initCloud();
@@ -83,6 +84,7 @@ async function init() {
   setInterval(tick, 1000);
   document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && tick());
 
+  backfillHistory();
   renderModes();
   renderMode();
   if (!loadPref('seenHelp', false)) {
@@ -320,6 +322,7 @@ function submitGuess(athlete) {
 
   if (finished() && !S.game.recorded) {
     recordResult(S.mode.id, S.puzzleNo, won, S.game.guesses.length);
+    recordHistory(S.key, S.mode.id, S.game.status, S.game.guesses.length);
     S.game.recorded = true;
     const caught = resolveCatch(S.game, answer(), S.key, rareFor(S.mode));
     S.justFinished = true;
@@ -380,6 +383,13 @@ function todayEntries() {
       .map((x) => ({ correct: x.id === ans.id, cells: compareGuess(x, ans, S.key, m) }));
     return { mode: m, status: g.guesses.length ? g.status : 'none', rows, caught: g.catch?.outcome === 'caught', shiny: g.catch?.outcome === 'caught' && !!g.catch?.shiny };
   });
+}
+
+// Make sure today's finished games are in the daily history.
+function backfillHistory() {
+  for (const e of todayEntries()) {
+    if (e.status === 'won' || e.status === 'lost') recordHistory(S.key, e.mode.id, e.status, e.rows.length);
+  }
 }
 
 function finishedToday() {
@@ -576,6 +586,8 @@ function publicSummary() {
     lines: Object.fromEntries(ENABLED_SPORTS.map((sp) => [sp, FAMILIES.filter((f) => f.every((n) => sportDex(all, sp).caught[n])).length])),
     streaks,
     today: { date: S.key, puzzleNo: S.puzzleNo, results },
+    week: weekTotals(loadHistory(), S.key, MODES.map((m) => m.id)),
+    alltime: allTimeTotals(Object.fromEntries(MODES.map((m) => [m.id, loadStats(m.id)]))),
   };
 }
 
@@ -804,11 +816,66 @@ function openPerson(p, { friend = false, sport = null } = {}) {
   });
 }
 
-async function openGroup(g) {
+let groupTab = 'today';
+const BOARD_TABS = [['today', 'Today'], ['week', 'This week'], ['alltime', 'All-time']];
+
+// A member's score on one leaderboard tab, or null if they haven't published it yet.
+function boardScore(p, tab) {
+  if (tab === 'today') {
+    const r = p.today?.date === S.key ? Object.values(p.today.results || {}) : [];
+    return { pts: r.reduce((t, x) => t + pointsFor(x), 0), solved: r.filter((x) => x.status === 'won').length, played: r.length };
+  }
+  if (tab === 'week') {
+    if (!p.week) return null;
+    return p.week.start === weekStart(S.key) ? p.week : { pts: 0, solved: 0, played: 0 };
+  }
+  return p.alltime || null;
+}
+
+function boardMeta(p, tab, sc) {
+  if (!sc) return '<span class="small">Totals show after their next game</span>';
+  const pts = `<b class="pts">${sc.pts} pt${sc.pts === 1 ? '' : 's'}</b>`;
+  if (tab === 'today') return `${pts} · ${todayLine(p, true)}`;
+  if (tab === 'week') return `${pts} · ${sc.solved}/${sc.played} solved`;
+  const pct = sc.played ? Math.round((100 * sc.solved) / sc.played) : 0;
+  return `${pts} · ${sc.solved} solved · ${pct}% · 📕 ${dexCount(p)}`;
+}
+
+function renderBoard(dlg, members) {
+  const me = currentUser()?.uid;
+  dlg.querySelectorAll('[data-btab]').forEach((b) => b.classList.toggle('is-active', b.dataset.btab === groupTab));
+  const ready = members.filter((p) => !p.pending).map((p) => ({ p, sc: boardScore(p, groupTab) }));
+  ready.sort((a, b) => (b.sc?.pts ?? -1) - (a.sc?.pts ?? -1) || (b.sc?.solved ?? -1) - (a.sc?.solved ?? -1) || dexCount(b.p) - dexCount(a.p));
+  const medal = ['🥇', '🥈', '🥉'];
+  let rank = 0;
+  let prev = null;
+  const rows = ready.map(({ p, sc }, i) => {
+    const key = sc ? `${sc.pts}:${sc.solved}` : 'none';
+    if (key !== prev) { rank = i + 1; prev = key; } // ties share a rank
+    const badge = sc?.pts > 0 && rank <= 3 ? medal[rank - 1] : rank;
+    return `<li class="person tappable${p.uid === me ? ' is-me' : ''}" data-member="${members.indexOf(p)}"><span class="rank">${badge}</span><span class="person-name">@${esc(p.handle)}${p.uid === me ? ' (you)' : ''}</span>
+      <span class="person-meta">${boardMeta(p, groupTab, sc)}</span><span class="person-arrow">›</span></li>`;
+  });
+  const pending = members.filter((p) => p.pending).map(() => '<li class="person"><span class="person-name small">A member (syncing…)</span></li>');
+  const board = dlg.querySelector('#board');
+  board.innerHTML = rows.concat(pending).join('') || '<li class="small">No members yet.</li>';
+  board.querySelectorAll('[data-member]').forEach((li) => (li.onclick = () => openPerson(members[Number(li.dataset.member)])));
+  const notes = {
+    today: "Today's puzzles across every mode.",
+    week: `Monday ${weekStart(S.key).slice(5).replace('-', '/')} through Sunday. Resets every Monday at midnight ET.`,
+    alltime: 'Every puzzle since joining ModiDex.',
+  };
+  dlg.querySelector('#board-note').textContent = notes[groupTab];
+}
+
+async function openGroup(g, testMembers = null) {
   const dlg = $('#dlg-person');
   openDialog(dlg, `<h2 id="person-title">${esc(g.name)}</h2>
     <p>Join code <b class="code">${esc(g.code)}</b> · <button class="link-btn plain" id="copy-invite">Copy invite link</button></p>
-    <h3>Today's leaderboard</h3><ul class="people" id="board"><li class="small">Loading…</li></ul>
+    <h3>Leaderboard</h3>
+    <div class="chip-row">${BOARD_TABS.map(([id, l]) => `<button class="chip${id === groupTab ? ' is-active' : ''}" data-btab="${id}">${l}</button>`).join('')}</div>
+    <ul class="people" id="board"><li class="small">Loading…</li></ul>
+    <p class="small"><span id="board-note"></span> Points: 6 for a 1st-guess solve, down to 1 for a 6th-guess solve.</p>
     <p class="small"><button class="link-btn" id="btn-leave">Leave group</button></p>`);
   dlg.querySelector('#copy-invite').onclick = async () =>
     toast((await copyText(`Join my ModiDex group "${g.name}"! ${siteUrl()}#join=${g.code}`)) ? 'Invite link copied!' : 'Could not copy.');
@@ -817,22 +884,9 @@ async function openGroup(g) {
     try { await leaveGroup(g.id); dlg.close(); toast(`Left "${g.name}".`); openProfile('groups'); } catch (err) { toast(socialError(err)); }
   };
   try {
-    const members = await groupMembers(g);
-    const score = (p) => {
-      const r = p.today?.date === S.key ? Object.values(p.today.results || {}) : [];
-      const solved = r.filter((x) => x.status === 'won');
-      return { solved: solved.length, guesses: solved.reduce((t, x) => t + x.n, 0) };
-    };
-    members.sort((a, b) => {
-      const x = score(a); const y = score(b);
-      return y.solved - x.solved || x.guesses - y.guesses || dexCount(b) - dexCount(a);
-    });
-    const me = currentUser()?.uid;
-    dlg.querySelector('#board').innerHTML = members.map((p, i) => p.pending
-      ? `<li class="person"><span class="person-name small">A member (syncing…)</span></li>`
-      : `<li class="person tappable${p.uid === me ? ' is-me' : ''}" data-member="${i}"><span class="rank">${i + 1}</span><span class="person-name">@${esc(p.handle)}${p.uid === me ? ' (you)' : ''}</span>
-          <span class="person-meta">📕 ${dexCount(p)} · ${todayLine(p, true)}</span><span class="person-arrow">›</span></li>`).join('');
-    dlg.querySelectorAll('[data-member]').forEach((li) => (li.onclick = () => openPerson(members[Number(li.dataset.member)])));
+    const members = testMembers || await groupMembers(g);
+    dlg.querySelectorAll('[data-btab]').forEach((b) => (b.onclick = () => { groupTab = b.dataset.btab; renderBoard(dlg, members); }));
+    renderBoard(dlg, members);
   } catch (err) {
     dlg.querySelector('#board').innerHTML = `<li class="small">${esc(socialError(err))}</li>`;
   }
@@ -996,4 +1050,4 @@ function toast(msg) {
 init();
 
 // Local testing only: lets the developer preview social screens with sample data.
-if (location.hostname === 'localhost') window.__modidexTest = { openPerson, publicSummary };
+if (location.hostname === 'localhost') window.__modidexTest = { openPerson, openGroup, publicSummary };

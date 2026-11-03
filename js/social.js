@@ -63,9 +63,15 @@ export async function publishProfile() {
   if (!a) return;
   const prof = await loadMyProfile();
   if (!prof.handle) return;
-  await a.fsM.setDoc(ref(a, 'profiles', a.user.uid), {
-    ...summaryBuilder(), handle: prof.handle, name: prof.handle, updatedAt: a.fsM.serverTimestamp(),
-  }, { merge: true }); // friends/groups are changed only by their own actions, never overwritten here
+  const doc = { ...summaryBuilder(), handle: prof.handle, name: prof.handle, updatedAt: a.fsM.serverTimestamp() };
+  // merge: friends/groups are changed only by their own actions, never overwritten here
+  try {
+    await a.fsM.setDoc(ref(a, 'profiles', a.user.uid), doc, { merge: true });
+  } catch (e) {
+    if (e?.code !== 'permission-denied') throw e;
+    const { week, alltime, ...older } = doc; // Firebase rules not updated yet for leaderboard totals
+    await a.fsM.setDoc(ref(a, 'profiles', a.user.uid), older, { merge: true });
+  }
   await processAnsweredRequests();
 }
 onAfterPush(publishProfile);

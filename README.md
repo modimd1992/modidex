@@ -185,7 +185,7 @@ The config values are meant to be public, so it's fine that they're in the repo.
 
 Once signed in, players pick a **username** (3–15 letters, numbers or _). Then, from the 👤 Profile screen:
 - **Friends:** add someone by username, or share a link like `https://playmodidex.com/#add=jedimodi`. They accept or decline.
-- **Groups:** create one and share its 6-letter code or invite link (`#join=CODE`). Up to 50 members, with a daily leaderboard.
+- **Groups:** create one and share its 6-letter code or invite link (`#join=CODE`). Up to 50 members, with a leaderboard for **Today**, **This week** (Monday–Sunday, ET) and **All-time**. Points per puzzle: 6 for a 1st-guess solve down to 1 for a 6th-guess solve, 0 for a miss. All-time comes from each player's stats; the weekly total comes from a 60-day results history saved with the profile (`history` in `users`, `week`/`alltime` in `profiles`, so `firestore.rules` must be the current version).
 - **What others see:** your username, Dex (caught, seen, shiny), evolution lines, streaks and today's results as spoiler-free squares. Never the answers, and never your email.
 - **Who can see it:** only your friends and people in a group with you. The rules in [`firestore.rules`](firestore.rules) enforce this.
 - After changing `firestore.rules`, paste it into Firebase → Firestore → **Rules** and click **Publish**.

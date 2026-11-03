@@ -79,12 +79,18 @@ async function pullAndMerge() {
 export async function pushProgress() {
   if (!fb || !user) return;
   try {
-    const { dex, stats, games } = exportProgress();
-    await fb.fsM.setDoc(userDoc(), {
+    const { dex, stats, games, history } = exportProgress();
+    const base = {
       dex, stats, games,
       name: user.displayName || (user.email || '').split('@')[0] || 'Trainer',
       updatedAt: fb.fsM.serverTimestamp(),
-    });
+    };
+    try {
+      await fb.fsM.setDoc(userDoc(), { ...base, history });
+    } catch (e) {
+      if (e?.code !== 'permission-denied') throw e;
+      await fb.fsM.setDoc(userDoc(), base); // Firebase rules not updated yet for history
+    }
   } catch (e) {
     console.warn('[profiles] save failed:', e);
   }

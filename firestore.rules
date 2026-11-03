@@ -10,7 +10,7 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, delete: if signedIn() && me() == uid;
       allow create, update: if signedIn() && me() == uid
-        && request.resource.data.keys().hasOnly(['dex', 'stats', 'games', 'name', 'updatedAt']);
+        && request.resource.data.keys().hasOnly(['dex', 'stats', 'games', 'history', 'name', 'updatedAt']);
     }
 
     // Usernames: look one up by exact name (no browsing the list).
@@ -28,7 +28,7 @@ service cloud.firestore {
         || me() in resource.data.friends
         || (exists(profileOf(me())) && resource.data.groups.hasAny(get(profileOf(me())).data.groups)));
       allow create, update: if signedIn() && me() == uid
-        && request.resource.data.keys().hasOnly(['handle', 'name', 'friends', 'groups', 'dex', 'lines', 'streaks', 'today', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['handle', 'name', 'friends', 'groups', 'dex', 'lines', 'streaks', 'today', 'week', 'alltime', 'updatedAt'])
         && request.resource.data.friends.size() <= 300
         && request.resource.data.groups.size() <= 20;
       allow delete: if signedIn() && me() == uid;

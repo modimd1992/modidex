@@ -1,6 +1,7 @@
 // Everything saved in the browser (localStorage). Wrapped in try/catch so the
 // game still works in private browsing or when storage is blocked.
 import { GAME } from './config.js';
+import { addDays } from './daily.js';
 
 const P = GAME.storagePrefix;
 
@@ -68,6 +69,23 @@ export function displayStreak(stats, puzzleNo) {
   return stats.lastWon >= puzzleNo - 1 ? stats.currentStreak : 0;
 }
 
+// ---- Daily results history (for the weekly leaderboard) ----
+// { 'YYYY-MM-DD': { modeId: { s: 'won' | 'lost', n: guesses } } }, last HISTORY_DAYS days only.
+const HISTORY_DAYS = 60;
+const pruneHistory = (h, key) => {
+  const cutoff = addDays(key, -HISTORY_DAYS);
+  return Object.fromEntries(Object.entries(h || {}).filter(([d]) => d >= cutoff));
+};
+export function loadHistory() {
+  return read('history', {});
+}
+export function recordHistory(key, modeId, status, n) {
+  const h = loadHistory();
+  if (h[key]?.[modeId]) return;
+  h[key] = { ...(h[key] || {}), [modeId]: { s: status, n } };
+  write('history', pruneHistory(h, key));
+}
+
 // ---- Small preferences ----
 export function loadPref(name, fallback) {
   return read(`pref:${name}`, fallback);
@@ -130,11 +148,12 @@ export function exportProgress() {
     const g = read(`game:${id}`, null);
     if (g) games[id] = g;
   }
-  return { dex: loadDex(), stats, games };
+  return { dex: loadDex(), stats, games, history: loadHistory() };
 }
 
-export function importProgress({ dex, stats = {}, games = {} }) {
+export function importProgress({ dex, stats = {}, games = {}, history }) {
   if (dex) saveDex(dex);
+  if (history) write('history', history);
   for (const [id, s] of Object.entries(stats)) write(`stats:${id}`, s);
   for (const [id, g] of Object.entries(games)) write(`game:${id}`, g);
 }
@@ -169,5 +188,15 @@ export function mergeProgress(a = {}, b = {}) {
     if (x.date !== y.date) games[id] = x.date > y.date ? x : y;
     else games[id] = rank(y) > rank(x) ? y : x;
   }
-  return { dex, stats, games };
+  const history = {};
+  for (const src of [a.history || {}, b.history || {}]) {
+    for (const [d, modes] of Object.entries(src)) {
+      history[d] ||= {};
+      for (const [id, r] of Object.entries(modes || {})) {
+        const cur = history[d][id];
+        if (!cur || (r.s === 'won' && cur.s !== 'won')) history[d][id] = r;
+      }
+    }
+  }
+  return { dex, stats, games, history };
 }
