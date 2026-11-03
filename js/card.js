@@ -43,42 +43,68 @@ export function typeBadges(athlete) {
     .join('');
 }
 
-export function statBars(athlete) {
-  const total = STATS.reduce((sum, s) => sum + (athlete.stats[s.key] || 0), 0);
+// The headline Gen 1 comparison. The "why" line stays hidden until the puzzle ends.
+export function compBanner(athlete, { revealWhy = true } = {}) {
+  if (!athlete.comp) return '';
+  return `<div class="comp-banner">
+    <span class="comp-label">Plays like</span>
+    <span class="comp-name"><span class="comp-dex">#${String(athlete.comp.dex).padStart(3, '0')}</span> ${esc(athlete.comp.name)}</span>
+    ${revealWhy ? `<span class="comp-why">${esc(athlete.comp.why)}</span>` : ''}
+  </div>`;
+}
+
+function arrowFor(answerVal, guessVal) {
+  const diff = answerVal - guessVal;
+  if (diff === 0) return '<span class="stat-cmp hit" aria-label="same">=</span>';
+  const cls = Math.abs(diff) <= 5 ? 'close' : 'miss';
+  return diff > 0
+    ? `<span class="stat-cmp ${cls}" aria-label="higher than your guess">▲</span>`
+    : `<span class="stat-cmp ${cls}" aria-label="lower than your guess">▼</span>`;
+}
+
+/** Stat bars. With `compare` (another athlete), each bar gets a marker for that
+ *  athlete's value and an arrow showing whether this athlete is higher or lower. */
+export function statBars(athlete, compare = null) {
+  const sum = (a) => STATS.reduce((t, s) => t + (a.stats[s.key] || 0), 0);
+  const total = sum(athlete);
   const rows = STATS.map((s) => {
     const v = athlete.stats[s.key] || 0;
     const pct = Math.round((v / STAT_MAX) * 100);
-    return `<div class="stat-row" title="${esc(SPORTS[athlete.sport]?.statHints?.[s.key] || '')}">
+    const cv = compare ? compare.stats[s.key] || 0 : null;
+    const marker = compare ? `<span class="stat-marker" style="left:${Math.round((cv / STAT_MAX) * 100)}%" title="Your guess: ${cv}"></span>` : '';
+    return `<div class="stat-row${compare ? ' has-cmp' : ''}" title="${esc(SPORTS[athlete.sport]?.statHints?.[s.key] || '')}">
       <span class="stat-label">${s.label}</span>
       <span class="stat-val">${v}</span>
-      <span class="stat-track"><span class="stat-fill" style="width:${pct}%"></span></span>
+      <span class="stat-track"><span class="stat-fill" style="width:${pct}%"></span>${marker}</span>
+      ${compare ? arrowFor(v, cv) : ''}
     </div>`;
   }).join('');
-  return `<div class="stats">${rows}<div class="stat-total">TOTAL <b>${total}</b></div></div>`;
+  const head = compare
+    ? `<div class="stat-cmp-head"><span>vs. <b>${esc(compare.name)}</b></span><span class="stat-cmp-key"><span class="key-marker"></span> your guess · ▲▼ mystery is higher / lower</span></div>`
+    : '';
+  const totalCmp = compare ? ` ${arrowFor(total, sum(compare))}` : '';
+  return `<div class="stats">${head}${rows}<div class="stat-total">TOTAL <b>${total}</b>${totalCmp}</div></div>`;
 }
 
 /**
  * @param athlete  one entry from athletes.json
- * @param opts.hidden     hide the name (daily puzzle mode)
- * @param opts.showSport  show the sport badge (false in All Sports until revealed)
- * @param opts.label      text in the top-left corner, e.g. "No. 012"
- * @param opts.showComp   show the Gen 1 comparison
+ * @param opts.hidden       hide the name (daily puzzle mode)
+ * @param opts.showSport    show the sport badge (false in All Sports until revealed)
+ * @param opts.label        text in the top-left corner, e.g. "No. 012"
+ * @param opts.showComp     show the Gen 1 comparison banner
+ * @param opts.compareWith  another athlete whose stats are marked on the bars
  */
-export function renderCard(athlete, { hidden = false, showSport = true, label = '', showComp = !hidden } = {}) {
+export function renderCard(athlete, { hidden = false, showSport = true, label = '', showComp = true, compareWith = null } = {}) {
   const primary = typeInfo(athlete.type).color;
   const sport = SPORTS[athlete.sport];
   const sportBadge = showSport ? `${sport?.emoji || ''} ${esc(athlete.sport)}` : '❔ ???';
-  const comp = showComp && athlete.comp
-    ? `<div class="comp"><span class="comp-label">Gen 1 Comp</span>
-         <span class="comp-name">#${String(athlete.comp.dex).padStart(3, '0')} ${esc(athlete.comp.name)}</span>
-         <span class="comp-why">${esc(athlete.comp.why)}</span></div>`
-    : '';
   return `
   <article class="card ${hidden ? 'is-hidden' : 'is-revealed'}" style="--type:${primary}">
     <div class="card-top">
       <span class="card-no">${esc(label)}</span>
       <span class="card-sport">${sportBadge}</span>
     </div>
+    ${showComp ? compBanner(athlete, { revealWhy: !hidden }) : ''}
     <div class="card-hero">
       ${emblemSvg(athlete, { hidden })}
       <div class="card-id">
@@ -88,8 +114,7 @@ export function renderCard(athlete, { hidden = false, showSport = true, label = 
         <div class="types">${typeBadges(athlete)}</div>
       </div>
     </div>
-    ${statBars(athlete)}
+    ${statBars(athlete, compareWith)}
     <p class="bio">${esc(athlete.bio)}</p>
-    ${comp}
   </article>`;
 }

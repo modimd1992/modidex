@@ -320,3 +320,42 @@ main { max-width: 560px; margin: 0 auto; padding: 12px; }
 .type-pop-verdict { margin: 8px 0 0; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); }
 .type-pop-verdict.hit { color: var(--hit); }
 .type-pop-verdict.close { color: var(--close); }
+
+/* ---------- Gen 1 comp banner (top of card) ---------- */
+.comp-banner {
+  display: grid; gap: 2px; margin: 10px 0 0; padding: 10px 12px; border-radius: 12px;
+  background: linear-gradient(90deg, rgba(198, 255, 61, 0.16), rgba(34, 211, 238, 0.12));
+  border: 1px solid rgba(198, 255, 61, 0.55);
+  text-align: center;
+}
+.comp-banner .comp-label { font: 10px/1 var(--font-display); letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); }
+.comp-banner .comp-name { font: 26px/1.15 var(--font-display); letter-spacing: 0.5px; }
+.comp-banner .comp-dex { font-size: 15px; color: var(--muted); vertical-align: middle; }
+.comp-banner .comp-why { font-size: 13px; color: var(--muted); }
+
+/* ---------- stat comparison ---------- */
+.stat-row.has-cmp { grid-template-columns: 34px 32px 1fr 18px; }
+.stat-track { position: relative; overflow: visible; }
+.stat-fill { border-radius: 99px; }
+.stat-marker {
+  position: absolute; top: -3px; width: 3px; height: 14px; margin-left: -1.5px;
+  border-radius: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+.stat-cmp { text-align: center; font-size: 11px; font-weight: 800; color: var(--muted); }
+.stat-cmp.hit { color: var(--hit); }
+.stat-cmp.close { color: var(--close); }
+.stat-cmp-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; margin-bottom: 2px; font-size: 12px; color: var(--muted); }
+.stat-cmp-head b { color: var(--text); }
+.stat-cmp-key { font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+.key-marker { display: inline-block; width: 3px; height: 11px; border-radius: 2px; background: #fff; }
+
+/* ---------- always-visible color key + selectable guesses ---------- */
+.key-line { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; margin: 0 0 8px; font-size: 12px; color: var(--muted); }
+.key-line span { display: inline-flex; align-items: center; gap: 4px; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.sw.hit { background: var(--hit); } .sw.close { background: var(--close); } .sw.miss { background: var(--miss); }
+.guess { cursor: pointer; }
+.guess.is-compared { border-color: var(--accent-2); box-shadow: 0 0 0 1px var(--accent-2) inset; }
+.guess.is-correct { cursor: default; }
+.guess-meta { display: inline-flex; align-items: center; gap: 6px; }
+.cmp-tag { font-size: 11px; color: var(--accent-2); font-weight: 600; }

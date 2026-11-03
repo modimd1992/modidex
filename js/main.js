@@ -20,6 +20,7 @@ const S = {
   mode: MODES[0],
   game: null,
   ac: null,
+  compareId: null, // which guess the stat bars compare against
 };
 
 const isMixed = (mode) => !mode.sports || mode.sports.length > 1;
@@ -130,6 +131,7 @@ function renderMode() {
     return;
   }
   S.game = loadGame(S.mode.id, S.key, a.id);
+  S.compareId = null;
   $('#app').innerHTML = `
     <section id="card-area" aria-live="polite"></section>
     <section id="play-area"></section>
@@ -149,8 +151,17 @@ function renderCardArea() {
     hidden: !done,
     showSport: !isMixed(S.mode) || done || clueSportShown,
     label: `${S.mode.short} No. ${pad3(S.puzzleNo)}`,
-    showComp: done,
+    showComp: true,
+    compareWith: done ? null : compareTarget(),
   });
+}
+
+// The guess the stat bars compare against: the one the player tapped, else the latest.
+function compareTarget() {
+  const ids = S.game.guesses;
+  if (!ids.length) return null;
+  const id = ids.includes(S.compareId) ? S.compareId : ids[ids.length - 1];
+  return S.data.byId.get(id) || null;
 }
 
 function renderClues() {
@@ -213,7 +224,7 @@ function renderGuesses(animateLast) {
   const cols = columnsFor(S.mode);
   const el = $('#guesses');
   if (!rows.length) {
-    el.innerHTML = `<p class="hint">Start typing a name. Each guess shows how close you are: 🟩 match · 🟨 close · ⬛ miss.</p>`;
+    el.innerHTML = `<p class="hint">Start typing a name. Each guess shows how close you are, and the card's stat bars compare against it.</p>${legendHtml()}`;
     return;
   }
   const header = `<div class="tiles tiles-head" style="--cols:${cols.length}">${cols.map((c) => `<span>${esc(c.label)}</span>`).join('')}</div>`;
@@ -221,23 +232,32 @@ function renderGuesses(animateLast) {
   const body = rows.map((r, i) => ({ r, i })).reverse().map(({ r, i }) => {
     const isNew = animateLast && i === rows.length - 1;
     const correct = r.g.id === S.game.answerId;
+    const cmp = compareTarget();
+    const compared = !finished() && cmp && cmp.id === r.g.id;
     const tiles = r.cells.map((c, j) => {
       const arrow = c.arrow === 'up' ? '<span class="arrow" aria-label="higher">▲</span>' : c.arrow === 'down' ? '<span class="arrow" aria-label="lower">▼</span>' : '';
       const typeAttrs = c.types ? ` data-types="${esc(c.types.join(','))}" data-status="${c.status}" role="button" tabindex="0" aria-label="${esc(c.title)}: what it means"` : '';
       return `<span class="tile ${c.status}${isNew ? ' flip' : ''}${c.types ? ' tappable' : ''}" style="--d:${j * 90}ms" title="${esc(c.title || '')}"${typeAttrs}>
         <span class="tile-val">${esc(c.value)}</span>${arrow}</span>`;
     }).join('');
-    return `<div class="guess${correct ? ' is-correct' : ''}">
-      <div class="guess-name"><span>${i + 1}. ${esc(r.g.name)}</span>${isMixed(S.mode) ? `<span class="guess-sport">${SPORTS[r.g.sport]?.emoji || ''}</span>` : ''}</div>
+    return `<div class="guess${correct ? ' is-correct' : ''}${compared ? ' is-compared' : ''}" data-guess-id="${esc(r.g.id)}">
+      <div class="guess-name"><span>${i + 1}. ${esc(r.g.name)}</span><span class="guess-meta">${compared ? '<span class="cmp-tag">📊 on card</span>' : ''}${isMixed(S.mode) ? `<span class="guess-sport">${SPORTS[r.g.sport]?.emoji || ''}</span>` : ''}</span></div>
       <div class="tiles" style="--cols:${cols.length}">${tiles}</div>
     </div>`;
   }).join('');
-  el.innerHTML = `<h3 class="section-title">Your guesses</h3>${header}${body}`;
+  el.innerHTML = `<h3 class="section-title">Your guesses</h3>${legendHtml()}${header}${body}`;
+}
+
+function legendHtml() {
+  return `<div class="key-line" aria-label="Color key">
+    <span><i class="sw hit"></i>match</span><span><i class="sw close"></i>close</span><span><i class="sw miss"></i>miss</span><span>▲▼ answer higher / lower</span>
+  </div>`;
 }
 
 function submitGuess(athlete) {
   if (finished() || S.game.guesses.includes(athlete.id)) return;
   S.game.guesses.push(athlete.id);
+  S.compareId = athlete.id;
   const won = athlete.id === S.game.answerId;
   if (won) S.game.status = 'won';
   else if (S.game.guesses.length >= GAME.maxGuesses) S.game.status = 'lost';
@@ -328,7 +348,7 @@ function openHelp() {
   const statRows = STATS.map((s) => `<tr><th>${s.label}</th>${sports.map((sp) => `<td>${esc(sp.statHints[s.key])}</td>`).join('')}</tr>`).join('');
   openDialog($('#dlg-help'), `
     <h2 id="help-title">How to play ModiDex</h2>
-    <p>Each day there's a mystery athlete for <b>${ENABLED_SPORTS.join(', ')}</b>, plus an <b>All Sports</b> puzzle. You get a creature-style scouting card: type, base stats and a field-guide bio. Name the athlete in <b>${GAME.maxGuesses} guesses</b>.</p>
+    <p>Each day there's a mystery athlete for <b>${ENABLED_SPORTS.join(', ')}</b>, plus an <b>All Sports</b> puzzle. The scouting card tells you which <b>original-151 creature they play like</b>, plus their type, base stats and a field-guide bio. Name the athlete in <b>${GAME.maxGuesses} guesses</b>.</p>
     <h3>Reading your guesses</h3>
     <ul class="legend">
       <li><span class="tile hit mini">✓</span> Exact match</li>
@@ -339,7 +359,9 @@ function openHelp() {
     </ul>
     ${CLUE_SCHEDULE.length ? `<h3>Bonus clues</h3>
     <p>A new clue unlocks after ${CLUE_SCHEDULE.map((c) => c.after).join(', ').replace(/, (\d+)$/, ' and $1')} misses: where they play, then their team, then their initials.</p>` : ''}
-    <p>After the puzzle ends you'll see the athlete's <b>Gen 1 comp</b>: the original-151 creature they play like.</p>
+    <h3>Comparing stats</h3>
+    <p>After each guess, the card's stat bars show a marker for your guess, and ▲ / ▼ tells you if the mystery athlete is higher or lower in each stat. Tap any earlier guess to compare against it instead.</p>
+    <p>When the puzzle ends you'll also see <b>why</b> they play like that creature.</p>
     <h3>Types</h3>
     <ul class="type-list">${typeList}</ul>
     <h3>What the stats mean</h3>
@@ -401,6 +423,14 @@ function openTypePop(el) {
 }
 
 document.addEventListener('click', (e) => {
+  const row = e.target.closest('[data-guess-id]');
+  if (row && !e.target.closest('[data-types]') && S.game && !finished()) {
+    S.compareId = row.dataset.guessId;
+    renderCardArea();
+    renderGuesses(false);
+    $('#card-area .stats')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   const el = e.target.closest('[data-types]');
   if (el && !e.target.closest('.type-pop')) openTypePop(el);
   else if (!e.target.closest('.type-pop')) closeTypePop();
