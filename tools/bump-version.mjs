@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const v = new Date().toISOString().replace(/\D/g, '').slice(0, 12);
+const v = new Date().toISOString().replace(/\D/g, '').slice(0, 14);
 const modules = readdirSync(join(root, 'js')).filter((f) => f.endsWith('.js')).sort();
 
 const map = {
