@@ -182,7 +182,16 @@ Profiles let players sign in with Google or an emailed link so their Dex, stats 
 
 The config values are meant to be public, so it's fine that they're in the repo. The rules make sure each player can only read and write their own save. The free tier covers thousands of daily players. A player's save is one document, written once per finished puzzle.
 
+## Friends and groups
 
+Once signed in, players pick a **username** (3–15 letters, numbers or _). Then, from the 👤 Profile screen:
+- **Friends:** add someone by username, or share a link like `https://playmodidex.com/#add=jedimodi`. They accept or decline.
+- **Groups:** create one and share its 6-letter code or invite link (`#join=CODE`). Up to 50 members, with a daily leaderboard.
+- **What others see:** your username, Dex (caught, seen, shiny), evolution lines, streaks and today's results as spoiler-free squares. Never the answers, and never your email.
+- **Who can see it:** only your friends and people in a group with you. The rules in [`firestore.rules`](firestore.rules) enforce this.
+- After changing `firestore.rules`, paste it into Firebase → Firestore → **Rules** and click **Publish**.
+
+## Publishing updates
 
 - **Data only** (`data/*.json`): commit and push. Players get it on their next visit.
 - **Code or styling** (`js/`, `css/`): run `node tools/bump-version.mjs` first, then commit and push. It stamps a new version on every file so browsers never mix old and new code.
