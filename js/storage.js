@@ -99,23 +99,21 @@ export function savePref(name, value) {
 const PARTS = ['caught', 'seen', 'shiny'];
 const sportOfAthleteId = (id) => (typeof id === 'string' && id.includes('-') ? id.split('-')[0].toUpperCase() : null);
 
-// Accepts the current shape or the old single-Dex shape and returns the current shape.
+// Accepts the current shape or the old single-Dex shape (or a mix of both, which an
+// old open tab can write) and returns the current shape.
 // Old entries are sorted into the sport of the athlete they were caught from.
 export function normalizeDex(d) {
   const out = { sports: {} };
   if (!d) return out;
-  if (d.sports) {
-    for (const [sp, sd] of Object.entries(d.sports)) {
-      out.sports[sp] = { caught: { ...(sd?.caught || {}) }, seen: { ...(sd?.seen || {}) }, shiny: { ...(sd?.shiny || {}) } };
-    }
-    return out;
+  for (const [sp, sd] of Object.entries(d.sports || {})) {
+    out.sports[sp] = { caught: { ...(sd?.caught || {}) }, seen: { ...(sd?.seen || {}) }, shiny: { ...(sd?.shiny || {}) } };
   }
   for (const part of PARTS) {
     for (const [n, entry] of Object.entries(d[part] || {})) {
       const sp = sportOfAthleteId(entry?.athleteId);
       if (!sp) continue;
       out.sports[sp] ||= { caught: {}, seen: {}, shiny: {} };
-      out.sports[sp][part][n] = entry;
+      out.sports[sp][part][n] ||= entry;
     }
   }
   return out;

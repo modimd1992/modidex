@@ -5,7 +5,7 @@ import { loadData } from './data.js';
 import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay } from './daily.js';
 import { compareGuess, columnsFor } from './compare.js';
 import { cluesFor } from './clues.js';
-import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex, sportDex, dexCounts, loadHistory, recordHistory } from './storage.js';
+import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex, saveDex, sportDex, dexCounts, loadHistory, recordHistory } from './storage.js';
 import { pointsFor, weekTotals, weekStart, allTimeTotals } from './leaderboard.js';
 import { shareText, combinedShareText, shareOrCopy, copyText, guessSquares } from './share.js';
 import { renderCard, esc } from './card.js';
@@ -99,14 +99,13 @@ function setDay() {
   S.answers = answersForDate(S.data.athletes, S.key, S.data.schedule);
 }
 
-// New day while the tab is open: reload puzzles.
+// New day while the tab is open: reload the page, so the new puzzles also get
+// the latest version of the game and its data.
 function tick() {
   if (!S.data) return;
   if (dateKey() !== S.key) {
-    setDay();
-    renderModes();
-    renderMode();
-    toast('A new day of puzzles is here!');
+    S.key = dateKey(); // only reload once
+    location.reload();
     return;
   }
   const cd = $('#countdown');
@@ -385,10 +384,28 @@ function todayEntries() {
   });
 }
 
-// Make sure today's finished games are in the daily history.
+// Make sure today's finished games are in the daily history, and that every
+// creature today's games caught or saw is in the Dex (repairs saves from old tabs).
 function backfillHistory() {
   for (const e of todayEntries()) {
     if (e.status === 'won' || e.status === 'lost') recordHistory(S.key, e.mode.id, e.status, e.rows.length);
+  }
+  const all = loadDex();
+  let changed = false;
+  for (const m of MODES) {
+    const ans = S.answers[m.id];
+    if (!ans) continue;
+    const c = loadGame(m.id, S.key, ans.id).catch;
+    if (!c?.dex || c.outcome === 'fled') continue;
+    const sd = sportDex(all, c.sport || ans.sport);
+    const entry = { date: S.key, athleteId: ans.id };
+    if (!sd.seen[c.dex]) { sd.seen[c.dex] = entry; changed = true; }
+    if (c.outcome === 'caught' && !sd.caught[c.dex]) { sd.caught[c.dex] = { ...entry, ball: c.ball }; changed = true; }
+    if (c.outcome === 'caught' && c.shiny && !sd.shiny[c.dex]) { sd.shiny[c.dex] = entry; changed = true; }
+  }
+  if (changed) {
+    saveDex(all);
+    setTimeout(pushProgress, 0);
   }
 }
 
