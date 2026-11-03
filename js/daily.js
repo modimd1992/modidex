@@ -197,6 +197,11 @@ function buildSchedule(athletes, schedule, days) {
           // Everyone left is near a single-sport answer: take whoever is furthest away.
           k = 0;
           deck.forEach((a, idx) => { if (near.get(a.id) > near.get(deck[k].id)) k = idx; });
+        } else if (k > 0) {
+          // Send the skipped players to the back of the deck. Keeping them at the front
+          // would bring them back the first day they're allowed, a guessable pattern.
+          deck = [...deck.slice(k), ...deck.slice(0, k)];
+          k = 0;
         }
         pick = deck.splice(k, 1)[0];
       }
