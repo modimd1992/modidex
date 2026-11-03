@@ -48,12 +48,15 @@ export async function claimHandle(raw) {
     if (h.exists() && h.data().uid !== me) throw new Error('taken');
     if (!h.exists()) tx.set(ref(a, 'handles', handle), { uid: me });
     if (prof.handle) tx.delete(ref(a, 'handles', prof.handle));
+    // Only the basics here; the Dex and scores are published right after, separately,
+    // so a problem with those can never block saving a username.
     tx.set(ref(a, 'profiles', me), {
       handle, name: handle, friends: prof.friends || [], groups: prof.groups || [],
-      ...summaryBuilder(), updatedAt: a.fsM.serverTimestamp(),
+      updatedAt: a.fsM.serverTimestamp(),
     }, { merge: true });
   });
   mine = { ...prof, handle, name: handle };
+  try { await publishProfile(); } catch (e) { console.warn('[profiles] publish after username failed:', e); }
   return handle;
 }
 
