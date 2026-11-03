@@ -1,6 +1,6 @@
 # ModiDex
 
-**A free daily athlete-guessing game by JediModi Sports Network.**
+**A free daily athlete-guessing game by JediModi Sports Network.** Play at **https://playmodidex.com**
 
 Every day there's a mystery athlete for each sport, shown as a creature-style scouting card with a type, six base stats and a field-guide bio. You get 6 guesses to name the athlete. After the puzzle ends, the card shows the athlete's **Gen 1 comp**: the creature from the original 151 that they play like.
 
@@ -175,7 +175,7 @@ Profiles let players sign in with Google or an emailed link so their Dex, stats 
 3. **Build → Authentication → Get started → Sign-in method**:
    - Enable **Google** (pick your support email).
    - Enable **Email/Password**, then turn on **Email link (passwordless sign-in)**.
-4. **Authentication → Settings → Authorized domains → Add domain:** `modimd1992.github.io`
+4. **Authentication → Settings → Authorized domains → Add domain:** `playmodidex.com` and `www.playmodidex.com` (plus `modimd1992.github.io`)
 5. **Build → Firestore Database → Create database** in production mode, location `nam5 (United States)`.
 6. In Firestore, open the **Rules** tab, replace everything with the contents of [`firestore.rules`](firestore.rules), and click **Publish**.
 7. Paste the config into [`js/firebase-config.js`](js/firebase-config.js) (`export const FIREBASE_CONFIG = { ... };`), run `node tools/bump-version.mjs`, then commit and push.
@@ -204,6 +204,12 @@ To add a new sport (WNBA, MLS, etc.):
 3. Add athletes with that `"sport"` value.
 
 ---
+
+## Live site and domain
+
+- Live at **https://playmodidex.com**. It's hosted free on GitHub Pages, and the old `modimd1992.github.io/modidex` links redirect there.
+- The domain is registered at Porkbun, with auto-renew on. DNS has four `A` records for `@` pointing to GitHub (185.199.108–111.153) and a `www` CNAME to `modimd1992.github.io`.
+- The `CNAME` file in this repo tells GitHub Pages which domain to serve. Don't delete it.
 
 ## Host it for free
 
