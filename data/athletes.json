@@ -717,9 +717,9 @@
       },
       "bio": "Its graceful swing sprays line drives to every part of the field. Veteran instincts let it adjust to any pitch it sees.",
       "comp": {
-        "name": "Horsea",
-        "dex": 116,
-        "why": "Smooth and steady, gliding through any current."
+        "name": "Lapras",
+        "dex": 131,
+        "why": "A tall, gentle giant with a smooth, steady glide."
       }
     },
     {
@@ -750,9 +750,9 @@
       },
       "bio": "It smothers anything hit near it with a cannon arm and soft hands. Its fiery competitiveness makes it a feared opponent.",
       "comp": {
-        "name": "Cubone",
-        "dex": 104,
-        "why": "Battle-hardened, fearless, and ready to swing its club."
+        "name": "Hitmonchan",
+        "dex": 107,
+        "why": "Strong, polished and always ready to brawl."
       }
     },
     {
@@ -784,9 +784,9 @@
       },
       "bio": "Its ferocious swing drives the ball out to every direction, even when it is fooled. Velocity only seems to energize it.",
       "comp": {
-        "name": "Sandshrew",
-        "dex": 27,
-        "why": "Compact and sturdy, it strikes back with surprising force."
+        "name": "Graveler",
+        "dex": 75,
+        "why": "Thick, sturdy and built to smash anything in reach."
       }
     },
     {
@@ -1008,9 +1008,9 @@
       },
       "bio": "It combines blazing speed with explosive power in a lean frame. When healthy, it dominates games on both sides of the ball.",
       "comp": {
-        "name": "Raticate",
-        "dex": 20,
-        "why": "Lightning quick with a surprisingly strong bite."
+        "name": "Dodrio",
+        "dex": 85,
+        "why": "Long legs and blazing speed in every direction."
       }
     },
     {
@@ -1040,9 +1040,9 @@
       },
       "bio": "It shows rare patience for its age, waiting for its pitch before unleashing tremendous power. It is still growing into its towering frame.",
       "comp": {
-        "name": "Poliwag",
-        "dex": 60,
-        "why": "Young and developing, with huge evolution ahead."
+        "name": "Machoke",
+        "dex": 67,
+        "why": "Big and strong, still growing into its full power."
       }
     },
     {
@@ -1072,9 +1072,9 @@
       },
       "bio": "It pounds the zone with heat and a deep arsenal, pitching deep into games. Its steady demeanor rarely cracks.",
       "comp": {
-        "name": "Shellder",
-        "dex": 90,
-        "why": "Armored, dependable, and very hard to crack."
+        "name": "Victreebel",
+        "dex": 71,
+        "why": "Tall and long-armed, it devours hitters inning after inning."
       }
     },
     {
@@ -1104,9 +1104,9 @@
       },
       "bio": "It challenges hitters with high fastballs and sharp breaking pitches. It studies every opponent and attacks with a plan.",
       "comp": {
-        "name": "Flareon",
-        "dex": 136,
-        "why": "Burning heat with a sharp, calculating mind."
+        "name": "Gyarados",
+        "dex": 130,
+        "why": "Big, intense and intimidating when it takes the stage."
       }
     },
     {
@@ -1197,9 +1197,9 @@
       },
       "bio": "It overpowers hitters with blistering fastballs and a wipeout slider. It enters late and simply refuses to be touched.",
       "comp": {
-        "name": "Electrode",
-        "dex": 101,
-        "why": "Explosive power that detonates late in games."
+        "name": "Zapdos",
+        "dex": 145,
+        "why": "A towering bolt of lightning that strikes late in games."
       }
     },
     {
@@ -1265,9 +1265,9 @@
       },
       "bio": "It pairs a blazing fastball with a tumbling offering that vanishes beneath bats. It is still refining its command.",
       "comp": {
-        "name": "Jigglypuff",
-        "dex": 39,
-        "why": "Its signature offering lulls hitters to sleep."
+        "name": "Haunter",
+        "dex": 93,
+        "why": "Long and spectral, its pitches vanish like a phantom."
       }
     },
     {
@@ -1362,9 +1362,9 @@
       },
       "bio": "It commands the game from behind the plate, guiding its pitchers with a calm, steady mind. It works long at-bats from both sides of the plate.",
       "comp": {
-        "name": "Kadabra",
-        "dex": 64,
-        "why": "A keen mind that reads every situation."
+        "name": "Blastoise",
+        "dex": 9,
+        "why": "A sturdy, armored shell with a steady, calculating mind."
       }
     },
     {
@@ -1756,9 +1756,9 @@
       },
       "bio": "It fires from absurd distances and changed how its whole species plays the game.",
       "comp": {
-        "name": "Blastoise",
-        "dex": 9,
-        "why": "Long-range cannons that never stop firing."
+        "name": "Horsea",
+        "dex": 116,
+        "why": "Small and precise, it fires shots with pinpoint accuracy from long range."
       }
     },
     {
@@ -2068,9 +2068,9 @@
       },
       "bio": "Tall and thin as a shadow, it rises over defenders and its shot simply cannot be blocked.",
       "comp": {
-        "name": "Gengar",
-        "dex": 94,
-        "why": "A ghostly scorer nobody can stop."
+        "name": "Haunter",
+        "dex": 93,
+        "why": "Long, slender and ghostly, its shot floats over everything."
       }
     },
     {
@@ -2100,9 +2100,9 @@
       },
       "bio": "A strong young forward that plows through defenders on the way to the rim.",
       "comp": {
-        "name": "Nidorino",
-        "dex": 33,
-        "why": "Powerful and still evolving into a king."
+        "name": "Nidoking",
+        "dex": 34,
+        "why": "A big, powerful body that bulldozes its way to the rim."
       }
     },
     {
@@ -2256,9 +2256,9 @@
       },
       "bio": "A pure catch-and-shoot marksman. Once it heats up, nothing can cool it down.",
       "comp": {
-        "name": "Psyduck",
-        "dex": 54,
-        "why": "Seems laid-back, then erupts with sudden, unstoppable power."
+        "name": "Seadra",
+        "dex": 117,
+        "why": "Slender and precise, it fires jets of water right on target."
       }
     },
     {
@@ -2394,9 +2394,9 @@
       },
       "bio": "It rarely makes a sound, yet its enormous hands smother anything it guards. In tense moments it calmly rises for a midrange shot that seldom misses.",
       "comp": {
-        "name": "Magnemite",
-        "dex": 81,
-        "why": "Quiet, steely, and grips onto its target like a magnet."
+        "name": "Kingler",
+        "dex": 99,
+        "why": "Enormous claws that clamp down on anything they touch."
       }
     },
     {
@@ -2495,9 +2495,9 @@
       },
       "bio": "It lulls defenders with an unhurried rhythm, then hops backward into a shot or bursts past them in a flash. Its deceptive moves constantly bait opponents into fouls.",
       "comp": {
-        "name": "Venomoth",
-        "dex": 49,
-        "why": "Its dizzying moves leave foes disoriented."
+        "name": "Drowzee",
+        "dex": 96,
+        "why": "Sturdy and sly, it lulls defenders before it strikes."
       }
     },
     {
@@ -2529,9 +2529,9 @@
       },
       "bio": "It flings no-look passes across the floor and pulls up from deep without hesitation. Crowds roar whenever it pushes the pace upcourt.",
       "comp": {
-        "name": "Seel",
-        "dex": 86,
-        "why": "A playful showman with a flair for dazzling tricks."
+        "name": "Mr. Mime",
+        "dex": 122,
+        "why": "A long-limbed showman whose passes look like magic tricks."
       }
     },
     {
@@ -2630,9 +2630,9 @@
       },
       "bio": "It bursts toward the rim with a rare mix of raw strength and springy lift. Defenders in its path tend to bounce right off.",
       "comp": {
-        "name": "Krabby",
-        "dex": 98,
-        "why": "A compact powerhouse with crushing strength."
+        "name": "Tauros",
+        "dex": 128,
+        "why": "A thick-bodied bull that charges and leaps through anything."
       }
     },
     {
@@ -2700,9 +2700,9 @@
       },
       "bio": "It glides into the midrange with patient, powerful drives and guards the opponent's best scorer on the other end. It keeps adding new skills each time it is observed.",
       "comp": {
-        "name": "Paras",
-        "dex": 46,
-        "why": "Steady and resilient, it keeps growing stronger."
+        "name": "Scyther",
+        "dex": 123,
+        "why": "Long, lean and sharp at both ends."
       }
     },
     {
@@ -2734,9 +2734,9 @@
       },
       "bio": "It spins, pivots and fakes its way around the post with old-fashioned footwork. From the high post it whips clever passes to cutters no one else sees.",
       "comp": {
-        "name": "Kabuto",
-        "dex": 140,
-        "why": "Its old-school moves seem pulled from an ancient era."
+        "name": "Kabutops",
+        "dex": 141,
+        "why": "A towering fossil with moves from an older era."
       }
     },
     {
@@ -2904,9 +2904,9 @@
       },
       "bio": "Its long limbs let it switch onto guards and still recover to block shots at the rim. Its offensive game is still sprouting new branches.",
       "comp": {
-        "name": "Tangela",
-        "dex": 114,
-        "why": "Its long vines seem to reach everywhere at once."
+        "name": "Arbok",
+        "dex": 24,
+        "why": "Long and slender, it coils around anything nearby."
       }
     },
     {
@@ -3006,9 +3006,9 @@
       },
       "bio": "It pulls up from far beyond the arc without blinking and seems to grow colder as the clock winds down. Defenders must pick it up the moment it crosses half court.",
       "comp": {
-        "name": "Dewgong",
-        "dex": 87,
-        "why": "Calm and icy, it thrives in frigid moments."
+        "name": "Shellder",
+        "dex": 90,
+        "why": "Small, tough and icy, it snaps shut in the biggest moments."
       }
     },
     {
@@ -3107,9 +3107,9 @@
       },
       "bio": "It stands guard beneath the basket like a towering wall, swatting and altering every shot nearby. On offense it mostly lurks for lobs and putbacks.",
       "comp": {
-        "name": "Golem",
-        "dex": 76,
-        "why": "A towering wall of rock beneath the rim."
+        "name": "Onix",
+        "dex": 95,
+        "why": "A huge, towering wall of rock beneath the rim."
       }
     },
     {
@@ -3207,9 +3207,9 @@
       },
       "bio": "It uses clever pump fakes and changes of pace to draw fouls from bigger, faster rivals. Crowds adore its fearless, crafty style.",
       "comp": {
-        "name": "Clefairy",
-        "dex": 35,
-        "why": "A crowd favorite with more tricks than it lets on."
+        "name": "Meowth",
+        "dex": 52,
+        "why": "Sly, scrappy and full of tricks."
       }
     },
     {
@@ -3333,9 +3333,9 @@
       },
       "bio": "Defenders who try to tackle it often grab only the air where it was a moment ago.",
       "comp": {
-        "name": "Electrode",
-        "dex": 101,
-        "why": "Explosive and among the fastest of its kind."
+        "name": "Jolteon",
+        "dex": 135,
+        "why": "Lean, spiky and the fastest of its kind."
       }
     },
     {
@@ -3930,9 +3930,9 @@
       },
       "bio": "It grows more dangerous every week, flinging deep strikes with a powerful arm. When the pocket collapses, it takes off and runs with surprising speed.",
       "comp": {
-        "name": "Nidoran♂",
-        "dex": 32,
-        "why": "Young, bold, and growing into royalty."
+        "name": "Nidorino",
+        "dex": 33,
+        "why": "Big, bold and growing into royalty."
       }
     },
     {
@@ -4096,9 +4096,9 @@
       },
       "bio": "It stands tall in the pocket and places throws with pinpoint touch. It reads the coverage early and calmly finds the open target.",
       "comp": {
-        "name": "Drowzee",
-        "dex": 96,
-        "why": "Reads what is coming before it happens."
+        "name": "Kadabra",
+        "dex": 64,
+        "why": "Lean and cerebral, it reads defenses before the snap."
       }
     },
     {
@@ -4634,9 +4634,9 @@
       },
       "bio": "It wins with craft rather than speed, setting up defenders with subtle fakes. It always seems to know exactly where the soft spot in the zone will be.",
       "comp": {
-        "name": "Chansey",
-        "dex": 113,
-        "why": "Dependable and always there when needed."
+        "name": "Sandslash",
+        "dex": 28,
+        "why": "Tough and reliable, it digs out the hard catches."
       }
     },
     {
@@ -4701,9 +4701,9 @@
       },
       "bio": "A massively muscled receiver with sprinter's speed. It bullies cornerbacks at the line, then runs right past them down the sideline.",
       "comp": {
-        "name": "Machop",
-        "dex": 66,
-        "why": "A muscle-bound powerhouse that loves to compete."
+        "name": "Machamp",
+        "dex": 68,
+        "why": "A towering, muscle-bound powerhouse."
       }
     },
     {
@@ -4735,9 +4735,9 @@
       },
       "bio": "A thickly built receiver that wins contested catches with strength. After the catch, it stiff-arms defenders and rumbles away for big gains.",
       "comp": {
-        "name": "Krabby",
-        "dex": 98,
-        "why": "A crushing grip and a bruiser's strength."
+        "name": "Machoke",
+        "dex": 67,
+        "why": "Strong, physical and built to bully defenders."
       }
     },
     {
@@ -4768,9 +4768,9 @@
       },
       "bio": "An explosive pass rusher with rare burst off the snap. It can line up anywhere and arrives at the quarterback in a flash.",
       "comp": {
-        "name": "Golbat",
-        "dex": 42,
-        "why": "Swoops in fast and never lets its target escape."
+        "name": "Arcanine",
+        "dex": 59,
+        "why": "An explosive, athletic hunter that runs down anything."
       }
     },
     {
@@ -4802,9 +4802,9 @@
       },
       "bio": "It never stops chasing, bending around blockers with a relentless motor. When it reaches the passer, it rips at the ball as well as the body.",
       "comp": {
-        "name": "Venonat",
-        "dex": 48,
-        "why": "Relentless and always locked onto its target."
+        "name": "Rhydon",
+        "dex": 112,
+        "why": "Armored, relentless and always charging the backfield."
       }
     },
     {
@@ -4903,9 +4903,9 @@
       },
       "bio": "It plays every snap at full throttle and never gives up on a play. It loves to get under opponents' skin as it hunts them down.",
       "comp": {
-        "name": "Nidoran♀",
-        "dex": 29,
-        "why": "Sharp barbs and a fearless, never-quit spirit."
+        "name": "Primeape",
+        "dex": 57,
+        "why": "A fiery motor that never stops charging."
       }
     },
     {
@@ -4936,9 +4936,9 @@
       },
       "bio": "A technician off the edge whose hands work faster than blockers can react. It swats, rips and dips its way to the quarterback with precision.",
       "comp": {
-        "name": "Tentacruel",
-        "dex": 73,
-        "why": "Its many limbs work like skilled, precise hands."
+        "name": "Hitmonchan",
+        "dex": 107,
+        "why": "Its hand technique is precise and powerful."
       }
     },
     {
