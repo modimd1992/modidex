@@ -1,4 +1,10 @@
 {
   "_readme": "Optional. Pin an athlete to a date and mode, e.g. to match a video. Format: \"YYYY-MM-DD\": { \"mode\": \"athlete-id\" }. Modes: all, nfl, nba, mlb (nhl when hockey is turned on). Dates not listed use the automatic daily pick.",
-  "2026-12-25": { "nba": "nba-stephen-curry" }
+  "2026-12-25": {
+    "nba": "nba-stephen-curry"
+  },
+  "2026-11-02": {
+    "all": "nba-chet-holmgren",
+    "nba": "nba-donovan-mitchell"
+  }
 }

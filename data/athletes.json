@@ -1252,6 +1252,39 @@
       }
     },
     {
+      "id": "nba-klay-thompson",
+      "name": "Klay Thompson",
+      "aliases": [
+        "Klay",
+        "Game 6 Klay"
+      ],
+      "sport": "NBA",
+      "league": "East",
+      "division": "Southeast",
+      "team": "Miami Heat",
+      "teamAbbr": "MIA",
+      "position": "SG",
+      "number": 11,
+      "birthDate": "1990-02-08",
+      "type": "Water",
+      "type2": "Fire",
+      "category": "Splash Sharpshooter",
+      "stats": {
+        "hp": 85,
+        "atk": 115,
+        "def": 100,
+        "skl": 140,
+        "iq": 110,
+        "spe": 70
+      },
+      "bio": "Half of a legendary splash duo, it once scored 37 points in a single quarter. It loves cruising on its boat, and after years by the bay it now soaks up the sun in a beach town.",
+      "comp": {
+        "name": "Psyduck",
+        "dex": 54,
+        "why": "Seems laid-back, then erupts with sudden, unstoppable power."
+      }
+    },
+    {
       "id": "nfl-patrick-mahomes",
       "name": "Patrick Mahomes",
       "aliases": [
