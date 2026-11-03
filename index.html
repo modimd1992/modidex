@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=202611030150">
 </head>
 <body>
   <header class="topbar">
@@ -34,7 +34,7 @@
   </main>
 
   <footer class="footer">
-    <p>New puzzles every day at midnight. <span id="data-asof"></span></p>
+    <p>New puzzles every day at midnight ET. <span id="data-asof"></span></p>
     <p class="legal">Fan-made game. Not affiliated with or endorsed by Nintendo, The Pokémon Company, Game Freak, the NFL, NBA, MLB, NHL, or any team or player. Pokémon names are trademarks of their owners and are mentioned only for comparison.</p>
   </footer>
 
@@ -43,6 +43,24 @@
   <dialog id="dlg-help" class="dialog" aria-labelledby="help-title"></dialog>
   <dialog id="dlg-stats" class="dialog" aria-labelledby="stats-title"></dialog>
 
-  <script type="module" src="js/main.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "./js/autocomplete.js": "./js/autocomplete.js?v=202611030150",
+    "./js/card.js": "./js/card.js?v=202611030150",
+    "./js/clues.js": "./js/clues.js?v=202611030150",
+    "./js/compare.js": "./js/compare.js?v=202611030150",
+    "./js/config.js": "./js/config.js?v=202611030150",
+    "./js/daily.js": "./js/daily.js?v=202611030150",
+    "./js/data.js": "./js/data.js?v=202611030150",
+    "./js/main.js": "./js/main.js?v=202611030150",
+    "./js/share.js": "./js/share.js?v=202611030150",
+    "./js/storage.js": "./js/storage.js?v=202611030150",
+    "./js/types.js": "./js/types.js?v=202611030150",
+    "./js/validate.js": "./js/validate.js?v=202611030150"
+  }
+}
+  </script>
+  <script type="module" src="js/main.js?v=202611030150"></script>
 </body>
 </html>

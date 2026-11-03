@@ -8,6 +8,8 @@ export const GAME = {
   hashtag: '#ModiDex',
   // Puzzle #1 is this date. Changing it renumbers every puzzle.
   launchDate: '2026-11-02',
+  // New puzzles for everyone at midnight in this time zone (handles daylight saving).
+  timeZone: 'America/New_York',
   maxGuesses: 6,
   storagePrefix: 'modidex:v1',
 };

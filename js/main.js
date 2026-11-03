@@ -2,7 +2,7 @@
 import { GAME, MODES, SPORTS, STATS, CLUE_SCHEDULE, CLOSE, ENABLED_SPORTS } from './config.js';
 import { TYPES, typeInfo } from './types.js';
 import { loadData } from './data.js';
-import { dateKey, puzzleNumber, answersForDate, poolForMode } from './daily.js';
+import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay } from './daily.js';
 import { compareGuess, columnsFor } from './compare.js';
 import { cluesFor } from './clues.js';
 import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref } from './storage.js';
@@ -83,10 +83,7 @@ function tick() {
 }
 
 function timeToMidnight() {
-  const now = new Date();
-  const next = new Date(now);
-  next.setHours(24, 0, 0, 0);
-  const s = Math.max(0, Math.floor((next - now) / 1000));
+  const s = secondsUntilNextDay();
   const h = String(Math.floor(s / 3600)).padStart(2, '0');
   const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
   const sec = String(s % 60).padStart(2, '0');
@@ -366,7 +363,7 @@ function openHelp() {
     <ul class="type-list">${typeList}</ul>
     <h3>What the stats mean</h3>
     <div class="table-wrap"><table class="stat-table"><thead><tr><th></th>${sports.map((sp) => `<th>${sp.emoji} ${sp.label}</th>`).join('')}</tr></thead><tbody>${statRows}</tbody></table></div>
-    <p class="small">Stats are 1–150 ratings based on real performance. New puzzles drop at midnight your time. Watch more on <a href="${GAME.channelUrl}" target="_blank" rel="noopener">${esc(GAME.channel)}</a>.</p>`);
+    <p class="small">Stats are 1–150 ratings based on real performance. New puzzles drop every day at midnight Eastern Time. Watch more on <a href="${GAME.channelUrl}" target="_blank" rel="noopener">${esc(GAME.channel)}</a>.</p>`);
 }
 
 function openStats(modeId) {

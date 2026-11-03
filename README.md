@@ -5,7 +5,7 @@
 Every day there's a mystery athlete for each sport, shown as a creature-style scouting card with a type, six base stats and a field-guide bio. You get 6 guesses to name the athlete. After the puzzle ends, the card shows the athlete's **Gen 1 comp**: the creature from the original 151 that they play like.
 
 - Modes: **All Sports**, **NFL**, **NBA**, **MLB** (NHL is built but turned off, see below)
-- Same puzzles for everyone each day, with a new set at local midnight
+- Same puzzles for everyone each day, with a new set at midnight Eastern Time (set `timeZone` in `js/config.js`)
 - Wordle-style feedback on conference, team, position, age, jersey number and type
 - No bonus clues: just the card and your guess feedback (clues can be turned back on in `js/config.js`)
 - Spoiler-free emoji share grid, plus streaks and stats per mode saved in the browser
@@ -135,6 +135,11 @@ Players were chosen from each league's official jersey-sales rankings (NFLPA Top
 The data is a snapshot (`dataAsOf` at the top of `athletes.json`). Trades and signings will make some entries wrong over time. Every so often, ask Claude Code to *"verify every athlete in data/athletes.json against current rosters and fix teams, numbers and divisions"*, then run the checker.
 
 ---
+
+## Publishing updates
+
+- **Data only** (`data/*.json`): commit and push. Players get it on their next visit.
+- **Code or styling** (`js/`, `css/`): run `node tools/bump-version.mjs` first, then commit and push. It stamps a new version on every file so browsers never mix old and new code.
 
 ## Turning NHL back on (or adding a sport)
 

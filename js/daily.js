@@ -2,11 +2,32 @@
 // Pure functions only (no DOM), so Node tools can import this file too.
 import { GAME, MODES } from './config.js';
 
-// Local calendar date as "YYYY-MM-DD". Like Wordle, the puzzle flips at the player's midnight.
-export function dateKey(d = new Date()) {
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${m}-${day}`;
+// Calendar date as "YYYY-MM-DD" in the game's time zone (Eastern Time by default),
+// so every player everywhere gets new puzzles at the same moment.
+function partsIn(d, tz) {
+  const out = {};
+  for (const p of new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+  }).formatToParts(d)) out[p.type] = p.value;
+  return out;
+}
+
+export function dateKey(d = new Date(), tz = GAME.timeZone) {
+  const p = partsIn(d, tz);
+  return `${p.year}-${p.month}-${p.day}`;
+}
+
+// Seconds until the next puzzle (next midnight in the game's time zone).
+// Adjusts for daylight-saving days, which are 23 or 25 hours long.
+export function secondsUntilNextDay(now = new Date(), tz = GAME.timeZone) {
+  const p = partsIn(now, tz);
+  const today = `${p.year}-${p.month}-${p.day}`;
+  let s = 86400 - (Number(p.hour) * 3600 + Number(p.minute) * 60 + Number(p.second));
+  const at = (sec) => dateKey(new Date(now.getTime() + sec * 1000), tz);
+  if (at(s - 1) !== today) s -= 3600;      // short day (clocks spring forward)
+  else if (at(s) === today) s += 3600;     // long day (clocks fall back)
+  return Math.max(0, s);
 }
 
 function dayIndex(key) {
