@@ -12,6 +12,13 @@ let status = 'off'; // off | loading | ready | error
 const listeners = new Set();
 
 export const cloudEnabled = () => !!FIREBASE_CONFIG;
+// For social.js: the loaded Firebase modules/instances, or null.
+export const cloudApi = () => (fb && user ? { ...fb, user } : null);
+// Hooks so other modules can react after a save or before the profile is deleted.
+const afterPush = new Set();
+const beforeDelete = new Set();
+export const onAfterPush = (fn) => afterPush.add(fn);
+export const onBeforeDelete = (fn) => beforeDelete.add(fn);
 export const currentUser = () => user;
 export const cloudStatus = () => status;
 export function onCloudChange(fn) { listeners.add(fn); }
@@ -81,6 +88,9 @@ export async function pushProgress() {
   } catch (e) {
     console.warn('[profiles] save failed:', e);
   }
+  for (const fn of afterPush) {
+    try { await fn(); } catch (e) { console.warn('[profiles] after-save step failed:', e); }
+  }
 }
 
 export async function signInWithGoogle() {
@@ -102,6 +112,9 @@ export async function signOut() {
 
 // Removes the cloud copy and the account. Progress on this device stays.
 export async function deleteProfile() {
+  for (const fn of beforeDelete) {
+    try { await fn(); } catch (e) { console.warn('[profiles] cleanup failed:', e); }
+  }
   await fb.fsM.deleteDoc(userDoc());
   await fb.authM.deleteUser(user);
 }

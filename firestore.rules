@@ -1,13 +1,79 @@
 rules_version = '2';
 // Paste into Firebase console -> Firestore Database -> Rules, then Publish.
-// Each signed-in player can read and write only their own save.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function profileOf(uid) { return /databases/$(database)/documents/profiles/$(uid); }
+
+    // Private save: only its owner.
     match /users/{uid} {
-      allow read, delete: if request.auth != null && request.auth.uid == uid;
-      allow create, update: if request.auth != null && request.auth.uid == uid
+      allow read, delete: if signedIn() && me() == uid;
+      allow create, update: if signedIn() && me() == uid
         && request.resource.data.keys().hasOnly(['dex', 'stats', 'games', 'name', 'updatedAt']);
     }
+
+    // Usernames: look one up by exact name (no browsing the list).
+    match /handles/{handle} {
+      allow get: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == me()
+        && handle.matches('^[a-z0-9_]{3,15}$');
+      allow delete: if signedIn() && resource.data.uid == me();
+    }
+
+    // Public profile: visible to you, your friends, and people in a group with you.
+    match /profiles/{uid} {
+      allow read: if signedIn() && (
+        me() == uid
+        || me() in resource.data.friends
+        || (exists(profileOf(me())) && resource.data.groups.hasAny(get(profileOf(me())).data.groups)));
+      allow create, update: if signedIn() && me() == uid
+        && request.resource.data.keys().hasOnly(['handle', 'name', 'friends', 'groups', 'dex', 'lines', 'streaks', 'today', 'updatedAt'])
+        && request.resource.data.friends.size() <= 300
+        && request.resource.data.groups.size() <= 20;
+      allow delete: if signedIn() && me() == uid;
+    }
+
+    // Friend requests: the sender creates, the recipient accepts or declines.
+    match /friendRequests/{id} {
+      allow read: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+      allow create: if signedIn() && request.resource.data.from == me()
+        && id == request.resource.data.to + '_' + me()
+        && request.resource.data.status == 'pending';
+      allow update: if signedIn() && resource.data.to == me()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['accepted', 'declined'];
+      allow delete: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+    }
+
+    // Groups: anyone signed in can see a group's name to join it; members can only
+    // add or remove themselves; the owner can delete it.
+    match /groups/{gid} {
+      allow get: if signedIn();
+      allow create: if signedIn() && request.resource.data.owner == me()
+        && request.resource.data.members == [me()];
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+        && request.resource.data.members.size() <= 50
+        && (
+          (request.resource.data.members.hasAll(resource.data.members)
+            && request.resource.data.members.removeAll(resource.data.members) == [me()])
+          || (resource.data.members.hasAll(request.resource.data.members)
+            && resource.data.members.removeAll(request.resource.data.members) == [me()])
+        );
+      allow delete: if signedIn() && resource.data.owner == me();
+    }
+
+    // Join codes.
+    match /groupCodes/{code} {
+      allow get: if signedIn();
+      allow create: if signedIn()
+        && getAfter(/databases/$(database)/documents/groups/$(request.resource.data.gid)).data.owner == me();
+      allow delete: if signedIn()
+        && (!exists(/databases/$(database)/documents/groups/$(resource.data.gid))
+          || get(/databases/$(database)/documents/groups/$(resource.data.gid)).data.owner == me());
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

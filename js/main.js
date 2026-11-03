@@ -6,12 +6,16 @@ import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay
 import { compareGuess, columnsFor } from './compare.js';
 import { cluesFor } from './clues.js';
 import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex } from './storage.js';
-import { shareText, combinedShareText, shareOrCopy, copyText } from './share.js';
+import { shareText, combinedShareText, shareOrCopy, copyText, guessSquares } from './share.js';
 import { renderCard, esc } from './card.js';
 import { attachAutocomplete } from './autocomplete.js';
 import { resolveCatch, tierForGuess, ballById, isShiny, isLegendary, catchRate, lineProgress } from './catch.js';
 import { GEN1, FAMILIES, pad3 as dex3 } from './gen1.js';
 import { cloudEnabled, initCloud, onCloudChange, currentUser, cloudStatus, pushProgress, signInWithGoogle, emailSignInLink, signOut, deleteProfile } from './cloud.js';
+import {
+  setSummaryBuilder, loadMyProfile, myHandle, forgetProfile, claimHandle, sendFriendRequest, incomingRequests,
+  answerRequest, listFriends, removeFriend, createGroup, joinGroup, leaveGroup, listGroups, groupMembers, HANDLE_RE,
+} from './social.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -44,6 +48,11 @@ async function init() {
   }
   if (S.data.dataAsOf) $('#data-asof').textContent = `Rosters as of ${S.data.dataAsOf}.`;
   setDay();
+  const link = location.hash.match(/^#(add|join)=([A-Za-z0-9_]+)/);
+  if (link) {
+    pendingLink = { kind: link[1], value: link[2] };
+    history.replaceState(null, '', location.pathname);
+  }
   const fromHash = MODES.find((m) => m.id === location.hash.slice(1));
   const fromPref = MODES.find((m) => m.id === loadPref('mode', null));
   S.mode = fromHash || fromPref || MODES[0];
@@ -54,12 +63,18 @@ async function init() {
   if (cloudEnabled()) {
     $('#btn-profile').hidden = false;
     $('#btn-profile').addEventListener('click', openProfile);
-    onCloudChange((why) => {
+    setSummaryBuilder(publicSummary);
+    onCloudChange(async (why) => {
+      if (why === 'auth') {
+        if (currentUser()) { try { await loadMyProfile(true); } catch { /* rules not published yet */ } } else forgetProfile();
+      }
       renderProfileButton();
       if ($('#dlg-profile').open) openProfile();
       if (why === 'synced') { renderModes(); renderMode(); }
+      if (why === 'auth' || why === 'synced') handlePendingLink();
     });
     initCloud();
+    if (pendingLink) toast(pendingLink.kind === 'add' ? 'Opening friend invite…' : 'Opening group invite…');
   }
   window.addEventListener('hashchange', () => {
     const m = MODES.find((x) => x.id === location.hash.slice(1));
@@ -363,7 +378,7 @@ function todayEntries() {
     const g = loadGame(m.id, S.key, ans.id);
     const rows = g.guesses.map((id) => S.data.byId.get(id)).filter(Boolean)
       .map((x) => ({ correct: x.id === ans.id, cells: compareGuess(x, ans, S.key, m) }));
-    return { mode: m, status: g.guesses.length ? g.status : 'none', rows, caught: g.catch?.outcome === 'caught' };
+    return { mode: m, status: g.guesses.length ? g.status : 'none', rows, caught: g.catch?.outcome === 'caught', shiny: g.catch?.outcome === 'caught' && !!g.catch?.shiny };
   });
 }
 
@@ -525,59 +540,299 @@ document.addEventListener('click', (e) => {
   if (e.target.closest('[data-open-dex]')) openDex();
 });
 
-// ---------- profile ----------
+// ---------- profile, friends & groups ----------
+let profileTab = 'me';
+let pendingLink = null; // { kind: 'add' | 'join', value } from an invite link
+
+// What friends and group members can see about you (never the answers).
+function publicSummary() {
+  if (!S.data) return {};
+  const dex = loadDex();
+  const nums = (o) => Object.keys(o).map(Number).sort((x, y) => x - y);
+  const results = {};
+  for (const e of todayEntries()) {
+    if (e.status === 'won' || e.status === 'lost') {
+      results[e.mode.id] = { status: e.status, n: e.rows.length, squares: guessSquares(e.rows), caught: e.caught, shiny: e.shiny };
+    }
+  }
+  const streaks = {};
+  for (const m of MODES) streaks[m.id] = displayStreak(loadStats(m.id), S.puzzleNo);
+  return {
+    dex: { caught: nums(dex.caught), seen: nums(dex.seen), shiny: nums(dex.shiny) },
+    lines: FAMILIES.filter((f) => f.every((n) => dex.caught[n])).length,
+    streaks,
+    today: { date: S.key, puzzleNo: S.puzzleNo, results },
+  };
+}
+
 function renderProfileButton() {
   const b = $('#btn-profile');
   const u = currentUser();
-  b.textContent = u ? (u.displayName || u.email || '?').trim()[0].toUpperCase() : '👤';
+  const label = myHandle() || u?.displayName || u?.email || '?';
+  b.textContent = u ? label.trim()[0].toUpperCase() : '👤';
   b.classList.toggle('signed-in', !!u);
   b.setAttribute('aria-label', u ? 'Your profile' : 'Sign in');
 }
 
-function openProfile() {
+const siteUrl = () => `${location.origin}${location.pathname}`;
+
+function socialError(e) {
+  const map = {
+    invalid: 'Usernames are 3–15 letters, numbers or _.', taken: 'That username is taken.',
+    'not-found': 'No one found. Check the spelling.', self: "That's you!", already: "You're already friends.",
+    'no-handle': 'Pick a username first (Me tab).', 'group-name': 'Group names need at least 2 characters.', full: 'That group is full.', 'too-many': "You're in the maximum number of groups.",
+  };
+  const m = map[e?.message];
+  if (m) return m;
+  if (e?.code === 'permission-denied') return 'Friends & groups need the updated Firebase rules (see README).';
+  return 'Something went wrong. Try again.';
+}
+
+function todayLine(p, compact = false) {
+  const t = p.today;
+  if (!t || t.date !== S.key || !Object.keys(t.results || {}).length) return '<span class="small">Hasn\'t played today</span>';
+  return MODES.filter((m) => t.results[m.id]).map((m) => {
+    const r = t.results[m.id];
+    const score = r.status === 'won' ? `${r.n}/${GAME.maxGuesses}` : `X/${GAME.maxGuesses}`;
+    return `<span class="today-chip">${m.emoji} ${score}${compact ? '' : ` ${r.squares}`}${r.caught ? (r.shiny ? ' ✨' : ' 🎯') : ''}</span>`;
+  }).join(' ');
+}
+
+const dexCount = (p) => p.dex?.caught?.length || 0;
+
+async function openProfile(tab = profileTab) {
+  profileTab = tab;
   const u = currentUser();
   const st = cloudStatus();
   const dex = loadDex();
   const caughtN = Object.keys(dex.caught).length;
-  let body;
-  if (st === 'loading') {
-    body = '<p>Connecting…</p>';
-  } else if (st === 'error') {
-    body = '<p>Profiles are unavailable right now. Your progress is still saved on this device.</p>';
-  } else if (u) {
-    body = `
-      <p>Signed in as <b>${esc(u.displayName || u.email || 'Trainer')}</b>${u.email && u.displayName ? `<br><span class="small">${esc(u.email)}</span>` : ''}</p>
-      <p>✅ Your Dex (<b>${caughtN}</b> caught), stats and today's games are saved to your profile and sync on any device where you sign in.</p>
-      <div class="btn-row"><button class="btn" id="btn-signout">Sign out</button></div>
-      <p class="small"><button class="link-btn" id="btn-delete-profile">Delete my profile</button> removes your saved data from our server. Progress on this device stays.</p>`;
-  } else {
-    body = `
-      <p>Sign in to save your Dex (<b>${caughtN}</b> caught so far) and stats to a profile. They'll sync on every device you use and survive clearing your browser. What you've caught on this device is kept and added to your profile.</p>
+  const dlg = $('#dlg-profile');
+  if (st === 'loading') return openDialog(dlg, '<h2 id="profile-title">Profile</h2><p>Connecting…</p>');
+  if (st === 'error') return openDialog(dlg, '<h2 id="profile-title">Profile</h2><p>Profiles are unavailable right now. Your progress is still saved on this device.</p>');
+  if (!u) {
+    openDialog(dlg, `<h2 id="profile-title">Profile</h2>
+      ${pendingLink ? `<p class="invite-note">${pendingLink.kind === 'add' ? `👋 <b>@${esc(pendingLink.value)}</b> wants to be friends.` : `👥 You've been invited to a group.`} Sign in to continue.</p>` : ''}
+      <p>Sign in to save your Dex (<b>${caughtN}</b> caught so far), add friends and join groups. Your progress syncs on every device, and what you've caught on this device is kept.</p>
       <button class="btn btn-primary btn-block" id="btn-google">Continue with Google</button>
       <p class="or">or get a sign-in link by email</p>
       <form class="email-form" id="email-form">
         <input type="email" id="email-input" placeholder="you@example.com" required autocomplete="email" inputmode="email">
         <button class="btn" type="submit">Email me a link</button>
       </form>
-      <p class="small">We only store your sign-in email and your game progress. No passwords, no ads.</p>`;
+      <p class="small">We only store your sign-in email and your game progress. No passwords, no ads.</p>`);
+    dlg.querySelector('#btn-google').addEventListener('click', async () => {
+      try { await signInWithGoogle(); } catch (e) { if (e?.code !== 'auth/popup-closed-by-user') toast('Sign-in didn\'t work. Try the email link.'); }
+    });
+    dlg.querySelector('#email-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try { await emailSignInLink(dlg.querySelector('#email-input').value.trim()); toast('Check your email for the sign-in link.'); dlg.close(); }
+      catch { toast('Could not send the email. Check the address.'); }
+    });
+    return;
   }
-  openDialog($('#dlg-profile'), `<h2 id="profile-title">Profile</h2>${body}`);
-  const dlg = $('#dlg-profile');
-  dlg.querySelector('#btn-google')?.addEventListener('click', async () => {
-    try { await signInWithGoogle(); } catch (e) { if (e?.code !== 'auth/popup-closed-by-user') toast('Sign-in didn\'t work. Try the email link.'); }
-  });
-  dlg.querySelector('#email-form')?.addEventListener('submit', async (e) => {
+  const tabs = [['me', '👤 Me'], ['friends', '🤝 Friends'], ['groups', '👥 Groups']];
+  openDialog(dlg, `<h2 id="profile-title">Profile</h2>
+    <div class="chip-row">${tabs.map(([id, l]) => `<button class="chip${id === tab ? ' is-active' : ''}" data-ptab="${id}">${l}</button>`).join('')}</div>
+    <div id="profile-body"><p class="small">Loading…</p></div>`);
+  dlg.querySelectorAll('[data-ptab]').forEach((b) => (b.onclick = () => openProfile(b.dataset.ptab)));
+  const body = dlg.querySelector('#profile-body');
+  let prof = null;
+  try { prof = await loadMyProfile(); } catch (e) { body.innerHTML = `<p>${esc(socialError(e))}</p>`; return; }
+  if (tab === 'friends' && prof.handle) return renderFriendsTab(body, prof);
+  if (tab === 'groups' && prof.handle) return renderGroupsTab(body, prof);
+  renderMeTab(body, u, prof, caughtN, tab !== 'me');
+}
+
+function renderMeTab(body, u, prof, caughtN, needHandle) {
+  body.innerHTML = `
+    ${needHandle || !prof.handle ? '<p class="invite-note">Pick a username to add friends and join groups.</p>' : ''}
+    <h3>Username</h3>
+    ${prof.handle ? `<p>You're <b>@${esc(prof.handle)}</b>. Friends find you by this name.</p>` : '<p>3–15 letters, numbers or _. This is what friends see, never your email.</p>'}
+    <form class="email-form" id="handle-form">
+      <input id="handle-input" maxlength="15" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="e.g. jedimodi" value="${esc(prof.handle || '')}">
+      <button class="btn btn-primary" type="submit">${prof.handle ? 'Change' : 'Save'}</button>
+    </form>
+    <h3>Sync</h3>
+    <p>✅ Your Dex (<b>${caughtN}</b> caught), stats and today's games are saved to your profile and sync on any device where you sign in.</p>
+    <p class="small">Signed in as ${esc(u.email || u.displayName || 'you')}. Your username, Dex and daily scores (never the answers) are visible only to your friends and groups.</p>
+    <div class="btn-row"><button class="btn" id="btn-signout">Sign out</button></div>
+    <p class="small"><button class="link-btn" id="btn-delete-profile">Delete my profile</button> removes your saved data, username and group memberships from our server. Progress on this device stays.</p>`;
+  body.querySelector('#handle-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = dlg.querySelector('#email-input').value.trim();
-    try { await emailSignInLink(email); toast('Check your email for the sign-in link.'); dlg.close(); }
-    catch { toast('Could not send the email. Check the address.'); }
+    const v = body.querySelector('#handle-input').value.trim().toLowerCase();
+    if (!HANDLE_RE.test(v)) return toast(socialError({ message: 'invalid' }));
+    try { await claimHandle(v); toast(`You're @${v}!`); renderProfileButton(); pushProgress(); await handlePendingLink(); openProfile('me'); }
+    catch (err) { toast(socialError(err)); }
   });
-  dlg.querySelector('#btn-signout')?.addEventListener('click', async () => { await signOut(); toast('Signed out. Progress stays on this device.'); });
-  dlg.querySelector('#btn-delete-profile')?.addEventListener('click', async () => {
-    if (!confirm('Delete your profile and its saved data? Progress on this device stays.')) return;
-    try { await deleteProfile(); toast('Profile deleted.'); dlg.close(); }
+  body.querySelector('#btn-signout').addEventListener('click', async () => { await signOut(); toast('Signed out. Progress stays on this device.'); });
+  body.querySelector('#btn-delete-profile').addEventListener('click', async () => {
+    if (!confirm('Delete your profile, username and group memberships? Progress on this device stays.')) return;
+    try { await deleteProfile(); toast('Profile deleted.'); $('#dlg-profile').close(); }
     catch { toast('For security, sign out and back in, then try again.'); }
   });
+}
+
+async function renderFriendsTab(body, prof) {
+  body.innerHTML = `
+    <form class="email-form" id="add-friend-form">
+      <input id="add-friend" maxlength="16" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="Friend's username">
+      <button class="btn btn-primary" type="submit">Add friend</button>
+    </form>
+    <p class="small">Or send your friend link: <button class="link-btn plain" id="copy-friend-link">Copy my link</button></p>
+    <div id="requests"></div>
+    <h3>Friends</h3>
+    <ul class="people" id="friend-list"><li class="small">Loading…</li></ul>`;
+  body.querySelector('#add-friend-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try { const h = await sendFriendRequest(body.querySelector('#add-friend').value); toast(`Friend request sent to @${h}!`); body.querySelector('#add-friend').value = ''; }
+    catch (err) { toast(socialError(err)); }
+  });
+  body.querySelector('#copy-friend-link').addEventListener('click', async () => {
+    toast((await copyText(`Add me on ModiDex! ${siteUrl()}#add=${prof.handle}`)) ? 'Friend link copied!' : 'Could not copy.');
+  });
+  try {
+    const [reqs, friends] = await Promise.all([incomingRequests(), listFriends()]);
+    const rq = body.querySelector('#requests');
+    if (reqs.length) {
+      rq.innerHTML = `<h3>Requests</h3><ul class="people">${reqs.map((r, i) => `
+        <li class="person"><span class="person-name">@${esc(r.fromName)}</span>
+          <span class="person-actions"><button class="btn btn-primary btn-sm" data-accept="${i}">Accept</button><button class="btn btn-sm" data-decline="${i}">Decline</button></span></li>`).join('')}</ul>`;
+      rq.querySelectorAll('[data-accept],[data-decline]').forEach((b) => (b.onclick = async () => {
+        const r = reqs[Number(b.dataset.accept ?? b.dataset.decline)];
+        try { await answerRequest(r, b.dataset.accept !== undefined); toast(b.dataset.accept !== undefined ? `You and @${r.fromName} are friends!` : 'Request declined.'); openProfile('friends'); }
+        catch (err) { toast(socialError(err)); }
+      }));
+    }
+    const list = body.querySelector('#friend-list');
+    if (!friends.length) { list.innerHTML = '<li class="small">No friends yet. Add someone by username or send your link.</li>'; return; }
+    friends.sort((x, y) => dexCount(y) - dexCount(x));
+    list.innerHTML = friends.map((f, i) => f.pending
+      ? `<li class="person"><span class="person-name small">Waiting for them to accept…</span><span class="person-actions"><button class="btn btn-sm" data-unfriend="${i}">Remove</button></span></li>`
+      : `<li class="person tappable" data-friend="${i}"><span class="person-name">@${esc(f.handle)}</span>
+          <span class="person-meta">📕 ${dexCount(f)} · ${todayLine(f, true)}</span><span class="person-arrow">›</span></li>`).join('');
+    list.querySelectorAll('[data-friend]').forEach((li) => (li.onclick = () => openPerson(friends[Number(li.dataset.friend)], { friend: true })));
+    list.querySelectorAll('[data-unfriend]').forEach((b) => (b.onclick = async () => { await removeFriend(friends[Number(b.dataset.unfriend)].uid); openProfile('friends'); }));
+  } catch (err) {
+    body.querySelector('#friend-list').innerHTML = `<li class="small">${esc(socialError(err))}</li>`;
+  }
+}
+
+async function renderGroupsTab(body) {
+  body.innerHTML = `
+    <form class="email-form" id="create-group-form">
+      <input id="group-name" maxlength="30" placeholder="New group name">
+      <button class="btn btn-primary" type="submit">Create</button>
+    </form>
+    <form class="email-form" id="join-group-form">
+      <input id="group-code" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Join code">
+      <button class="btn" type="submit">Join</button>
+    </form>
+    <h3>Your groups</h3>
+    <ul class="people" id="group-list"><li class="small">Loading…</li></ul>`;
+  body.querySelector('#create-group-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try { const g = await createGroup(body.querySelector('#group-name').value); toast(`Created "${g.name}". Share code ${g.code}!`); openProfile('groups'); }
+    catch (err) { toast(socialError(err)); }
+  });
+  body.querySelector('#join-group-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try { const g = await joinGroup(body.querySelector('#group-code').value); toast(g.already ? `You're already in "${g.name}".` : `Joined "${g.name}"!`); openProfile('groups'); }
+    catch (err) { toast(socialError(err)); }
+  });
+  try {
+    const groups = await listGroups();
+    const list = body.querySelector('#group-list');
+    if (!groups.length) { list.innerHTML = '<li class="small">No groups yet. Create one for your crew, or join with a code.</li>'; return; }
+    list.innerHTML = groups.map((g, i) => `<li class="person tappable" data-group="${i}"><span class="person-name">${esc(g.name)}</span>
+      <span class="person-meta">${g.members.length} member${g.members.length === 1 ? '' : 's'} · code ${esc(g.code)}</span><span class="person-arrow">›</span></li>`).join('');
+    list.querySelectorAll('[data-group]').forEach((li) => (li.onclick = () => openGroup(groups[Number(li.dataset.group)])));
+  } catch (err) {
+    body.querySelector('#group-list').innerHTML = `<li class="small">${esc(socialError(err))}</li>`;
+  }
+}
+
+// A friend's or group member's profile: today's results, streaks and their Dex.
+function openPerson(p, { friend = false } = {}) {
+  const caught = new Set(p.dex?.caught || []);
+  const seen = new Set(p.dex?.seen || []);
+  const shiny = new Set(p.dex?.shiny || []);
+  const streaks = MODES.map((m) => `${m.emoji} ${p.streaks?.[m.id] || 0}`).join(' · ');
+  const cells = GEN1.map((name, i) => {
+    const n = i + 1;
+    const st = caught.has(n) ? 'caught' : seen.has(n) ? 'seen' : 'unknown';
+    return `<li class="dex-cell mini ${st}${shiny.has(n) ? ' shiny' : ''}"><span class="dex-no">#${dex3(n)}${shiny.has(n) ? ' ✨' : ''}</span><span class="dex-name">${st === 'unknown' ? '???' : esc(name)}</span></li>`;
+  }).join('');
+  openDialog($('#dlg-person'), `
+    <h2 id="person-title">@${esc(p.handle || 'player')}</h2>
+    <p><b>${caught.size}</b> caught · ${seen.size} seen · ✨ ${shiny.size} shiny · 🏅 ${p.lines || 0} line${p.lines === 1 ? '' : 's'}</p>
+    <h3>Today</h3><p class="today-row">${todayLine(p)}</p>
+    <h3>Current streaks</h3><p>${streaks}</p>
+    <h3>Their Dex</h3><ul class="dex-grid">${cells}</ul>
+    ${friend ? '<p class="small"><button class="link-btn" id="btn-unfriend">Remove friend</button></p>' : ''}`);
+  $('#dlg-person').querySelector('#btn-unfriend')?.addEventListener('click', async () => {
+    if (!confirm(`Remove @${p.handle} from your friends?`)) return;
+    await removeFriend(p.uid); $('#dlg-person').close(); openProfile('friends');
+  });
+}
+
+async function openGroup(g) {
+  const dlg = $('#dlg-person');
+  openDialog(dlg, `<h2 id="person-title">${esc(g.name)}</h2>
+    <p>Join code <b class="code">${esc(g.code)}</b> · <button class="link-btn plain" id="copy-invite">Copy invite link</button></p>
+    <h3>Today's leaderboard</h3><ul class="people" id="board"><li class="small">Loading…</li></ul>
+    <p class="small"><button class="link-btn" id="btn-leave">Leave group</button></p>`);
+  dlg.querySelector('#copy-invite').onclick = async () =>
+    toast((await copyText(`Join my ModiDex group "${g.name}"! ${siteUrl()}#join=${g.code}`)) ? 'Invite link copied!' : 'Could not copy.');
+  dlg.querySelector('#btn-leave').onclick = async () => {
+    if (!confirm(`Leave "${g.name}"?`)) return;
+    try { await leaveGroup(g.id); dlg.close(); toast(`Left "${g.name}".`); openProfile('groups'); } catch (err) { toast(socialError(err)); }
+  };
+  try {
+    const members = await groupMembers(g);
+    const score = (p) => {
+      const r = p.today?.date === S.key ? Object.values(p.today.results || {}) : [];
+      const solved = r.filter((x) => x.status === 'won');
+      return { solved: solved.length, guesses: solved.reduce((t, x) => t + x.n, 0) };
+    };
+    members.sort((a, b) => {
+      const x = score(a); const y = score(b);
+      return y.solved - x.solved || x.guesses - y.guesses || dexCount(b) - dexCount(a);
+    });
+    const me = currentUser()?.uid;
+    dlg.querySelector('#board').innerHTML = members.map((p, i) => p.pending
+      ? `<li class="person"><span class="person-name small">A member (syncing…)</span></li>`
+      : `<li class="person tappable${p.uid === me ? ' is-me' : ''}" data-member="${i}"><span class="rank">${i + 1}</span><span class="person-name">@${esc(p.handle)}${p.uid === me ? ' (you)' : ''}</span>
+          <span class="person-meta">📕 ${dexCount(p)} · ${todayLine(p, true)}</span><span class="person-arrow">›</span></li>`).join('');
+    dlg.querySelectorAll('[data-member]').forEach((li) => (li.onclick = () => openPerson(members[Number(li.dataset.member)])));
+  } catch (err) {
+    dlg.querySelector('#board').innerHTML = `<li class="small">${esc(socialError(err))}</li>`;
+  }
+}
+
+// Finish an invite link (#add=username or #join=CODE) once signed in with a username.
+async function handlePendingLink() {
+  if (!pendingLink) return;
+  if (!currentUser()) { openProfile('me'); return; }
+  let prof;
+  try { prof = await loadMyProfile(); } catch { return; }
+  if (!prof.handle) { openProfile('me'); return; }
+  const { kind, value } = pendingLink;
+  pendingLink = null;
+  try {
+    if (kind === 'add') {
+      if (value.toLowerCase() === prof.handle) return;
+      if (!confirm(`Send a friend request to @${value}?`)) return;
+      await sendFriendRequest(value);
+      toast(`Friend request sent to @${value}!`);
+    } else {
+      if (!confirm(`Join the group with code ${value.toUpperCase()}?`)) return;
+      const g = await joinGroup(value);
+      toast(g.already ? `You're already in "${g.name}".` : `Joined "${g.name}"!`);
+      openProfile('groups');
+    }
+  } catch (err) {
+    toast(socialError(err));
+  }
 }
 
 // ---------- dialogs ----------
@@ -710,3 +965,6 @@ function toast(msg) {
 }
 
 init();
+
+// Local testing only: lets the developer preview social screens with sample data.
+if (location.hostname === 'localhost') window.__modidexTest = { openPerson, publicSummary };

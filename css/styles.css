@@ -489,3 +489,27 @@ main { max-width: 560px; margin: 0 auto; padding: 12px; }
 .line-member.seen { color: var(--muted); }
 .line-member.unknown { color: var(--muted); opacity: 0.55; }
 .line-arrow { color: var(--muted); opacity: 0.6; }
+
+/* ---------- friends & groups ---------- */
+.invite-note { padding: 8px 10px; border-radius: 10px; background: rgba(34, 211, 238, 0.1); border: 1px solid rgba(34, 211, 238, 0.4); }
+.people { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.person {
+  display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "rank name arrow" "rank meta arrow";
+  align-items: center; column-gap: 8px; row-gap: 2px;
+  padding: 9px 10px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line);
+}
+.person.tappable { cursor: pointer; }
+.person.tappable:active { transform: scale(0.99); }
+.person.is-me { border-color: var(--accent-2); }
+.person .rank { grid-area: rank; font: 14px/1 var(--font-display); color: var(--muted); min-width: 16px; text-align: center; }
+.person-name { grid-area: name; font-weight: 800; overflow-wrap: anywhere; }
+.person-meta { grid-area: meta; font-size: 12px; color: var(--muted); }
+.person-arrow { grid-area: arrow; color: var(--muted); font-size: 18px; }
+.person-actions { grid-area: arrow; display: flex; gap: 6px; }
+.btn-sm { height: 34px; padding: 0 10px; font-size: 13px; border-radius: 10px; }
+.today-chip { display: inline-block; margin-right: 4px; white-space: nowrap; }
+.today-row { line-height: 1.8; }
+.code { font-family: var(--font-display); letter-spacing: 2px; color: var(--accent); }
+.link-btn.plain { color: var(--accent-2); }
+.dex-cell.mini { min-height: 40px; padding: 5px 6px; }
+.dex-cell.mini .dex-name { font-size: 11px; }

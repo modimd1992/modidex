@@ -1,0 +1,242 @@
+// Friends and groups, built on profiles (cloud.js).
+//
+// Firestore layout:
+//   handles/{username}         -> { uid }                      who owns a username
+//   profiles/{uid}             -> public summary, readable only by friends and
+//                                 people in a shared group (see firestore.rules)
+//   friendRequests/{to}_{from} -> { from, to, fromName, status }
+//   groups/{gid}               -> { name, owner, code, members: [uid] }
+//   groupCodes/{CODE}          -> { gid }                      join codes
+import { cloudApi, onAfterPush, onBeforeDelete } from './cloud.js';
+
+export const HANDLE_RE = /^[a-z0-9_]{3,15}$/;
+export const MAX_GROUP = 50;
+let mine = null; // cached own profile
+let summaryBuilder = () => ({});
+
+const api = () => {
+  const a = cloudApi();
+  if (!a) throw new Error('not-signed-in');
+  return a;
+};
+const ref = (a, ...path) => a.fsM.doc(a.db, ...path);
+
+// main.js supplies the public summary (Dex, streaks, today's results).
+export function setSummaryBuilder(fn) { summaryBuilder = fn; }
+
+export async function loadMyProfile(force = false) {
+  const a = cloudApi();
+  if (!a) { mine = null; return null; }
+  if (mine && mine.uid === a.user.uid && !force) return mine;
+  const snap = await a.fsM.getDoc(ref(a, 'profiles', a.user.uid));
+  mine = snap.exists() ? { uid: a.user.uid, ...snap.data() } : { uid: a.user.uid, friends: [], groups: [] };
+  return mine;
+}
+export const myHandle = () => mine?.handle || null;
+export function forgetProfile() { mine = null; }
+
+// Claim a username (or change it). Throws 'invalid' or 'taken'.
+export async function claimHandle(raw) {
+  const a = api();
+  const handle = String(raw || '').trim().toLowerCase();
+  if (!HANDLE_RE.test(handle)) throw new Error('invalid');
+  const me = a.user.uid;
+  const prof = await loadMyProfile();
+  if (prof.handle === handle) return handle;
+  await a.fsM.runTransaction(a.db, async (tx) => {
+    const h = await tx.get(ref(a, 'handles', handle));
+    if (h.exists() && h.data().uid !== me) throw new Error('taken');
+    if (!h.exists()) tx.set(ref(a, 'handles', handle), { uid: me });
+    if (prof.handle) tx.delete(ref(a, 'handles', prof.handle));
+    tx.set(ref(a, 'profiles', me), {
+      handle, name: handle, friends: prof.friends || [], groups: prof.groups || [],
+      ...summaryBuilder(), updatedAt: a.fsM.serverTimestamp(),
+    }, { merge: true });
+  });
+  mine = { ...prof, handle, name: handle };
+  return handle;
+}
+
+// Publish the latest Dex / results so friends see them. Runs after every save.
+export async function publishProfile() {
+  const a = cloudApi();
+  if (!a) return;
+  const prof = await loadMyProfile();
+  if (!prof.handle) return;
+  await a.fsM.setDoc(ref(a, 'profiles', a.user.uid), {
+    ...summaryBuilder(), handle: prof.handle, name: prof.handle, updatedAt: a.fsM.serverTimestamp(),
+  }, { merge: true }); // friends/groups are changed only by their own actions, never overwritten here
+  await processAnsweredRequests();
+}
+onAfterPush(publishProfile);
+
+async function addToMine(field, value, remove = false) {
+  const a = api();
+  const op = remove ? a.fsM.arrayRemove(value) : a.fsM.arrayUnion(value);
+  await a.fsM.updateDoc(ref(a, 'profiles', a.user.uid), { [field]: op });
+  const prof = await loadMyProfile();
+  const list = new Set(prof[field] || []);
+  remove ? list.delete(value) : list.add(value);
+  prof[field] = [...list];
+}
+
+// ---------- friends ----------
+export async function sendFriendRequest(rawHandle) {
+  const a = api();
+  const prof = await loadMyProfile();
+  if (!prof.handle) throw new Error('no-handle');
+  const handle = String(rawHandle || '').trim().toLowerCase().replace(/^@/, '');
+  const h = await a.fsM.getDoc(ref(a, 'handles', handle));
+  if (!h.exists()) throw new Error('not-found');
+  const to = h.data().uid;
+  if (to === a.user.uid) throw new Error('self');
+  if ((prof.friends || []).includes(to)) throw new Error('already');
+  await a.fsM.setDoc(ref(a, 'friendRequests', `${to}_${a.user.uid}`), {
+    from: a.user.uid, to, fromName: prof.handle, toName: handle, status: 'pending', createdAt: a.fsM.serverTimestamp(),
+  });
+  return handle;
+}
+
+export async function incomingRequests() {
+  const a = api();
+  const q = a.fsM.query(a.fsM.collection(a.db, 'friendRequests'),
+    a.fsM.where('to', '==', a.user.uid), a.fsM.where('status', '==', 'pending'));
+  return (await a.fsM.getDocs(q)).docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function outgoingRequests() {
+  const a = api();
+  const q = a.fsM.query(a.fsM.collection(a.db, 'friendRequests'), a.fsM.where('from', '==', a.user.uid));
+  return (await a.fsM.getDocs(q)).docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function answerRequest(req, accept) {
+  const a = api();
+  if (accept) await addToMine('friends', req.from);
+  await a.fsM.updateDoc(ref(a, 'friendRequests', req.id), { status: accept ? 'accepted' : 'declined' });
+}
+
+// The sender finishes the handshake: add accepted friends, clear answered requests.
+export async function processAnsweredRequests() {
+  const a = cloudApi();
+  if (!a) return;
+  for (const r of await outgoingRequests()) {
+    if (r.status === 'accepted') await addToMine('friends', r.to);
+    if (r.status !== 'pending') await a.fsM.deleteDoc(ref(a, 'friendRequests', r.id));
+  }
+}
+
+export async function removeFriend(uid) {
+  await addToMine('friends', uid, true);
+}
+
+// A profile you're allowed to see, or null (not a friend yet / no longer shared).
+export async function readProfile(uid) {
+  const a = api();
+  try {
+    const snap = await a.fsM.getDoc(ref(a, 'profiles', uid));
+    return snap.exists() ? { uid, ...snap.data() } : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function listFriends() {
+  const prof = await loadMyProfile(true);
+  return Promise.all((prof.friends || []).map(async (uid) => (await readProfile(uid)) || { uid, pending: true }));
+}
+
+// ---------- groups ----------
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const newCode = () => Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+
+export async function createGroup(rawName) {
+  const a = api();
+  const prof = await loadMyProfile();
+  if (!prof.handle) throw new Error('no-handle');
+  const name = String(rawName || '').trim().slice(0, 30);
+  if (name.length < 2) throw new Error('group-name');
+  if ((prof.groups || []).length >= 20) throw new Error('too-many');
+  const gref = a.fsM.doc(a.fsM.collection(a.db, 'groups'));
+  for (let tries = 0; tries < 5; tries++) {
+    const code = newCode();
+    if ((await a.fsM.getDoc(ref(a, 'groupCodes', code))).exists()) continue;
+    const batch = a.fsM.writeBatch(a.db);
+    batch.set(gref, { name, owner: a.user.uid, code, members: [a.user.uid], createdAt: a.fsM.serverTimestamp() });
+    batch.set(ref(a, 'groupCodes', code), { gid: gref.id });
+    batch.update(ref(a, 'profiles', a.user.uid), { groups: a.fsM.arrayUnion(gref.id) });
+    await batch.commit();
+    prof.groups = [...new Set([...(prof.groups || []), gref.id])];
+    return { id: gref.id, name, code };
+  }
+  throw new Error('try-again');
+}
+
+export async function joinGroup(rawCode) {
+  const a = api();
+  const prof = await loadMyProfile();
+  if (!prof.handle) throw new Error('no-handle');
+  const code = String(rawCode || '').trim().toUpperCase();
+  const c = await a.fsM.getDoc(ref(a, 'groupCodes', code));
+  if (!c.exists()) throw new Error('not-found');
+  const gid = c.data().gid;
+  const g = await a.fsM.getDoc(ref(a, 'groups', gid));
+  if (!g.exists()) throw new Error('not-found');
+  const data = g.data();
+  if (data.members.includes(a.user.uid)) {
+    if (!(prof.groups || []).includes(gid)) await addToMine('groups', gid);
+    return { id: gid, name: data.name, already: true };
+  }
+  if (data.members.length >= MAX_GROUP) throw new Error('full');
+  const batch = a.fsM.writeBatch(a.db);
+  batch.update(ref(a, 'groups', gid), { members: a.fsM.arrayUnion(a.user.uid) });
+  batch.update(ref(a, 'profiles', a.user.uid), { groups: a.fsM.arrayUnion(gid) });
+  await batch.commit();
+  prof.groups = [...new Set([...(prof.groups || []), gid])];
+  return { id: gid, name: data.name };
+}
+
+export async function leaveGroup(gid) {
+  const a = api();
+  const g = await a.fsM.getDoc(ref(a, 'groups', gid));
+  const batch = a.fsM.writeBatch(a.db);
+  if (g.exists()) {
+    const data = g.data();
+    if (data.members.length <= 1 && data.owner === a.user.uid) {
+      batch.delete(ref(a, 'groups', gid));
+      batch.delete(ref(a, 'groupCodes', data.code));
+    } else {
+      batch.update(ref(a, 'groups', gid), { members: a.fsM.arrayRemove(a.user.uid) });
+    }
+  }
+  batch.update(ref(a, 'profiles', a.user.uid), { groups: a.fsM.arrayRemove(gid) });
+  await batch.commit();
+  const prof = await loadMyProfile();
+  prof.groups = (prof.groups || []).filter((x) => x !== gid);
+}
+
+export async function listGroups() {
+  const a = api();
+  const prof = await loadMyProfile(true);
+  const out = [];
+  for (const gid of prof.groups || []) {
+    const g = await a.fsM.getDoc(ref(a, 'groups', gid));
+    if (g.exists()) out.push({ id: gid, ...g.data() });
+  }
+  return out;
+}
+
+export async function groupMembers(group) {
+  return Promise.all(group.members.map(async (uid) => (await readProfile(uid)) || { uid, pending: true }));
+}
+
+// Remove usernames, profile and memberships when someone deletes their profile.
+onBeforeDelete(async () => {
+  const a = cloudApi();
+  if (!a) return;
+  const prof = await loadMyProfile(true);
+  for (const gid of prof.groups || []) { try { await leaveGroup(gid); } catch { /* ignore */ } }
+  if (prof.handle) { try { await a.fsM.deleteDoc(ref(a, 'handles', prof.handle)); } catch { /* ignore */ } }
+  try { await a.fsM.deleteDoc(ref(a, 'profiles', a.user.uid)); } catch { /* ignore */ }
+  mine = null;
+});
