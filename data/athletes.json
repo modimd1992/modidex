@@ -4574,40 +4574,6 @@
       }
     },
     {
-      "id": "nfl-tyreek-hill",
-      "name": "Tyreek Hill",
-      "aliases": [
-        "Tyreek",
-        "Tyreke Hill",
-        "Tyreek Hil"
-      ],
-      "sport": "NFL",
-      "league": "AFC",
-      "division": "East",
-      "team": "Miami Dolphins",
-      "teamAbbr": "MIA",
-      "position": "WR",
-      "number": 10,
-      "birthDate": "1994-03-01",
-      "type": "Electric",
-      "type2": "Flying",
-      "category": "Blur Receiver",
-      "stats": {
-        "hp": 70,
-        "atk": 135,
-        "def": 40,
-        "skl": 120,
-        "iq": 110,
-        "spe": 150
-      },
-      "bio": "Its acceleration is so extreme that defenders give it a huge cushion and still lose. A single short catch can become a footrace it always wins.",
-      "comp": {
-        "name": "Dugtrio",
-        "dex": 51,
-        "why": "Blinding speed that leaves everyone in the dust."
-      }
-    },
-    {
       "id": "nfl-mike-evans",
       "name": "Mike Evans",
       "aliases": [

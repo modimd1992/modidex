@@ -128,7 +128,6 @@ Stats are 1–150 ratings, set by hand from real performance. Roughly 140+ is el
 Players were chosen from each league's official jersey-sales rankings (NFLPA Top 50, NBA top-selling jerseys, MLB top-20 jerseys), plus other well-known stars.
 
 **Unsigned as of 2026-11-02, listed under their last team. Update these when they sign:**
-- Tyreek Hill (NFL, last team MIA)
 - Tarik Skubal (MLB, last team LAD)
 - Kiké Hernández (MLB, last team LAD)
 
