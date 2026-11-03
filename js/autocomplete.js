@@ -12,6 +12,7 @@ function score(athlete, q) {
     const name = normalize(n);
     if (name === q) return 100;
     if (name.startsWith(q)) best = Math.max(best, 80);
+    else if (name.split(' ').some((w) => w === q)) best = Math.max(best, 70); // exact last name
     else if (name.split(' ').some((w) => w.startsWith(q))) best = Math.max(best, 60);
     else if (name.includes(q)) best = Math.max(best, 40);
   }
