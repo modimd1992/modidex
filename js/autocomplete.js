@@ -3,7 +3,7 @@ import { SPORTS } from './config.js';
 import { esc } from './card.js';
 
 export function normalize(s) {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/-/g, ' ').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
 }
 
 function score(athlete, q) {

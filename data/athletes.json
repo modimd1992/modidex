@@ -1627,6 +1627,40 @@
       }
     },
     {
+      "id": "nfl-jaxon-smith-njigba",
+      "name": "Jaxon Smith-Njigba",
+      "aliases": [
+        "JSN",
+        "Jaxson Smith-Njigba",
+        "Jaxon Smith Njigba"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "West",
+      "team": "Seattle Seahawks",
+      "teamAbbr": "SEA",
+      "position": "WR",
+      "number": 11,
+      "birthDate": "2002-02-14",
+      "type": "Water",
+      "type2": "Psychic",
+      "category": "Silk Route Runner",
+      "stats": {
+        "hp": 115,
+        "atk": 130,
+        "def": 55,
+        "skl": 145,
+        "iq": 130,
+        "spe": 120
+      },
+      "bio": "Its routes are so smooth and precise that defenders always seem a step behind. It catches nearly everything thrown its way.",
+      "comp": {
+        "name": "Dragonair",
+        "dex": 148,
+        "why": "Sleek, graceful, and quietly powerful."
+      }
+    },
+    {
       "id": "nfl-saquon-barkley",
       "name": "Saquon Barkley",
       "aliases": [
