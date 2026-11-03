@@ -23,12 +23,16 @@ export const CLUE_SCHEDULE = [];
 // rate = chance to catch. Solving on the last guess only registers it as Seen; a loss means it flees.
 export const CATCH = {
   tiers: [
-    { id: 'hof', guesses: [1], name: 'Hall of Fame Ball', icon: '🏆', rate: 1 },
-    { id: 'allstar', guesses: [2], name: 'All-Star Ball', icon: '⭐', rate: 0.75 },
-    { id: 'pro', guesses: [3], name: 'Pro Ball', icon: '🎖️', rate: 0.5 },
-    { id: 'rookie', guesses: [4, 5], name: 'Rookie Ball', icon: '🔰', rate: 0.3 },
+    { id: 'hof', guesses: [1], name: 'Hall of Fame Ball', icon: '🏆', rate: 1, legendaryRate: 1 },
+    { id: 'allstar', guesses: [2], name: 'All-Star Ball', icon: '⭐', rate: 0.75, legendaryRate: 0.5 },
+    { id: 'pro', guesses: [3], name: 'Pro Ball', icon: '🎖️', rate: 0.5, legendaryRate: 0.3 },
+    { id: 'rookie', guesses: [4, 5], name: 'Rookie Ball', icon: '🔰', rate: 0.3, legendaryRate: 0.15 },
   ],
   total: 151,
+  // Legendary creatures are tougher to catch (legendaryRate above).
+  legendary: [144, 145, 146, 150, 151],
+  // About 1 in this many puzzles is a shiny encounter (same for every player that day).
+  shinyOdds: 25,
 };
 
 // Stats shown on every profile. Same six keys for every sport so mixed mode works.

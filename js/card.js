@@ -44,9 +44,10 @@ export function typeBadges(athlete) {
 }
 
 // The headline Gen 1 comparison. The "why" line stays hidden until the puzzle ends.
-export function compBanner(athlete, { revealWhy = true, status = null } = {}) {
+export function compBanner(athlete, { revealWhy = true, status = null, rare = {} } = {}) {
   if (!athlete.comp) return '';
   return `<div class="comp-banner">
+    ${rare.legendary || rare.shiny ? `<span class="rare-line">${rare.legendary ? '👑 Legendary encounter' : ''}${rare.legendary && rare.shiny ? ' · ' : ''}${rare.shiny ? '✨ Shiny encounter' : ''}</span>` : ''}
     <span class="comp-label">Plays like${status ? ` <span class="dex-chip ${status}">${{ caught: '✅ In your Dex', seen: '👁 Seen', new: '✨ New' }[status]}</span>` : ''}</span>
     <span class="comp-name"><span class="comp-dex">#${String(athlete.comp.dex).padStart(3, '0')}</span> ${esc(athlete.comp.name)}</span>
     ${revealWhy ? `<span class="comp-why">${esc(athlete.comp.why)}</span>` : ''}
@@ -94,17 +95,17 @@ export function statBars(athlete, compare = null) {
  * @param opts.showComp     show the Gen 1 comparison banner
  * @param opts.compareWith  another athlete whose stats are marked on the bars
  */
-export function renderCard(athlete, { hidden = false, showSport = true, label = '', showComp = true, compareWith = null, dexStatus = null } = {}) {
+export function renderCard(athlete, { hidden = false, showSport = true, label = '', showComp = true, compareWith = null, dexStatus = null, rare = {} } = {}) {
   const primary = typeInfo(athlete.type).color;
   const sport = SPORTS[athlete.sport];
   const sportBadge = showSport ? `${sport?.emoji || ''} ${esc(athlete.sport)}` : '❔ ???';
   return `
-  <article class="card ${hidden ? 'is-hidden' : 'is-revealed'}" style="--type:${primary}">
+  <article class="card ${hidden ? 'is-hidden' : 'is-revealed'}${rare.shiny ? ' is-shiny' : ''}${rare.legendary ? ' is-legendary' : ''}" style="--type:${primary}">
     <div class="card-top">
       <span class="card-no">${esc(label)}</span>
       <span class="card-sport">${sportBadge}</span>
     </div>
-    ${showComp ? compBanner(athlete, { revealWhy: !hidden, status: dexStatus }) : ''}
+    ${showComp ? compBanner(athlete, { revealWhy: !hidden, status: dexStatus, rare }) : ''}
     <div class="card-hero">
       ${emblemSvg(athlete, { hidden })}
       <div class="card-id">

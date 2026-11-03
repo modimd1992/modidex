@@ -30,6 +30,15 @@ Each puzzle is a wild encounter with the creature on the card. Solve it to throw
 - The Dex is saved in the player's browser, like stats. Clearing site data or switching phones starts a new Dex. Accounts would be needed to sync it.
 - When adding athletes, run `node tools/validate.mjs`. It warns if any of the 151 creatures can't be caught.
 
+**Rare encounters**
+- **👑 Legendary** (Articuno, Zapdos, Moltres, Mewtwo, Mew): tougher to catch, at 🏆 100%, ⭐ 50%, 🎖️ 30% and 🔰 15%. Set `legendaryRate` in `CATCH`.
+- **✨ Shiny**: about 1 in 25 puzzles (`CATCH.shinyOdds`), decided by the date so it's the same for every player. A shiny catch is marked ✨ in the Dex.
+- The sport tabs show 👑 or ✨ while a rare puzzle is unplayed. `node tools/validate.mjs --upcoming 30` marks upcoming rare days.
+
+**Evolution lines**
+- Catching every member of a family (e.g. Charmander › Charmeleon › Charizard) earns a 🏅. There are 54 lines, defined in `FAMILIES` in `js/gen1.js`.
+- The Dex has a 🏅 Lines view showing progress for each family.
+
 ---
 
 ## Run it on your computer

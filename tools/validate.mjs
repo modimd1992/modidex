@@ -8,6 +8,7 @@ import { validateAthletes } from '../js/validate.js';
 import { MODES, SPORTS, isSportEnabled } from '../js/config.js';
 import { answersForDate, dateKey, addDays, puzzleNumber } from '../js/daily.js';
 import { GEN1 } from '../js/gen1.js';
+import { isShiny, isLegendary } from '../js/catch.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
@@ -65,7 +66,7 @@ if (i > -1) {
   let key = dateKey();
   for (let d = 0; d < days; d++) {
     const ans = answersForDate(active, key, schedule);
-    const row = MODES.map((m) => `${m.short}: ${ans[m.id]?.name || '-'}`).join(' | ');
+    const row = MODES.map((m) => `${m.short}: ${ans[m.id]?.name || '-'}${isShiny(m.id, key) ? ' ✨' : ''}${isLegendary(ans[m.id]) ? ' 👑' : ''}`).join(' | ');
     console.log(`  ${key} #${puzzleNumber(key)}  ${row}`);
     key = addDays(key, 1);
   }

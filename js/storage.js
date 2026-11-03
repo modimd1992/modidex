@@ -80,7 +80,7 @@ export function savePref(name, value) {
 // { caught: { [dexNo]: { date, athleteId, ball } }, seen: { [dexNo]: { date, athleteId } } }
 export function loadDex() {
   const d = read('dex', null);
-  return { caught: {}, seen: {}, ...(d || {}) };
+  return { caught: {}, seen: {}, shiny: {}, ...(d || {}) };
 }
 export function saveDex(dex) {
   write('dex', dex);
@@ -110,8 +110,8 @@ export function importProgress({ dex, stats = {}, games = {} }) {
 // Combine two saves without losing anything: union of the Dex,
 // the more-played stats per mode, and the further-along game for the same day.
 export function mergeProgress(a = {}, b = {}) {
-  const dex = { caught: {}, seen: {} };
-  for (const part of ['caught', 'seen']) {
+  const dex = { caught: {}, seen: {}, shiny: {} };
+  for (const part of ['caught', 'seen', 'shiny']) {
     for (const src of [a.dex?.[part] || {}, b.dex?.[part] || {}]) {
       for (const [n, entry] of Object.entries(src)) {
         const cur = dex[part][n];
