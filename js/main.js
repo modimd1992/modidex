@@ -510,19 +510,47 @@ function catchHtml(c, animate) {
 }
 
 let dexSport = null;
+const TOTAL = 'TOTAL'; // the combined Dex tab
+const TIER_RANK = Object.fromEntries(CATCH.tiers.map((t, i) => [t.id, i]));
+
+// One Dex across every sport: a creature counts once, from whichever sport you got it.
+// Each entry also lists the sports it came from.
+function combinedDex(all) {
+  const out = { caught: {}, seen: {}, shiny: {}, from: {} };
+  for (const sp of ENABLED_SPORTS) {
+    const sd = sportDex(all, sp);
+    for (let n = 1; n <= CATCH.total; n++) {
+      const c = sd.caught[n];
+      const s = sd.seen[n];
+      if (!c && !s) continue;
+      (out.from[n] ||= []).push({ sport: sp, entry: c || s, caught: !!c });
+      if (c && (!out.caught[n] || (TIER_RANK[c.ball] ?? 99) < (TIER_RANK[out.caught[n].ball] ?? 99))) out.caught[n] = c;
+      if (s && !out.seen[n]) out.seen[n] = s;
+      if (sd.shiny[n]) out.shiny[n] = sd.shiny[n];
+    }
+  }
+  for (const n of Object.keys(out.caught)) delete out.seen[n]; // caught anywhere beats seen
+  return out;
+}
+
 function openDex(filter = 'all', sport = dexSport) {
-  if (!sport || !ENABLED_SPORTS.includes(sport)) sport = S.mode.sports?.length === 1 ? S.mode.sports[0] : ENABLED_SPORTS[0];
+  if (sport !== TOTAL && (!sport || !ENABLED_SPORTS.includes(sport))) sport = S.mode.sports?.length === 1 ? S.mode.sports[0] : TOTAL;
   dexSport = sport;
   const all = loadDex();
-  const dex = sportDex(all, sport);
+  const isTotal = sport === TOTAL;
+  const dex = isTotal ? combinedDex(all) : sportDex(all, sport);
   const caughtN = Object.keys(dex.caught).length;
   const seenN = Object.keys(dex.seen).length;
   const shinyN = Object.keys(dex.shiny).length;
   const linesDone = FAMILIES.filter((f) => f.every((n) => dex.caught[n])).length;
-  const sportTabs = ENABLED_SPORTS.map((sp) => {
-    const n = dexCounts(all.sports[sp]).caught;
-    return `<button class="chip sport-chip${sp === sport ? ' is-active' : ''}" data-dex-sport="${sp}">${SPORTS[sp].emoji} ${sp} <b>${n}</b></button>`;
-  }).join('');
+  const grandCaught = ENABLED_SPORTS.reduce((t, sp) => t + dexCounts(all.sports[sp]).caught, 0);
+  const sportTabs = [
+    `<button class="chip sport-chip${isTotal ? ' is-active' : ''}" data-dex-sport="${TOTAL}">📚 Total <b>${Object.keys(combinedDex(all).caught).length}</b></button>`,
+    ...ENABLED_SPORTS.map((sp) => {
+      const n = dexCounts(all.sports[sp]).caught;
+      return `<button class="chip sport-chip${sp === sport ? ' is-active' : ''}" data-dex-sport="${sp}">${SPORTS[sp].emoji} ${sp} <b>${n}</b></button>`;
+    }),
+  ].join('');
   const cells = GEN1.map((name, i) => {
     const n = i + 1;
     const c = dex.caught[n];
@@ -531,10 +559,17 @@ function openDex(filter = 'all', sport = dexSport) {
     if (filter === 'caught' && !c) return '';
     if (filter === 'missing' && c) return '';
     if (filter === 'shiny' && !dex.shiny[n]) return '';
-    const via = c || s ? S.data.byId.get((c || s).athleteId)?.name : '';
+    const nameOf = (e) => S.data.byId.get(e?.athleteId)?.name || '';
+    let via = c || s ? nameOf(c || s) : '';
+    let title = via ? `${state === 'caught' ? 'Caught' : 'Seen'} via ${via}` : '';
+    if (isTotal && dex.from[n]) {
+      // Show which sports it came from, e.g. "🏈 🏀"
+      via = dex.from[n].map((f) => SPORTS[f.sport].emoji).join(' ');
+      title = dex.from[n].map((f) => `${f.sport}: ${f.caught ? 'caught' : 'seen'} via ${nameOf(f.entry)}`).join('\n');
+    }
     const ball = c ? ballById(c.ball) : null;
     const shinyMark = dex.shiny[n] ? ' ✨' : '';
-    return `<li class="dex-cell ${state}${dex.shiny[n] ? ' shiny' : ''}${CATCH.legendary.includes(n) ? ' legendary' : ''}" title="${esc(via ? `${state === 'caught' ? 'Caught' : 'Seen'} via ${via}` : '')}">
+    return `<li class="dex-cell ${state}${dex.shiny[n] ? ' shiny' : ''}${CATCH.legendary.includes(n) ? ' legendary' : ''}" title="${esc(title)}">
       <span class="dex-no">#${dex3(n)}${ball ? ` ${ball.icon}` : state === 'seen' ? ' 👁' : ''}${shinyMark}</span>
       <span class="dex-name">${state === 'unknown' ? '???' : esc(name)}</span>
       ${via ? `<span class="dex-via">${esc(via)}</span>` : ''}
@@ -542,16 +577,16 @@ function openDex(filter = 'all', sport = dexSport) {
   }).join('');
   const pct = Math.round((caughtN / CATCH.total) * 100);
   openDialog($('#dlg-dex'), `
-    <h2 id="dex-title">Your ${SPORTS[sport].emoji} ${sport} Dex</h2>
+    <h2 id="dex-title">${isTotal ? 'Your 📚 Total Dex' : `Your ${SPORTS[sport].emoji} ${sport} Dex`}</h2>
     <div class="chip-row">${sportTabs}</div>
-    <p><b>${caughtN}</b> caught · ${seenN} seen · ${CATCH.total} total<br><span class="small">✨ ${shinyN} shiny · 🏅 ${linesDone}/${FAMILIES.length} evolution lines complete</span></p>
+    <p><b>${caughtN}</b> caught · ${seenN} seen · ${CATCH.total} total<br><span class="small">✨ ${shinyN} shiny · 🏅 ${linesDone}/${FAMILIES.length} evolution lines complete</span>${isTotal ? `<br><span class="small">🏆 Grand total: <b>${grandCaught}</b> of ${CATCH.total * ENABLED_SPORTS.length} caught across all ${ENABLED_SPORTS.length} sports</span>` : ''}</p>
     <div class="dex-bar" aria-label="${pct}% caught"><span style="width:${pct}%"></span></div>
     <div class="chip-row">
       ${[['all', 'All'], ['caught', 'Caught'], ['missing', 'Missing'], ['shiny', '✨ Shiny'], ['lines', '🏅 Lines']].map(([id, label]) =>
         `<button class="chip${filter === id ? ' is-active' : ''}" data-dex-filter="${id}">${label}</button>`).join('')}
     </div>
     ${filter === 'lines' ? linesHtml(dex) : `<ul class="dex-grid">${cells || '<li class="small">Nothing here yet. Solve a puzzle to start catching!</li>'}</ul>`}
-    <p class="small">Each sport has its own Dex of ${CATCH.total}. Catches from All Sports go to that athlete's sport. Solve faster for a better ball: ${CATCH.tiers.map((t) => `${t.icon} ${t.name} ${Math.round(t.rate * 100)}%`).join(' · ')}.</p>`);
+    <p class="small">${isTotal ? `The Total Dex counts each creature once, from any sport. ` : ''}Each sport has its own Dex of ${CATCH.total}. Catches from All Sports go to that athlete's sport. Solve faster for a better ball: ${CATCH.tiers.map((t) => `${t.icon} ${t.name} ${Math.round(t.rate * 100)}%`).join(' · ')}.</p>`);
   $('#dlg-dex').querySelectorAll('[data-dex-filter]').forEach((b) => (b.onclick = () => openDex(b.dataset.dexFilter, sport)));
   $('#dlg-dex').querySelectorAll('[data-dex-sport]').forEach((b) => (b.onclick = () => openDex(filter, b.dataset.dexSport)));
 }

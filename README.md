@@ -25,7 +25,7 @@ Each puzzle is a wild encounter with the creature on the card. Solve it to throw
 | Not solved | it flees | — |
 
 - If it breaks free, it's still registered as Seen. Each throw is rolled once and saved, so refreshing doesn't re-roll.
-- **Each sport has its own Dex of 151.** Every sport has exactly 151 athletes, one for each original creature, so an NFL-only fan can complete the NFL Dex. All Sports catches count toward that athlete's sport. `node tools/validate.mjs` warns if a sport is missing a creature or doesn't have exactly 151 athletes.
+- **Each sport has its own Dex of 151.** Every sport has exactly 151 athletes, one for each original creature, so an NFL-only fan can complete the NFL Dex. All Sports catches count toward that athlete's sport. `node tools/validate.mjs` warns if a sport is missing a creature or doesn't have exactly 151 athletes. The Dex also has a **Total** tab: each creature counts once if caught in any sport, plus a grand total out of 453.
 - Ball names, icons and odds live in `CATCH` in `js/config.js`. They're original sports-themed names, not the trademarked ones.
 - The Dex is saved in the player's browser, like stats. Clearing site data or switching phones starts a new Dex. Accounts would be needed to sync it.
 - When adding athletes, run `node tools/validate.mjs`. It warns if any of the 151 creatures can't be caught.
