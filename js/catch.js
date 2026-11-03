@@ -1,7 +1,7 @@
 // Catching: solving a puzzle lets you throw a ball at that athlete's Gen 1 creature.
 // The faster you solve, the better the ball. Results are rolled once and saved.
 import { CATCH, GAME } from './config.js';
-import { loadDex, saveDex } from './storage.js';
+import { loadDex, saveDex, sportDex } from './storage.js';
 import { hashString } from './daily.js';
 import { familyOf } from './gen1.js';
 
@@ -20,10 +20,11 @@ export const isShiny = (modeId, key) => hashString(`${GAME.name}:shiny:${key}:${
 
 export const catchRate = (tier, legendary) => (legendary ? tier.legendaryRate : tier.rate);
 
-export function lineProgress(dex, n) {
+// sd = one sport's Dex.
+export function lineProgress(sd, n) {
   const fam = familyOf(n);
   if (!fam) return null;
-  return { family: fam, caught: fam.filter((d) => dex.caught[d]).length, total: fam.length };
+  return { family: fam, caught: fam.filter((d) => sd.caught[d]).length, total: fam.length };
 }
 
 /**
@@ -34,7 +35,8 @@ export function resolveCatch(game, answer, key, { shiny = false, legendary = fal
   if (game.catch) return game.catch;
   const comp = answer.comp;
   if (!comp) return null;
-  const dex = loadDex();
+  const all = loadDex();
+  const dex = sportDex(all, answer.sport); // each sport has its own Dex
   const was = { caught: !!dex.caught[comp.dex], seen: !!dex.seen[comp.dex], shiny: !!dex.shiny[comp.dex] };
   const n = game.guesses.length;
   let result;
@@ -56,13 +58,14 @@ export function resolveCatch(game, answer, key, { shiny = false, legendary = fal
   if (caught && !was.caught) dex.caught[comp.dex] = { ...entry, ball: result.ball };
   if (caught && shiny && !was.shiny) dex.shiny[comp.dex] = entry;
   if (result.outcome !== 'fled' && !was.seen) dex.seen[comp.dex] = entry;
-  saveDex(dex);
+  saveDex(all);
 
   const line = caught && !was.caught ? lineProgress(dex, comp.dex) : null;
   game.catch = {
     ...result,
     dex: comp.dex,
     name: comp.name,
+    sport: answer.sport,
     shiny,
     legendary,
     newCatch: caught && !was.caught,

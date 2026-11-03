@@ -123,6 +123,15 @@ function buildSchedule(athletes, schedule, days) {
   const out = Array.from({ length: horizon }, () => ({}));
   const keyOf = (i) => addDays(GAME.launchDate, i);
 
+  // Athletes pinned (schedule.json) in another mode within SPACING days of day i.
+  const pinnedNear = (i, modeId) => {
+    const ids = new Set();
+    for (let j = Math.max(0, i - SPACING); j <= i + SPACING; j++) {
+      for (const [mid, id] of Object.entries(schedule[keyOf(j)] || {})) if (mid !== modeId) ids.add(id);
+    }
+    return ids;
+  };
+
   // 1) Single-sport modes.
   for (const mode of MODES.filter((m) => m.sports)) {
     const pool = poolForMode(athletes, mode);
@@ -139,6 +148,10 @@ function buildSchedule(athletes, schedule, days) {
         pick = pinned;
         deck = deck.filter((a) => a.id !== pinned.id);
       } else {
+        // Skip anyone pinned in another mode nearby (they go to the back of the deck).
+        const near = pinnedNear(i, mode.id);
+        const k = deck.findIndex((a) => !near.has(a.id));
+        if (k > 0) deck = [...deck.slice(k), ...deck.slice(0, k)];
         pick = deck.shift();
       }
       out[i][mode.id] = pick;

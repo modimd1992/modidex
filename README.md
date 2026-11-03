@@ -25,7 +25,7 @@ Each puzzle is a wild encounter with the creature on the card. Solve it to throw
 | Not solved | it flees | — |
 
 - If it breaks free, it's still registered as Seen. Each throw is rolled once and saved, so refreshing doesn't re-roll.
-- The goal is to catch all 151. Every original-151 creature is the comp of at least one NFL, NBA or MLB athlete, so all of them can be caught.
+- **Each sport has its own Dex of 151.** Every sport has exactly 151 athletes, one for each original creature, so an NFL-only fan can complete the NFL Dex. All Sports catches count toward that athlete's sport. `node tools/validate.mjs` warns if a sport is missing a creature or doesn't have exactly 151 athletes.
 - Ball names, icons and odds live in `CATCH` in `js/config.js`. They're original sports-themed names, not the trademarked ones.
 - The Dex is saved in the player's browser, like stats. Clearing site data or switching phones starts a new Dex. Accounts would be needed to sync it.
 - When adding athletes, run `node tools/validate.mjs`. It warns if any of the 151 creatures can't be caught.
@@ -155,11 +155,10 @@ Stats are 1–150 ratings, set by hand from real performance. Roughly 140+ is el
 
 ### Keeping rosters current
 
-Players were chosen from each league's official jersey-sales rankings (NFLPA Top 50, NBA top-selling jerseys, MLB top-20 jerseys), plus other well-known stars.
+Each sport has 151 players (one per creature). They were chosen from each league's official jersey-sales rankings (NFLPA Top 50, NBA top-selling jerseys, MLB top-20 jerseys), then filled out with Pro Bowl / All-Star players, starters and notable rookies so every team has about 4–5 players.
 
-**Unsigned as of 2026-11-02, listed under their last team. Update these when they sign:**
-- Tarik Skubal (MLB, last team LAD)
-- Kiké Hernández (MLB, last team LAD)
+**Unsigned (or likely unsigned) as of 2026-11-02, listed under their last team. Update these when they sign:**
+- MLB: Tarik Skubal (LAD), Kiké Hernández (LAD), Aroldis Chapman (BOS), Gleyber Torres (DET), Jazz Chisholm Jr. (NYY), Shota Imanaga (CHC), Eugenio Suárez (CIN), Tomoyuki Sugano (COL), Bo Bichette (NYM), Kyle Freeland (COL)
 
 
 The data is a snapshot (`dataAsOf` at the top of `athletes.json`). Trades and signings will make some entries wrong over time. Every so often, ask Claude Code to *"verify every athlete in data/athletes.json against current rosters and fix teams, numbers and divisions"*, then run the checker.

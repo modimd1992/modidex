@@ -40,10 +40,16 @@ for (const [date, picks] of Object.entries(schedule)) {
   }
 }
 
-// Every one of the 151 creatures must be catchable from an active sport.
-const activeComps = new Set(all.filter((a) => isSportEnabled(a.sport) && a.comp).map((a) => a.comp.dex));
-const uncatchable = GEN1.map((name, i) => ({ dex: i + 1, name })).filter((c) => !activeComps.has(c.dex));
-if (uncatchable.length) warnings.push(`${uncatchable.length} of 151 creatures can't be caught yet (no active athlete has them as a comp): ${uncatchable.map((c) => `#${c.dex} ${c.name}`).join(', ')}`);
+// Each active sport has its own Dex: every one of the 151 creatures should be the comp
+// of exactly one athlete in that sport.
+for (const sport of Object.keys(SPORTS).filter(isSportEnabled)) {
+  const comps = all.filter((a) => a.sport === sport && a.comp).map((a) => a.comp.dex);
+  const have = new Set(comps);
+  const missing = GEN1.map((name, i) => ({ dex: i + 1, name })).filter((c) => !have.has(c.dex));
+  if (missing.length) warnings.push(`${sport}: ${missing.length} of 151 creatures can't be caught yet: ${missing.slice(0, 12).map((c) => `#${c.dex} ${c.name}`).join(', ')}${missing.length > 12 ? '…' : ''}`);
+  const athletes = all.filter((a) => a.sport === sport).length;
+  if (athletes !== 151) warnings.push(`${sport}: ${athletes} athletes (the full Dex needs exactly 151)`);
+}
 for (const a of all) if (a.comp && GEN1[a.comp.dex - 1] !== a.comp.name) errors.push(`${a.name}: comp "${a.comp.name}" doesn't match Dex #${a.comp.dex} (${GEN1[a.comp.dex - 1]})`);
 
 console.log(`\nModiDex data check (rosters as of ${file.dataAsOf || 'unknown'})`);

@@ -5,7 +5,7 @@ import { loadData } from './data.js';
 import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay } from './daily.js';
 import { compareGuess, columnsFor } from './compare.js';
 import { cluesFor } from './clues.js';
-import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex } from './storage.js';
+import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex, sportDex, dexCounts } from './storage.js';
 import { shareText, combinedShareText, shareOrCopy, copyText, guessSquares } from './share.js';
 import { renderCard, esc } from './card.js';
 import { attachAutocomplete } from './autocomplete.js';
@@ -193,8 +193,8 @@ function renderCardArea() {
 
 function dexStatusFor(a) {
   if (!a.comp) return null;
-  const dex = loadDex();
-  return dex.caught[a.comp.dex] ? 'caught' : dex.seen[a.comp.dex] ? 'seen' : 'new';
+  const sd = sportDex(loadDex(), a.sport);
+  return sd.caught[a.comp.dex] ? 'caught' : sd.seen[a.comp.dex] ? 'seen' : 'new';
 }
 
 // The guess the stat bars compare against: the one the player tapped, else the latest.
@@ -452,14 +452,15 @@ function catchHtml(c, animate) {
   if (c.outcome === 'caught') {
     icon = ball?.icon || '🎯'; cls = 'caught';
     const kind = c.shiny ? '✨ Shiny ' : c.legendary ? '👑 Legendary ' : '';
-    msg = c.newCatch ? `${kind ? `${kind}catch! ` : 'Caught! '}${who} was added to your Dex.`
-      : c.newShiny ? `✨ Shiny catch! ${who} now sparkles in your Dex.`
-      : `Caught again! ${who} is already in your Dex.`;
+    const yourDex = `your ${esc(c.sport || '')} Dex`;
+    msg = c.newCatch ? `${kind ? `${kind}catch! ` : 'Caught! '}${who} was added to ${yourDex}.`
+      : c.newShiny ? `✨ Shiny catch! ${who} now sparkles in ${yourDex}.`
+      : `Caught again! ${who} is already in ${yourDex}.`;
     if (c.line && c.line.caught === c.line.total) msg += `<br><span class="line-done">🏅 Evolution line complete: the ${esc(GEN1[c.line.first - 1])} line!</span>`;
     else if (c.line) msg += `<br><span class="small">${esc(GEN1[c.line.first - 1])} line: ${c.line.caught}/${c.line.total} caught</span>`;
   } else if (c.outcome === 'escaped') {
     icon = ball?.icon || '💨'; cls = 'escaped';
-    msg = c.alreadyCaught ? `${who} broke free, but it's already in your Dex.` : `Argh! ${who} broke free. Registered as 👁 Seen.`;
+    msg = c.alreadyCaught ? `${who} broke free, but it's already in your ${esc(c.sport || '')} Dex.` : `Argh! ${who} broke free. Registered as 👁 Seen.`;
   } else if (c.outcome === 'seen') {
     icon = '👁'; cls = 'seen';
     msg = `No ball left on the last guess. ${who} was registered as Seen.`;
@@ -471,23 +472,30 @@ function catchHtml(c, animate) {
   const rareTag = c.legendary ? '<span class="rare-tag legendary">👑 Legendary encounter</span>' : '';
   const shinyTag = c.shiny ? '<span class="rare-tag shiny">✨ Shiny encounter</span>' : '';
   const throwLine = `${rareTag}${shinyTag}${ball ? `<span class="catch-throw">You threw a ${ball.icon} ${esc(ball.name)} (${Math.round(rateNow * 100)}%)</span>` : ''}`;
-  const dex = loadDex();
-  const caughtN = Object.keys(dex.caught).length;
-  const seenN = Object.keys(dex.seen).length;
+  const sport = c.sport || answer()?.sport;
+  const cnt = dexCounts(sportDex(loadDex(), sport));
   return `<div class="catch ${cls}${c.shiny ? ' is-shiny' : ''}${c.legendary ? ' is-legendary' : ''}${animate && ball ? ' animate' : ''}">
     ${throwLine}
     <span class="catch-ball" aria-hidden="true">${icon}</span>
     <p class="catch-msg">${msg}</p>
-    <button class="catch-dex" type="button" data-open-dex>📕 Dex: <b>${caughtN}</b> caught · ${seenN} seen of ${CATCH.total}</button>
+    <button class="catch-dex" type="button" data-open-dex="${esc(sport)}">📕 ${esc(sport)} Dex: <b>${cnt.caught}</b> caught · ${cnt.seen} seen of ${CATCH.total}</button>
   </div>`;
 }
 
-function openDex(filter = 'all') {
-  const dex = loadDex();
+let dexSport = null;
+function openDex(filter = 'all', sport = dexSport) {
+  if (!sport || !ENABLED_SPORTS.includes(sport)) sport = S.mode.sports?.length === 1 ? S.mode.sports[0] : ENABLED_SPORTS[0];
+  dexSport = sport;
+  const all = loadDex();
+  const dex = sportDex(all, sport);
   const caughtN = Object.keys(dex.caught).length;
   const seenN = Object.keys(dex.seen).length;
   const shinyN = Object.keys(dex.shiny).length;
   const linesDone = FAMILIES.filter((f) => f.every((n) => dex.caught[n])).length;
+  const sportTabs = ENABLED_SPORTS.map((sp) => {
+    const n = dexCounts(all.sports[sp]).caught;
+    return `<button class="chip sport-chip${sp === sport ? ' is-active' : ''}" data-dex-sport="${sp}">${SPORTS[sp].emoji} ${sp} <b>${n}</b></button>`;
+  }).join('');
   const cells = GEN1.map((name, i) => {
     const n = i + 1;
     const c = dex.caught[n];
@@ -507,7 +515,8 @@ function openDex(filter = 'all') {
   }).join('');
   const pct = Math.round((caughtN / CATCH.total) * 100);
   openDialog($('#dlg-dex'), `
-    <h2 id="dex-title">Your Dex</h2>
+    <h2 id="dex-title">Your ${SPORTS[sport].emoji} ${sport} Dex</h2>
+    <div class="chip-row">${sportTabs}</div>
     <p><b>${caughtN}</b> caught · ${seenN} seen · ${CATCH.total} total<br><span class="small">✨ ${shinyN} shiny · 🏅 ${linesDone}/${FAMILIES.length} evolution lines complete</span></p>
     <div class="dex-bar" aria-label="${pct}% caught"><span style="width:${pct}%"></span></div>
     <div class="chip-row">
@@ -515,8 +524,9 @@ function openDex(filter = 'all') {
         `<button class="chip${filter === id ? ' is-active' : ''}" data-dex-filter="${id}">${label}</button>`).join('')}
     </div>
     ${filter === 'lines' ? linesHtml(dex) : `<ul class="dex-grid">${cells || '<li class="small">Nothing here yet. Solve a puzzle to start catching!</li>'}</ul>`}
-    <p class="small">Solve faster for a better ball: ${CATCH.tiers.map((t) => `${t.icon} ${t.name} ${Math.round(t.rate * 100)}%`).join(' · ')}. Your Dex is saved in this browser.</p>`);
-  $('#dlg-dex').querySelectorAll('[data-dex-filter]').forEach((b) => (b.onclick = () => openDex(b.dataset.dexFilter)));
+    <p class="small">Each sport has its own Dex of ${CATCH.total}. Catches from All Sports go to that athlete's sport. Solve faster for a better ball: ${CATCH.tiers.map((t) => `${t.icon} ${t.name} ${Math.round(t.rate * 100)}%`).join(' · ')}.</p>`);
+  $('#dlg-dex').querySelectorAll('[data-dex-filter]').forEach((b) => (b.onclick = () => openDex(b.dataset.dexFilter, sport)));
+  $('#dlg-dex').querySelectorAll('[data-dex-sport]').forEach((b) => (b.onclick = () => openDex(filter, b.dataset.dexSport)));
 }
 
 // Evolution lines: each family with members caught, unknown ones as ???.
@@ -537,7 +547,8 @@ function linesHtml(dex) {
 }
 
 document.addEventListener('click', (e) => {
-  if (e.target.closest('[data-open-dex]')) openDex();
+  const od = e.target.closest('[data-open-dex]');
+  if (od) openDex('all', od.dataset.openDex || null);
 });
 
 // ---------- profile, friends & groups ----------
@@ -547,8 +558,8 @@ let pendingLink = null; // { kind: 'add' | 'join', value } from an invite link
 // What friends and group members can see about you (never the answers).
 function publicSummary() {
   if (!S.data) return {};
-  const dex = loadDex();
-  const nums = (o) => Object.keys(o).map(Number).sort((x, y) => x - y);
+  const all = loadDex();
+  const nums = (o) => Object.keys(o || {}).map(Number).sort((x, y) => x - y);
   const results = {};
   for (const e of todayEntries()) {
     if (e.status === 'won' || e.status === 'lost') {
@@ -558,8 +569,11 @@ function publicSummary() {
   const streaks = {};
   for (const m of MODES) streaks[m.id] = displayStreak(loadStats(m.id), S.puzzleNo);
   return {
-    dex: { caught: nums(dex.caught), seen: nums(dex.seen), shiny: nums(dex.shiny) },
-    lines: FAMILIES.filter((f) => f.every((n) => dex.caught[n])).length,
+    dex: Object.fromEntries(ENABLED_SPORTS.map((sp) => {
+      const sd = sportDex(all, sp);
+      return [sp, { caught: nums(sd.caught), seen: nums(sd.seen), shiny: nums(sd.shiny) }];
+    })),
+    lines: Object.fromEntries(ENABLED_SPORTS.map((sp) => [sp, FAMILIES.filter((f) => f.every((n) => sportDex(all, sp).caught[n])).length])),
     streaks,
     today: { date: S.key, puzzleNo: S.puzzleNo, results },
   };
@@ -598,14 +612,19 @@ function todayLine(p, compact = false) {
   }).join(' ');
 }
 
-const dexCount = (p) => p.dex?.caught?.length || 0;
+// A friend's Dex per sport. Older app versions published one shared Dex; show that as "All".
+function personDexes(p) {
+  if (!p.dex) return {};
+  if (Array.isArray(p.dex.caught)) return { All: p.dex };
+  return p.dex;
+}
+const dexCount = (p) => Object.values(personDexes(p)).reduce((t, d) => t + (d?.caught?.length || 0), 0);
 
 async function openProfile(tab = profileTab) {
   profileTab = tab;
   const u = currentUser();
   const st = cloudStatus();
-  const dex = loadDex();
-  const caughtN = Object.keys(dex.caught).length;
+  const caughtN = Object.values(loadDex().sports).reduce((t, sd) => t + dexCounts(sd).caught, 0);
   const dlg = $('#dlg-profile');
   if (st === 'loading') return openDialog(dlg, '<h2 id="profile-title">Profile</h2><p>Connecting…</p>');
   if (st === 'error') return openDialog(dlg, '<h2 id="profile-title">Profile</h2><p>Profiles are unavailable right now. Your progress is still saved on this device.</p>');
@@ -752,11 +771,17 @@ async function renderGroupsTab(body) {
 }
 
 // A friend's or group member's profile: today's results, streaks and their Dex.
-function openPerson(p, { friend = false } = {}) {
-  const caught = new Set(p.dex?.caught || []);
-  const seen = new Set(p.dex?.seen || []);
-  const shiny = new Set(p.dex?.shiny || []);
+function openPerson(p, { friend = false, sport = null } = {}) {
+  const dexes = personDexes(p);
+  const sports = Object.keys(dexes);
+  if (!sport || !dexes[sport]) sport = sports.find((sp) => sp === S.mode.sports?.[0]) || sports[0];
+  const d = dexes[sport] || {};
+  const caught = new Set(d.caught || []);
+  const seen = new Set(d.seen || []);
+  const shiny = new Set(d.shiny || []);
+  const lines = typeof p.lines === 'object' ? (p.lines?.[sport] || 0) : (p.lines || 0);
   const streaks = MODES.map((m) => `${m.emoji} ${p.streaks?.[m.id] || 0}`).join(' · ');
+  const tabs = sports.map((sp) => `<button class="chip sport-chip${sp === sport ? ' is-active' : ''}" data-person-sport="${sp}">${SPORTS[sp]?.emoji || '📕'} ${sp} <b>${dexes[sp]?.caught?.length || 0}</b></button>`).join('');
   const cells = GEN1.map((name, i) => {
     const n = i + 1;
     const st = caught.has(n) ? 'caught' : seen.has(n) ? 'seen' : 'unknown';
@@ -764,11 +789,15 @@ function openPerson(p, { friend = false } = {}) {
   }).join('');
   openDialog($('#dlg-person'), `
     <h2 id="person-title">@${esc(p.handle || 'player')}</h2>
-    <p><b>${caught.size}</b> caught · ${seen.size} seen · ✨ ${shiny.size} shiny · 🏅 ${p.lines || 0} line${p.lines === 1 ? '' : 's'}</p>
+    <p><b>${dexCount(p)}</b> caught across all sports</p>
     <h3>Today</h3><p class="today-row">${todayLine(p)}</p>
     <h3>Current streaks</h3><p>${streaks}</p>
-    <h3>Their Dex</h3><ul class="dex-grid">${cells}</ul>
+    <h3>Their Dex</h3>
+    ${sports.length ? `<div class="chip-row">${tabs}</div>
+    <p class="small">${sport}: <b>${caught.size}</b> caught · ${seen.size} seen · ✨ ${shiny.size} shiny · 🏅 ${lines} line${lines === 1 ? '' : 's'}</p>
+    <ul class="dex-grid">${cells}</ul>` : '<p class="small">No catches yet.</p>'}
     ${friend ? '<p class="small"><button class="link-btn" id="btn-unfriend">Remove friend</button></p>' : ''}`);
+  $('#dlg-person').querySelectorAll('[data-person-sport]').forEach((b) => (b.onclick = () => openPerson(p, { friend, sport: b.dataset.personSport })));
   $('#dlg-person').querySelector('#btn-unfriend')?.addEventListener('click', async () => {
     if (!confirm(`Remove @${p.handle} from your friends?`)) return;
     await removeFriend(p.uid); $('#dlg-person').close(); openProfile('friends');
@@ -866,7 +895,7 @@ function openHelp() {
     <p>Each puzzle is a wild encounter with the creature on the card. Solve it to throw a ball. The faster you solve, the better the ball:</p>
     <ul class="legend">${CATCH.tiers.map((t) => `<li>${t.icon}&nbsp; <b>${esc(t.name)}</b>&nbsp;· guess ${t.guesses.join(' or ')} · ${Math.round(t.rate * 100)}% catch</li>`).join('')}
       <li>👁&nbsp; Guess 6 · registered as Seen</li></ul>
-    <p>If it breaks free it's still registered as Seen. If you run out of guesses, it flees. Collect all ${CATCH.total} in your 📕 Dex!</p>
+    <p>If it breaks free it's still registered as Seen. If you run out of guesses, it flees. Each sport has its own 📕 Dex of ${CATCH.total}, one player for every creature, so you can complete the NFL, NBA and MLB Dexes separately. All Sports catches count toward that athlete's sport.</p>
     <h3>Rare encounters</h3>
     <p><b>👑 Legendary</b> creatures are tougher to catch: ${CATCH.tiers.map((t) => `${t.icon} ${Math.round(t.legendaryRate * 100)}%`).join(', ')}. About 1 in ${CATCH.shinyOdds} puzzles is a <b>✨ Shiny</b> encounter, the same for every player that day. Catch one to mark it shiny in your Dex. Watch for 👑 and ✨ on the sport tabs.</p>
     <h3>Evolution lines</h3>

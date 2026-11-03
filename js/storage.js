@@ -76,15 +76,47 @@ export function savePref(name, value) {
   write(`pref:${name}`, value);
 }
 
-// ---- Dex (collection) ----
-// { caught: { [dexNo]: { date, athleteId, ball } }, seen: { [dexNo]: { date, athleteId } } }
+// ---- Dex (collection): one per sport ----
+// { sports: { NFL: { caught: { [dexNo]: { date, athleteId, ball } }, seen: {...}, shiny: {...} }, NBA: {...}, ... } }
+const PARTS = ['caught', 'seen', 'shiny'];
+const sportOfAthleteId = (id) => (typeof id === 'string' && id.includes('-') ? id.split('-')[0].toUpperCase() : null);
+
+// Accepts the current shape or the old single-Dex shape and returns the current shape.
+// Old entries are sorted into the sport of the athlete they were caught from.
+export function normalizeDex(d) {
+  const out = { sports: {} };
+  if (!d) return out;
+  if (d.sports) {
+    for (const [sp, sd] of Object.entries(d.sports)) {
+      out.sports[sp] = { caught: { ...(sd?.caught || {}) }, seen: { ...(sd?.seen || {}) }, shiny: { ...(sd?.shiny || {}) } };
+    }
+    return out;
+  }
+  for (const part of PARTS) {
+    for (const [n, entry] of Object.entries(d[part] || {})) {
+      const sp = sportOfAthleteId(entry?.athleteId);
+      if (!sp) continue;
+      out.sports[sp] ||= { caught: {}, seen: {}, shiny: {} };
+      out.sports[sp][part][n] = entry;
+    }
+  }
+  return out;
+}
+
 export function loadDex() {
-  const d = read('dex', null);
-  return { caught: {}, seen: {}, shiny: {}, ...(d || {}) };
+  return normalizeDex(read('dex', null));
 }
 export function saveDex(dex) {
   write('dex', dex);
 }
+// The Dex for one sport (created empty if needed).
+export function sportDex(dex, sport) {
+  dex.sports[sport] ||= { caught: {}, seen: {}, shiny: {} };
+  return dex.sports[sport];
+}
+export const dexCounts = (sd) => ({
+  caught: Object.keys(sd?.caught || {}).length, seen: Object.keys(sd?.seen || {}).length, shiny: Object.keys(sd?.shiny || {}).length,
+});
 
 // ---- Whole save (for syncing to a profile) ----
 const MODE_IDS = ['all', 'nfl', 'nba', 'mlb', 'nhl'];
@@ -110,12 +142,15 @@ export function importProgress({ dex, stats = {}, games = {} }) {
 // Combine two saves without losing anything: union of the Dex,
 // the more-played stats per mode, and the further-along game for the same day.
 export function mergeProgress(a = {}, b = {}) {
-  const dex = { caught: {}, seen: {}, shiny: {} };
-  for (const part of ['caught', 'seen', 'shiny']) {
-    for (const src of [a.dex?.[part] || {}, b.dex?.[part] || {}]) {
-      for (const [n, entry] of Object.entries(src)) {
-        const cur = dex[part][n];
-        if (!cur || (entry.date && entry.date < cur.date)) dex[part][n] = entry; // keep the earliest
+  const dex = { sports: {} };
+  for (const src of [normalizeDex(a.dex), normalizeDex(b.dex)]) {
+    for (const [sp, sd] of Object.entries(src.sports)) {
+      const target = sportDex(dex, sp);
+      for (const part of PARTS) {
+        for (const [n, entry] of Object.entries(sd[part] || {})) {
+          const cur = target[part][n];
+          if (!cur || (entry.date && entry.date < cur.date)) target[part][n] = entry; // keep the earliest
+        }
       }
     }
   }
