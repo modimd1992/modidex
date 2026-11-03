@@ -144,7 +144,7 @@ function renderMode() {
 function renderCardArea() {
   const a = answer();
   const done = finished();
-  const clueSportShown = wrongCount() >= CLUE_SCHEDULE[0].after;
+  const clueSportShown = CLUE_SCHEDULE.length > 0 && wrongCount() >= CLUE_SCHEDULE[0].after;
   $('#card-area').innerHTML = renderCard(a, {
     hidden: !done,
     showSport: !isMixed(S.mode) || done || clueSportShown,
@@ -155,6 +155,7 @@ function renderCardArea() {
 
 function renderClues() {
   const list = cluesFor(answer(), S.mode, wrongCount(), finished());
+  if (!list.length) { $('#clues').innerHTML = ''; return; }
   $('#clues').innerHTML = `<h3 class="section-title">Bonus clues</h3><ul>${list.map((c) =>
     c.unlocked
       ? `<li class="clue is-open"><span class="clue-label">${esc(c.label)}</span><span class="clue-text">${esc(c.text)}</span></li>`
@@ -334,8 +335,8 @@ function openHelp() {
       <li><span class="tile miss mini">✗</span> No match</li>
       <li><b class="nowrap">▲ ▼</b>&nbsp; The answer's age or jersey number is higher / lower</li>
     </ul>
-    <h3>Bonus clues</h3>
-    <p>A new clue unlocks after ${CLUE_SCHEDULE.map((c) => c.after).join(', ').replace(/, (\d+)$/, ' and $1')} misses: where they play, then their team, then their initials.</p>
+    ${CLUE_SCHEDULE.length ? `<h3>Bonus clues</h3>
+    <p>A new clue unlocks after ${CLUE_SCHEDULE.map((c) => c.after).join(', ').replace(/, (\d+)$/, ' and $1')} misses: where they play, then their team, then their initials.</p>` : ''}
     <p>After the puzzle ends you'll see the athlete's <b>Gen 1 comp</b>: the original-151 creature they play like.</p>
     <h3>Types</h3>
     <ul class="type-list">${typeList}</ul>

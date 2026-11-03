@@ -53,6 +53,8 @@ export function validateAthletes(list) {
       if (last && a.bio.toLowerCase().includes(last.toLowerCase())) warnings.push(`${who}: bio mentions "${last}", which gives away the answer`);
     }
 
+    if (a.bio && /\d/.test(a.bio)) warnings.push(`${who}: bio contains a number, which can give the answer away`);
+
     if (a.comp) {
       if (!a.comp.name) err(`comp is missing "name"`);
       if (!Number.isInteger(a.comp.dex) || a.comp.dex < 1 || a.comp.dex > 151) err(`comp.dex must be 1-151 (original 151 only)`);

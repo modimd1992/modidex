@@ -27,7 +27,7 @@
         "iq": 120,
         "spe": 115
       },
-      "bio": "A creature thought to be impossible. It hurls fire from the mound, then picks up a bat and launches the ball into orbit. Scholars still argue over which talent is its true form.",
+      "bio": "It is gifted in more ways than seems fair. Rivals study it from every angle and still can't find a weakness.",
       "comp": {
         "name": "Mew",
         "dex": 151,
@@ -59,7 +59,7 @@
         "iq": 125,
         "spe": 70
       },
-      "bio": "It stands six-foot-seven and leads its pack with quiet authority. When it connects, the crowd rises before the ball even lands.",
+      "bio": "A towering creature that leads quietly. When it makes contact, the ball travels a very long way.",
       "comp": {
         "name": "Machamp",
         "dex": 68,
@@ -87,7 +87,7 @@
         "iq": 150,
         "spe": 65
       },
-      "bio": "It reads every pitch before it leaves the hand. When it takes a ball, it shuffles its feet at the pitcher as if to say it knew all along.",
+      "bio": "It has a remarkable eye and rarely chases anything it doesn't like. Patient to a fault, it waits for its pitch.",
       "comp": {
         "name": "Starmie",
         "dex": 121,
@@ -119,7 +119,7 @@
         "iq": 130,
         "spe": 95
       },
-      "bio": "Small in stature but able to master any role it is given. It has won awards in the outfield and then moved to the infield without missing a beat.",
+      "bio": "Small in stature but able to master almost any role it's given. Its versatility makes it hard to pin down.",
       "comp": {
         "name": "Ditto",
         "dex": 132,
@@ -150,7 +150,7 @@
         "iq": 105,
         "spe": 145
       },
-      "bio": "It turns ordinary doubles into triples in a crackling blur. Its sprint speed is so high that infielders rush their throws just hearing it run.",
+      "bio": "Blazing fast and smooth with the glove. Infielders hurry their throws when it bursts out of the box.",
       "comp": {
         "name": "Jolteon",
         "dex": 135,
@@ -183,7 +183,7 @@
         "iq": 80,
         "spe": 150
       },
-      "bio": "Its throws across the diamond have been clocked faster than most fastballs. Every time it reaches base, the whole ballpark braces for a storm.",
+      "bio": "Raw, wild and electric. Its tools are so loud that every trip to the plate feels like an event.",
       "comp": {
         "name": "Electabuzz",
         "dex": 125,
@@ -211,7 +211,7 @@
         "iq": 120,
         "spe": 60
       },
-      "bio": "It fires pitches over 100 mph and then drops a splitter that vanishes in mid-air. It trained in a military academy before taking over big-league mounds.",
+      "bio": "It overwhelms hitters with velocity and a pitch that seems to vanish. It reached the top of its kind remarkably quickly.",
       "comp": {
         "name": "Charizard",
         "dex": 6,
@@ -239,7 +239,7 @@
         "iq": 115,
         "spe": 55
       },
-      "bio": "A towering left-hander that freezes hitters in place. It piles up strikeouts so steadily that opponents are snowed under by the fifth inning.",
+      "bio": "A tall left-hander that freezes hitters in place and piles up strikeouts inning after inning.",
       "comp": {
         "name": "Dewgong",
         "dex": 87,
@@ -272,7 +272,7 @@
         "iq": 110,
         "spe": 40
       },
-      "bio": "Its father was a legend of the same kind. It smashes line drives so hard that infielders flinch, and it rarely swings and misses.",
+      "bio": "Sturdy and powerful, it smashes line drives and rarely swings through a pitch. Pitchers find no safe place to throw it.",
       "comp": {
         "name": "Golem",
         "dex": 76,
@@ -304,7 +304,7 @@
         "iq": 120,
         "spe": 40
       },
-      "bio": "It crouches behind the plate wearing armor all game, then stands up and hits home runs like no catcher before it. Rivals call it by a nickname we can't print here.",
+      "bio": "It wears heavy armor all game, then trades it for a bat and hits with surprising power.",
       "comp": {
         "name": "Kangaskhan",
         "dex": 115,
@@ -337,7 +337,7 @@
         "iq": 125,
         "spe": 110
       },
-      "bio": "It hits from both sides of the plate and plays every inning like it's the last. Compact and tireless, it digs in and refuses to be moved.",
+      "bio": "Compact and tireless, it hits from both sides and plays every inning like it's the last.",
       "comp": {
         "name": "Sandslash",
         "dex": 28,
@@ -370,7 +370,7 @@
         "iq": 125,
         "spe": 100
       },
-      "bio": "Its grin is famous across the league, and its colorful hair changes with the seasons. Behind the charm is a switch-hitting shortstop who rarely leaves the lineup.",
+      "bio": "Behind a famous grin is a steady leader that handles a premium position and rarely leaves the lineup.",
       "comp": {
         "name": "Clefable",
         "dex": 36,
@@ -399,7 +399,7 @@
         "iq": 110,
         "spe": 145
       },
-      "bio": "It leads the league in triples by gliding around the bases like a desert wind. Small but fearless, it plays far bigger than its size.",
+      "bio": "Small but fearless, it glides around the bases like a gust of wind.",
       "comp": {
         "name": "Pidgeot",
         "dex": 18,
@@ -432,7 +432,7 @@
         "iq": 95,
         "spe": 130
       },
-      "bio": "It soars across center field and snatches home runs out of the sky. Off the field it is a magnetic showman with a flair for style.",
+      "bio": "It patrols a huge stretch of grass and snatches fly balls out of the sky. Its energy is contagious.",
       "comp": {
         "name": "Aerodactyl",
         "dex": 142,
@@ -465,7 +465,7 @@
         "iq": 95,
         "spe": 125
       },
-      "bio": "It plays with flair, flipping bats and laser-throwing runners out from right field. Its father was also a big-league star with a famous swing.",
+      "bio": "It plays with flair and swagger, with an arm that cuts down runners and a swing built for highlights.",
       "comp": {
         "name": "Arcanine",
         "dex": 59,
@@ -493,7 +493,7 @@
         "iq": 105,
         "spe": 115
       },
-      "bio": "A smooth left-handed swing flows out of this tall shortstop like a current. It grew up in the rural South before washing over the league as a young star.",
+      "bio": "A tall, smooth left-handed swing flows out of this young infielder like a current.",
       "comp": {
         "name": "Wartortle",
         "dex": 8,
@@ -522,7 +522,7 @@
         "iq": 125,
         "spe": 80
       },
-      "bio": "Since its teenage years it was called the chosen one. It thrives in the loudest moments, and its home crowd roars every time it steps in.",
+      "bio": "It has carried enormous expectations since it was young. It thrives when the crowd is at its loudest.",
       "comp": {
         "name": "Moltres",
         "dex": 146,
@@ -550,7 +550,7 @@
         "iq": 120,
         "spe": 35
       },
-      "bio": "Huge and completely calm, it barely seems to move until the bat whips through the zone. Its October home runs are the stuff of legend.",
+      "bio": "Huge and completely calm, it barely seems to move until the bat whips through the zone.",
       "comp": {
         "name": "Snorlax",
         "dex": 143,
@@ -583,7 +583,7 @@
         "iq": 100,
         "spe": 140
       },
-      "bio": "It once did something no one had ever done: dozens of homers and over seventy steals in one season. Every swing and every step crackles with energy.",
+      "bio": "Every swing and every step crackles with energy. It can beat you with power or with its legs.",
       "comp": {
         "name": "Raichu",
         "dex": 26,
@@ -614,7 +614,7 @@
         "iq": 140,
         "spe": 60
       },
-      "bio": "Not big for an ace, but it carries a whole arsenal of pitches and commands each one perfectly. It once dominated the biggest stage, winning game after game.",
+      "bio": "Not big for its role, but it commands a deep arsenal of pitches with pinpoint precision.",
       "comp": {
         "name": "Ninetales",
         "dex": 38,
@@ -647,7 +647,7 @@
         "iq": 150,
         "spe": 40
       },
-      "bio": "It looks slow and unbothered, yet it sees passing lanes no one else can. Away from the court it is happiest racing horses back home.",
+      "bio": "It looks slow and unbothered, yet it sees passing lanes no one else can. It rarely seems to break a sweat.",
       "comp": {
         "name": "Slowbro",
         "dex": 80,
@@ -680,7 +680,7 @@
         "iq": 130,
         "spe": 115
       },
-      "bio": "It slips past defenders with herky-jerky footwork and sinks mid-range jumpers with ice in its veins. It is known for arriving in very bold outfits.",
+      "bio": "It slips past defenders with herky-jerky footwork and calmly drains shots from the middle of the floor.",
       "comp": {
         "name": "Persian",
         "dex": 53,
@@ -712,7 +712,7 @@
         "iq": 115,
         "spe": 90
       },
-      "bio": "Over seven feet tall with the moves of a guard. Researchers believe it came from another planet. It swats shots from places that should not be possible.",
+      "bio": "Impossibly tall with the moves of a much smaller creature. It swats shots from places that should not be possible.",
       "comp": {
         "name": "Mewtwo",
         "dex": 150,
@@ -745,7 +745,7 @@
         "iq": 145,
         "spe": 70
       },
-      "bio": "It lulls defenders to sleep with a slow dribble, then steps back into a shot they never saw coming. It turned pro in Europe as a teenager.",
+      "bio": "It lulls defenders to sleep with a slow dribble, then steps back into a shot they never saw coming.",
       "comp": {
         "name": "Hypno",
         "dex": 97,
@@ -777,7 +777,7 @@
         "iq": 140,
         "spe": 105
       },
-      "bio": "It fires water cannons from far beyond the arc and changed how the game is played. Even at an advanced age, a single hot streak can flood an arena.",
+      "bio": "It fires from absurd distances and changed how its whole species plays the game.",
       "comp": {
         "name": "Blastoise",
         "dex": 9,
@@ -806,7 +806,7 @@
         "iq": 115,
         "spe": 95
       },
-      "bio": "A long, polished wing that scores from every level and defends multiple positions. It has already raised a championship banner.",
+      "bio": "A long, polished wing that scores from every level and defends several positions.",
       "comp": {
         "name": "Hitmonchan",
         "dex": 107,
@@ -839,7 +839,7 @@
         "iq": 100,
         "spe": 130
       },
-      "bio": "Brash, loud, and explosive, it dunks on anyone who stands in its way and tells them about it afterward. Its confidence burns hotter than any arena.",
+      "bio": "Brash, loud and explosive, it dunks on anyone in its way and tells them about it afterward.",
       "comp": {
         "name": "Primeape",
         "dex": 57,
@@ -870,7 +870,7 @@
         "iq": 115,
         "spe": 50
       },
-      "bio": "A giant from Central Africa that once played volleyball and soccer. When healthy, it is an unstoppable force in the post who fans were told to trust.",
+      "bio": "A massive post presence with a surprisingly soft touch. When healthy, it is nearly impossible to stop.",
       "comp": {
         "name": "Rhydon",
         "dex": 112,
@@ -899,7 +899,7 @@
         "iq": 140,
         "spe": 85
       },
-      "bio": "Small for its position, it uses low-to-the-ground footwork to burrow into the paint. In the fourth quarter its shots turn ice cold for the other team.",
+      "bio": "Small for its role, it uses crafty, low-to-the-ground footwork to burrow into the paint.",
       "comp": {
         "name": "Marowak",
         "dex": 105,
@@ -930,7 +930,7 @@
         "iq": 110,
         "spe": 125
       },
-      "bio": "Its nickname comes from a crawling creature, but its game is pure electricity. It explodes to the rim and has exploded for 70 points in a single night.",
+      "bio": "Quick and explosive, it attacks the rim in a flash and can catch fire for huge scoring nights.",
       "comp": {
         "name": "Pikachu",
         "dex": 25,
@@ -962,7 +962,7 @@
         "iq": 145,
         "spe": 115
       },
-      "bio": "Born on a day that only exists every four years, it sends passes soaring the length of the court. It hit several game-winners in one unforgettable playoff run.",
+      "bio": "It sends passes soaring across the court and seems to love the biggest moments.",
       "comp": {
         "name": "Fearow",
         "dex": 22,
@@ -994,7 +994,7 @@
         "iq": 135,
         "spe": 85
       },
-      "bio": "A big, unhurried point guard that carried a rebuilding franchise back into the light. It grows stronger every season and controls the pace of every game.",
+      "bio": "A big, unhurried floor general that controls the pace and grows stronger every season.",
       "comp": {
         "name": "Kadabra",
         "dex": 64,
@@ -1025,7 +1025,7 @@
         "iq": 110,
         "spe": 115
       },
-      "bio": "Muscular and relentless, it attacks the rim in straight lines and doesn't back down from contact. It once claimed a Finals MVP trophy before moving down the coast to a new home.",
+      "bio": "Muscular and relentless, it attacks the rim in straight lines and doesn't back down from contact.",
       "comp": {
         "name": "Machoke",
         "dex": 67,
@@ -1057,7 +1057,7 @@
         "iq": 120,
         "spe": 95
       },
-      "bio": "Even in the desert heat its jumper flows like water. It once poured in 70 points in a single game as a young pup.",
+      "bio": "A silky shotmaker whose jumper flows like water, even in the hottest conditions.",
       "comp": {
         "name": "Golduck",
         "dex": 55,
@@ -1089,7 +1089,7 @@
         "iq": 125,
         "spe": 85
       },
-      "bio": "Tall and thin as a shadow, it rises over defenders and its shot simply cannot be blocked. It has haunted defenses for nearly two decades.",
+      "bio": "Tall and thin as a shadow, it rises over defenders and its shot simply cannot be blocked.",
       "comp": {
         "name": "Gengar",
         "dex": 94,
@@ -1121,7 +1121,7 @@
         "iq": 105,
         "spe": 85
       },
-      "bio": "A strong young forward that plows through defenders on the way to the rim. It was the top pick of its draft class and keeps getting stronger.",
+      "bio": "A strong young forward that plows through defenders on the way to the rim.",
       "comp": {
         "name": "Nidorino",
         "dex": 33,
@@ -1152,7 +1152,7 @@
         "iq": 120,
         "spe": 90
       },
-      "bio": "It can guard every position on the floor, from tiny guards to giant centers. Its hard shell is built from a famously tough team culture.",
+      "bio": "It can guard almost anyone on the floor, from tiny guards to giant centers.",
       "comp": {
         "name": "Cloyster",
         "dex": 91,
@@ -1184,7 +1184,7 @@
         "iq": 110,
         "spe": 85
       },
-      "bio": "Its long, wiry frame stretches toward the rim to erase shots. It can also step out and hit threes, which confuses opposing big men.",
+      "bio": "Its long, wiry frame erases shots at the rim, and it can also step out and shoot from deep.",
       "comp": {
         "name": "Onix",
         "dex": 95,
@@ -1213,7 +1213,7 @@
         "iq": 115,
         "spe": 105
       },
-      "bio": "This prodigy from the northern woods was the number one pick and already does a bit of everything. Experts say it is only beginning to grow.",
+      "bio": "A young prodigy that already does a bit of everything. Experts say it is only beginning to grow.",
       "comp": {
         "name": "Dratini",
         "dex": 147,
@@ -1244,7 +1244,7 @@
         "iq": 105,
         "spe": 70
       },
-      "bio": "A giant that floats out to the three-point line and shoots like a guard. Few creatures its size have ever had such a soft touch.",
+      "bio": "A big creature that floats out to the perimeter and shoots like a guard.",
       "comp": {
         "name": "Lapras",
         "dex": 131,
@@ -1277,7 +1277,7 @@
         "iq": 110,
         "spe": 70
       },
-      "bio": "Half of a legendary splash duo, it once scored 37 points in a single quarter. It loves cruising on its boat, and after years by the bay it now soaks up the sun in a beach town.",
+      "bio": "A pure catch-and-shoot marksman. Once it heats up, nothing can cool it down.",
       "comp": {
         "name": "Psyduck",
         "dex": 54,
@@ -1309,7 +1309,7 @@
         "iq": 150,
         "spe": 90
       },
-      "bio": "It throws sidearm, no-look, and on the run, often all in the same game. Its father was a big-league pitcher, which may explain the arm.",
+      "bio": "It throws from any angle, on the run, sometimes without even looking. Defenses never feel safe.",
       "comp": {
         "name": "Alakazam",
         "dex": 65,
@@ -1338,7 +1338,7 @@
         "iq": 120,
         "spe": 100
       },
-      "bio": "A huge-armed passer that would rather hurdle or truck a linebacker than slide. It thrives in blizzards near a great lake.",
+      "bio": "A huge-armed passer that would rather run over a defender than slide.",
       "comp": {
         "name": "Tauros",
         "dex": 128,
@@ -1369,7 +1369,7 @@
         "iq": 125,
         "spe": 150
       },
-      "bio": "The most dangerous runner ever to play its position. Defenders who try to tackle it often grab only the air where it was a moment ago.",
+      "bio": "Defenders who try to tackle it often grab only the air where it was a moment ago.",
       "comp": {
         "name": "Electrode",
         "dex": 101,
@@ -1402,7 +1402,7 @@
         "iq": 140,
         "spe": 65
       },
-      "bio": "Nothing rattles it. It arrives at stadiums in stylish outfits and dark sunglasses, then picks apart defenses with surgical calm.",
+      "bio": "Nothing rattles it. It picks defenses apart with surgical calm and cool confidence.",
       "comp": {
         "name": "Articuno",
         "dex": 144,
@@ -1431,7 +1431,7 @@
         "iq": 120,
         "spe": 110
       },
-      "bio": "Squat, strong, and stoic. Short-yardage plays seem hopeless for defenses, because its team simply shoves it forward until it crosses the line.",
+      "bio": "Squat, strong and stoic. On short-yardage plays, defenses brace for it and still can't stop it.",
       "comp": {
         "name": "Rhyhorn",
         "dex": 111,
@@ -1459,7 +1459,7 @@
         "iq": 130,
         "spe": 80
       },
-      "bio": "It was the very last pick of its draft class, a title meant to be a joke. It grew steadily and calmly into a franchise starter anyway.",
+      "bio": "Once overlooked by nearly everyone, it grew steadily and calmly into a starter.",
       "comp": {
         "name": "Bulbasaur",
         "dex": 1,
@@ -1492,7 +1492,7 @@
         "iq": 130,
         "spe": 130
       },
-      "bio": "Its routes are so sharp they slice cornerbacks in half. After a big catch, it celebrates with a famous dance.",
+      "bio": "Its routes are so sharp they slice defensive backs in half.",
       "comp": {
         "name": "Scyther",
         "dex": 123,
@@ -1523,7 +1523,7 @@
         "iq": 115,
         "spe": 135
       },
-      "bio": "Catch a short pass, break one tackle, and suddenly it's gone in a streak of flame. It shares a special bond with its college quarterback.",
+      "bio": "Catch a short pass, break one tackle, and suddenly it's gone in a streak of flame.",
       "comp": {
         "name": "Flareon",
         "dex": 136,
@@ -1555,7 +1555,7 @@
         "iq": 120,
         "spe": 125
       },
-      "bio": "It wears a legendary number for its famous franchise and plays with a showman's flair. It is a magnet for targets on every down.",
+      "bio": "A star target with a showman's flair that draws attention on every down.",
       "comp": {
         "name": "Rapidash",
         "dex": 78,
@@ -1586,7 +1586,7 @@
         "iq": 125,
         "spe": 110
       },
-      "bio": "Overlooked until late in its draft, it went on to break rookie records. It catches everything and loves to throw blocks.",
+      "bio": "Overlooked early, it proved everyone wrong. It catches everything and loves to throw blocks.",
       "comp": {
         "name": "Kingler",
         "dex": 99,
@@ -1619,7 +1619,7 @@
         "iq": 130,
         "spe": 105
       },
-      "bio": "It carries a nickname tied to the sun and keeps a list of every receiver drafted before it. It attacks the middle of the field with a relentless motor.",
+      "bio": "It attacks the middle of the field with a relentless motor and never takes a play off.",
       "comp": {
         "name": "Beedrill",
         "dex": 15,
@@ -1651,7 +1651,7 @@
         "iq": 110,
         "spe": 140
       },
-      "bio": "It once hurdled a defender backwards, without even looking. It flew past 2,000 rushing yards in a single season.",
+      "bio": "Explosive and acrobatic, it can run through defenders or leap right over them.",
       "comp": {
         "name": "Dragonite",
         "dex": 149,
@@ -1683,7 +1683,7 @@
         "iq": 105,
         "spe": 120
       },
-      "bio": "A huge back with a famously devastating stiff-arm. It grows stronger as the game goes on, and defenders dread tackling it in the fourth quarter.",
+      "bio": "A huge back with a devastating stiff-arm. It grows stronger as the game goes on.",
       "comp": {
         "name": "Nidoking",
         "dex": 34,
@@ -1715,7 +1715,7 @@
         "iq": 115,
         "spe": 135
       },
-      "bio": "Defenders swear they had it wrapped up, but it phases through tackles like a spirit. It wears a number rarely seen on running backs.",
+      "bio": "Defenders swear they had it wrapped up, but it phases through tackles like a spirit.",
       "comp": {
         "name": "Haunter",
         "dex": 93,
@@ -1747,7 +1747,7 @@
         "iq": 135,
         "spe": 120
       },
-      "bio": "It runs inside, catches passes like a wide receiver, and reads blocks perfectly. Its father caught passes in the league too.",
+      "bio": "It runs inside, catches passes like a receiver and reads blocks perfectly.",
       "comp": {
         "name": "Eevee",
         "dex": 133,
@@ -1776,7 +1776,7 @@
         "iq": 115,
         "spe": 115
       },
-      "bio": "It broke rookie receiving records for its position in its very first season. It blocks like a lineman and runs like a receiver.",
+      "bio": "It blocks like a lineman and runs like a receiver, a nightmare for linebackers.",
       "comp": {
         "name": "Poliwrath",
         "dex": 62,
@@ -1805,7 +1805,7 @@
         "iq": 110,
         "spe": 125
       },
-      "bio": "A rare beast with impossible size and speed. It writes poetry and studies dinosaurs in its spare time, and it recently migrated west to terrorize a new set of quarterbacks.",
+      "bio": "A rare beast with impossible size and speed that hunts quarterbacks.",
       "comp": {
         "name": "Gyarados",
         "dex": 130,
@@ -1837,7 +1837,7 @@
         "iq": 115,
         "spe": 110
       },
-      "bio": "Born and raised near the city it now defends, it clamps onto quarterbacks with a relentless motor. It plays every snap like it's personal.",
+      "bio": "It clamps onto quarterbacks with a relentless motor and plays every snap like it's personal.",
       "comp": {
         "name": "Pinsir",
         "dex": 127,
@@ -1868,7 +1868,7 @@
         "iq": 130,
         "spe": 120
       },
-      "bio": "It shadows the best receiver on every team and sticks to him like a magnet. Its father was also a star cornerback.",
+      "bio": "It shadows the opponent's best receiver every week and sticks to him like a magnet.",
       "comp": {
         "name": "Magneton",
         "dex": 82,
@@ -1899,7 +1899,7 @@
         "iq": 110,
         "spe": 40
       },
-      "bio": "Once a professional soccer player, it now drills kicks from more than 60 yards with ice in its veins. Opposing coaches start worrying once it crosses midfield.",
+      "bio": "It drills kicks from extremely long range with ice in its veins.",
       "comp": {
         "name": "Hitmonlee",
         "dex": 106,
@@ -1932,7 +1932,7 @@
         "iq": 145,
         "spe": 150
       },
-      "bio": "The fastest creature on ice. It carries the puck at full speed in a way that leaves defenders frozen and broadcasters out of words.",
+      "bio": "It carries the puck at blinding speed, leaving defenders frozen in its wake.",
       "comp": {
         "name": "Zapdos",
         "dex": 145,
@@ -1964,7 +1964,7 @@
         "iq": 135,
         "spe": 90
       },
-      "bio": "A big centre from Germany with a one-timer from its off wing that slices through goalies. It scores in bunches every spring.",
+      "bio": "A big, strong centre with a one-timer that slices through goalies.",
       "comp": {
         "name": "Kabutops",
         "dex": 141,
@@ -1997,7 +1997,7 @@
         "iq": 125,
         "spe": 145
       },
-      "bio": "It burns with an intensity teammates call scary. Each rush builds like a fire racing down a mountain slope.",
+      "bio": "It burns with intensity, and each rush builds like a fire racing downhill.",
       "comp": {
         "name": "Magmar",
         "dex": 126,
@@ -2029,7 +2029,7 @@
         "iq": 120,
         "spe": 95
       },
-      "bio": "Raised in the desert, far from any frozen pond, it became the most feared sniper in hockey. It once scored 69 goals in a season.",
+      "bio": "A feared sniper with a quick, deceptive release that fools goalies.",
       "comp": {
         "name": "Seadra",
         "dex": 117,
@@ -2062,7 +2062,7 @@
         "iq": 150,
         "spe": 95
       },
-      "bio": "Captain since it was barely an adult, it has led its kind for two decades. Its number matches its birthday.",
+      "bio": "A complete, ageless leader that does everything well at both ends of the ice.",
       "comp": {
         "name": "Venusaur",
         "dex": 3,
@@ -2094,7 +2094,7 @@
         "iq": 150,
         "spe": 95
       },
-      "bio": "Quiet and mysterious, it disguises every pass as a shot and every shot as a pass. Goalies rarely know which is coming.",
+      "bio": "Quiet and mysterious, it disguises every pass as a shot and every shot as a pass.",
       "comp": {
         "name": "Mr. Mime",
         "dex": 122,
@@ -2126,7 +2126,7 @@
         "iq": 135,
         "spe": 135
       },
-      "bio": "It skates so smoothly that it seems to melt into the ice. A defender by title, it attacks like a forward.",
+      "bio": "It skates so smoothly that it seems to melt into the ice. A defender that attacks like a forward.",
       "comp": {
         "name": "Vaporeon",
         "dex": 134,
@@ -2159,7 +2159,7 @@
         "iq": 125,
         "spe": 115
       },
-      "bio": "It appears out of nowhere in front of the net, scores, and vanishes again. It became a legend in another league before crossing the ocean.",
+      "bio": "It appears out of nowhere in front of the net, scores, and vanishes again.",
       "comp": {
         "name": "Gastly",
         "dex": 92,
@@ -2192,7 +2192,7 @@
         "iq": 115,
         "spe": 110
       },
-      "bio": "Its nickname is a famous noodle dish, and it is known for goofy outfits and a big smile. Its one-timer is no joke.",
+      "bio": "Playful and goofy away from the rink, but its one-timer is no joke.",
       "comp": {
         "name": "Clefairy",
         "dex": 35,
@@ -2220,7 +2220,7 @@
         "iq": 125,
         "spe": 140
       },
-      "bio": "One of a set of hockey-playing brothers. Its edgework is so slick that defenders often end up skating the wrong way.",
+      "bio": "Its edgework is so slick that defenders often end up skating the wrong way.",
       "comp": {
         "name": "Ponyta",
         "dex": 77,
@@ -2252,7 +2252,7 @@
         "iq": 120,
         "spe": 105
       },
-      "bio": "It was given special status to join a top junior league at only 15. Its quick-release shot keeps growing stronger.",
+      "bio": "A young prodigy with a lightning-quick release that keeps growing stronger.",
       "comp": {
         "name": "Charmander",
         "dex": 4,
@@ -2283,7 +2283,7 @@
         "iq": 130,
         "spe": 115
       },
-      "bio": "It guards the net with lightning reflexes and a hard shell. Shooters sometimes skate away shaking their heads in disbelief.",
+      "bio": "It guards the net with lightning reflexes and a hard shell.",
       "comp": {
         "name": "Omastar",
         "dex": 139,
@@ -2316,7 +2316,7 @@
         "iq": 125,
         "spe": 105
       },
-      "bio": "Nicknamed after a big jungle cat, it fills the whole net. It has backstopped multiple championship runs.",
+      "bio": "A huge presence in the crease that seems to fill the entire net.",
       "comp": {
         "name": "Graveler",
         "dex": 75,
@@ -2348,7 +2348,7 @@
         "iq": 135,
         "spe": 85
       },
-      "bio": "It gets under opponents' skin, chirping them all game until they snap. Its father and brother also play the same physical style.",
+      "bio": "It gets under opponents' skin, chirping all game until they snap.",
       "comp": {
         "name": "Arbok",
         "dex": 24,
@@ -2377,7 +2377,7 @@
         "iq": 110,
         "spe": 90
       },
-      "bio": "It parks itself in front of the net and refuses to be moved. After forcing its way out of its old den, it now shares a locker room with its older brother.",
+      "bio": "It parks itself in front of the net and refuses to be moved.",
       "comp": {
         "name": "Mankey",
         "dex": 56,
@@ -2408,7 +2408,7 @@
         "iq": 145,
         "spe": 105
       },
-      "bio": "It threads passes through tiny gaps that seem impossible. It left its hometown team and headed for the desert lights.",
+      "bio": "It threads passes through tiny gaps that seem impossible.",
       "comp": {
         "name": "Abra",
         "dex": 63,
@@ -2440,7 +2440,7 @@
         "iq": 130,
         "spe": 115
       },
-      "bio": "A big, complete centre that does a bit of everything. It overcame a serious neck injury and then lifted the championship trophy.",
+      "bio": "A big, complete centre that does a bit of everything.",
       "comp": {
         "name": "Dodrio",
         "dex": 85,
@@ -2472,7 +2472,7 @@
         "iq": 125,
         "spe": 110
       },
-      "bio": "It logs huge minutes and pushes the play forward like a rising tide. It became the heart of its team through a very hard time.",
+      "bio": "It logs huge minutes and pushes the play forward like a rising tide.",
       "comp": {
         "name": "Poliwhirl",
         "dex": 61,
@@ -2504,7 +2504,7 @@
         "iq": 135,
         "spe": 110
       },
-      "bio": "A first-overall pick whose father worked as a team trainer in another sport. It grows into a franchise leader faster than anyone expected.",
+      "bio": "A young leader growing into a cornerstone faster than anyone expected.",
       "comp": {
         "name": "Ivysaur",
         "dex": 2,
@@ -2533,7 +2533,7 @@
         "iq": 115,
         "spe": 115
       },
-      "bio": "Quiet and steady, it scores 40 goals in one of the coldest cities in the league with very little noise. Its release is smooth as a stream.",
+      "bio": "Quiet and steady, it piles up goals with a release smooth as a stream.",
       "comp": {
         "name": "Staryu",
         "dex": 120,

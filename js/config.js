@@ -12,13 +12,10 @@ export const GAME = {
   storagePrefix: 'modidex:v1',
 };
 
-// Extra clues unlock after this many wrong guesses.
-// Each clue is built from the answer in clues.js.
-export const CLUE_SCHEDULE = [
-  { after: 2, id: 'conference' },
-  { after: 4, id: 'team' },
-  { after: 5, id: 'initials' },
-];
+// Bonus clues that unlock after wrong guesses. Turned off (empty) for now.
+// To bring them back, add entries like { after: 3, id: 'conference' }.
+// Available ids (see clues.js): 'conference', 'team', 'number', 'initials'.
+export const CLUE_SCHEDULE = [];
 
 // Stats shown on every profile. Same six keys for every sport so mixed mode works.
 export const STATS = [

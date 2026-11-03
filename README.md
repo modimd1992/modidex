@@ -7,7 +7,7 @@ Every day there's a mystery athlete for each sport, shown as a creature-style sc
 - Modes: **All Sports**, **NFL**, **NBA**, **MLB** (NHL is built but turned off, see below)
 - Same puzzles for everyone each day, with a new set at local midnight
 - Wordle-style feedback on conference, team, position, age, jersey number and type
-- Bonus clues unlock after 2, 4 and 5 misses
+- No bonus clues: just the card and your guess feedback (clues can be turned back on in `js/config.js`)
 - Spoiler-free emoji share grid, plus streaks and stats per mode saved in the browser
 - Static site: no build step, no backend, no accounts
 
