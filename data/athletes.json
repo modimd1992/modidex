@@ -4942,6 +4942,71 @@
       }
     },
     {
+      "id": "nfl-devonta-smith",
+      "name": "DeVonta Smith",
+      "aliases": [
+        "Devonta Smith",
+        "Smitty"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "East",
+      "team": "Philadelphia Eagles",
+      "teamAbbr": "PHI",
+      "position": "WR",
+      "number": 6,
+      "birthDate": "1998-11-14",
+      "type": "Psychic",
+      "type2": "Ghost",
+      "category": "Wisp Route Runner",
+      "stats": {
+        "hp": 105,
+        "atk": 115,
+        "def": 50,
+        "skl": 145,
+        "iq": 130,
+        "spe": 120
+      },
+      "bio": "Slender as a reed, it slips through coverage with flawless timing and snatches throws that seem out of reach.",
+      "comp": {
+        "name": "Bellsprout",
+        "dex": 69,
+        "why": "Thin as a reed, whip-quick and surprisingly tough."
+      }
+    },
+    {
+      "id": "nfl-drake-london",
+      "name": "Drake London",
+      "aliases": [
+        "London"
+      ],
+      "sport": "NFL",
+      "league": "NFC",
+      "division": "South",
+      "team": "Atlanta Falcons",
+      "teamAbbr": "ATL",
+      "position": "WR",
+      "number": 5,
+      "birthDate": "2001-07-24",
+      "type": "Fighting",
+      "type2": "Flying",
+      "category": "Tower Target",
+      "stats": {
+        "hp": 115,
+        "atk": 125,
+        "def": 60,
+        "skl": 135,
+        "iq": 115,
+        "spe": 95
+      },
+      "bio": "A towering receiver that boxes out defenders and plucks contested throws from the air at their highest point.",
+      "comp": {
+        "name": "Aerodactyl",
+        "dex": 142,
+        "why": "A big, winged hunter that snatches its target out of the sky."
+      }
+    },
+    {
       "id": "nhl-connor-mcdavid",
       "name": "Connor McDavid",
       "aliases": [
