@@ -628,7 +628,7 @@ function socialError(e) {
   const m = map[e?.message];
   if (m) return m;
   if (e?.code === 'permission-denied') return 'Friends & groups need the updated Firebase rules (see README).';
-  return 'Something went wrong. Try again.';
+  return `Something went wrong${e?.code ? ` (${e.code})` : ''}. Try again.`;
 }
 
 function todayLine(p, compact = false) {
@@ -700,17 +700,38 @@ function renderMeTab(body, u, prof, caughtN, needHandle) {
       <input id="handle-input" maxlength="15" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="e.g. jedimodi" value="${esc(prof.handle || '')}">
       <button class="btn btn-primary" type="submit">${prof.handle ? 'Change' : 'Save'}</button>
     </form>
+    <p class="form-msg" id="handle-msg" role="status" aria-live="polite"></p>
     <h3>Sync</h3>
     <p>✅ Your Dex (<b>${caughtN}</b> caught), stats and today's games are saved to your profile and sync on any device where you sign in.</p>
     <p class="small">Signed in as ${esc(u.email || u.displayName || 'you')}. Your username, Dex and daily scores (never the answers) are visible only to your friends and groups.</p>
     <div class="btn-row"><button class="btn" id="btn-signout">Sign out</button></div>
     <p class="small"><button class="link-btn" id="btn-delete-profile">Delete my profile</button> removes your saved data, username and group memberships from our server. Progress on this device stays.</p>`;
+  const input = body.querySelector('#handle-input');
+  const msg = body.querySelector('#handle-msg');
+  const say = (text, bad = false) => { msg.textContent = text; msg.classList.toggle('bad', bad); };
+  // Usernames allow a–z, 0–9 and _. Turn spaces, dots and dashes into _ as you type and drop the rest.
+  input.addEventListener('input', () => {
+    const clean = input.value.toLowerCase().replace(/[\s.\-]+/g, '_').replace(/[^a-z0-9_]/g, '').slice(0, 15);
+    if (clean !== input.value) input.value = clean;
+    say('');
+  });
   body.querySelector('#handle-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const v = body.querySelector('#handle-input').value.trim().toLowerCase();
-    if (!HANDLE_RE.test(v)) return toast(socialError({ message: 'invalid' }));
-    try { await claimHandle(v); toast(`You're @${v}!`); renderProfileButton(); pushProgress(); await handlePendingLink(); openProfile('me'); }
-    catch (err) { toast(socialError(err)); }
+    const v = input.value.trim().toLowerCase();
+    if (!HANDLE_RE.test(v)) return say(socialError({ message: 'invalid' }), true);
+    const btn = body.querySelector('#handle-form button');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    say('');
+    try {
+      await claimHandle(v);
+      toast(`You're @${v}!`); renderProfileButton(); pushProgress(); await handlePendingLink(); openProfile('me');
+    } catch (err) {
+      console.warn('[profiles] username save failed:', err);
+      say(socialError(err), true);
+      btn.disabled = false;
+      btn.textContent = prof.handle ? 'Change' : 'Save';
+    }
   });
   body.querySelector('#btn-signout').addEventListener('click', async () => { await signOut(); toast('Signed out. Progress stays on this device.'); });
   body.querySelector('#btn-delete-profile').addEventListener('click', async () => {
@@ -1058,6 +1079,9 @@ window.addEventListener('scroll', closeTypePop, { passive: true });
 let toastTimer;
 function toast(msg) {
   const t = $('#toast');
+  // An open dialog sits above the page, so show the message inside it.
+  const open = [...document.querySelectorAll('dialog[open]')].pop() || document.body;
+  if (t.parentElement !== open) open.appendChild(t);
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
@@ -1067,4 +1091,4 @@ function toast(msg) {
 init();
 
 // Local testing only: lets the developer preview social screens with sample data.
-if (location.hostname === 'localhost') window.__modidexTest = { openPerson, openGroup, publicSummary };
+if (location.hostname === 'localhost') window.__modidexTest = { openPerson, openGroup, publicSummary, renderMeTab, openDialog };
