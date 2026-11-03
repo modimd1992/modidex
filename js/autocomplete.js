@@ -8,14 +8,18 @@ export function normalize(s) {
 
 function score(athlete, q) {
   let best = 0;
-  for (const n of [athlete.name, ...(athlete.aliases || [])]) {
+  [athlete.name, ...(athlete.aliases || [])].forEach((n, i) => {
     const name = normalize(n);
-    if (name === q) return 100;
-    if (name.startsWith(q)) best = Math.max(best, 80);
-    else if (name.split(' ').some((w) => w === q)) best = Math.max(best, 70); // exact last name
-    else if (name.split(' ').some((w) => w.startsWith(q))) best = Math.max(best, 60);
-    else if (name.includes(q)) best = Math.max(best, 40);
-  }
+    const words = name.split(' ');
+    let s = 0;
+    if (name === q) s = 100;
+    else if (words.includes(q)) s = 90; // exact first or last name
+    else if (name.startsWith(q)) s = 80;
+    else if (words.some((w) => w.startsWith(q))) s = 60;
+    else if (name.includes(q)) s = 40;
+    if (s && i > 0) s -= 1; // a real name beats a nickname on a tie
+    best = Math.max(best, s);
+  });
   return best;
 }
 
