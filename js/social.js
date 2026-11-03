@@ -100,10 +100,36 @@ export async function sendFriendRequest(rawHandle) {
   const to = h.data().uid;
   if (to === a.user.uid) throw new Error('self');
   if ((prof.friends || []).includes(to)) throw new Error('already');
-  await a.fsM.setDoc(ref(a, 'friendRequests', `${to}_${a.user.uid}`), {
+  // A request between these two people may already be in progress.
+  const theirs = await tryGet(ref(a, 'friendRequests', `${a.user.uid}_${to}`));
+  if (theirs?.status === 'pending') { // they already asked: accept it
+    await answerRequest({ id: `${a.user.uid}_${to}`, from: to }, true);
+    return { handle, result: 'friends' };
+  }
+  const mineRef = ref(a, 'friendRequests', `${to}_${a.user.uid}`);
+  const mine = await tryGet(mineRef);
+  if (mine?.status === 'pending') throw new Error('pending');
+  if (mine?.status === 'accepted') { // they accepted: finish the handshake
+    await addToMine('friends', to);
+    await a.fsM.deleteDoc(mineRef);
+    return { handle, result: 'friends' };
+  }
+  if (mine) await a.fsM.deleteDoc(mineRef); // declined earlier: ask again
+  await a.fsM.setDoc(mineRef, {
     from: a.user.uid, to, fromName: prof.handle, toName: handle, status: 'pending', createdAt: a.fsM.serverTimestamp(),
   });
-  return handle;
+  return { handle, result: 'sent' };
+}
+
+// A friend request's data, or null if there isn't one (reading a missing one is refused).
+async function tryGet(r) {
+  const a = api();
+  try {
+    const snap = await a.fsM.getDoc(r);
+    return snap.exists() ? snap.data() : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function incomingRequests() {

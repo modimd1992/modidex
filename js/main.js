@@ -15,7 +15,7 @@ import { GEN1, FAMILIES, pad3 as dex3 } from './gen1.js';
 import { cloudEnabled, initCloud, onCloudChange, currentUser, cloudStatus, pushProgress, signInWithGoogle, emailSignInLink, signOut, deleteProfile } from './cloud.js';
 import {
   setSummaryBuilder, loadMyProfile, myHandle, forgetProfile, claimHandle, sendFriendRequest, incomingRequests,
-  answerRequest, listFriends, removeFriend, createGroup, joinGroup, leaveGroup, listGroups, groupMembers, HANDLE_RE,
+  answerRequest, processAnsweredRequests, listFriends, removeFriend, createGroup, joinGroup, leaveGroup, listGroups, groupMembers, HANDLE_RE,
 } from './social.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -623,11 +623,11 @@ function socialError(e) {
   const map = {
     invalid: 'Usernames are 3–15 letters, numbers or _.', taken: 'That username is taken.',
     'not-found': 'No one found. Check the spelling.', self: "That's you!", already: "You're already friends.",
-    'no-handle': 'Pick a username first (Me tab).', 'group-name': 'Group names need at least 2 characters.', full: 'That group is full.', 'too-many': "You're in the maximum number of groups.",
+    'no-handle': 'Pick a username first (Me tab).', pending: "You've already sent them a request. It'll show here once they accept.", 'group-name': 'Group names need at least 2 characters.', full: 'That group is full.', 'too-many': "You're in the maximum number of groups.",
   };
   const m = map[e?.message];
   if (m) return m;
-  if (e?.code === 'permission-denied') return 'Friends & groups need the updated Firebase rules (see README).';
+  if (e?.code === 'permission-denied') return "That didn't go through. Reload the page and try again.";
   return `Something went wrong${e?.code ? ` (${e.code})` : ''}. Try again.`;
 }
 
@@ -753,13 +753,17 @@ async function renderFriendsTab(body, prof) {
     <ul class="people" id="friend-list"><li class="small">Loading…</li></ul>`;
   body.querySelector('#add-friend-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    try { const h = await sendFriendRequest(body.querySelector('#add-friend').value); toast(`Friend request sent to @${h}!`); body.querySelector('#add-friend').value = ''; }
-    catch (err) { toast(socialError(err)); }
+    try {
+      const r = await sendFriendRequest(body.querySelector('#add-friend').value);
+      body.querySelector('#add-friend').value = '';
+      if (r.result === 'friends') { toast(`You and @${r.handle} are friends!`); openProfile('friends'); } else toast(`Friend request sent to @${r.handle}!`);
+    } catch (err) { toast(socialError(err)); }
   });
   body.querySelector('#copy-friend-link').addEventListener('click', async () => {
     toast((await copyText(`Add me on ModiDex! ${siteUrl()}#add=${prof.handle}`)) ? 'Friend link copied!' : 'Could not copy.');
   });
   try {
+    try { await processAnsweredRequests(); } catch { /* finish accepted requests; not critical */ }
     const [reqs, friends] = await Promise.all([incomingRequests(), listFriends()]);
     const rq = body.querySelector('#requests');
     if (reqs.length) {
@@ -943,8 +947,8 @@ async function handlePendingLink() {
     if (kind === 'add') {
       if (value.toLowerCase() === prof.handle) return;
       if (!confirm(`Send a friend request to @${value}?`)) return;
-      await sendFriendRequest(value);
-      toast(`Friend request sent to @${value}!`);
+      const r = await sendFriendRequest(value);
+      toast(r.result === 'friends' ? `You and @${r.handle} are friends!` : `Friend request sent to @${r.handle}!`);
     } else {
       if (!confirm(`Join the group with code ${value.toUpperCase()}?`)) return;
       const g = await joinGroup(value);
