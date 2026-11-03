@@ -28,7 +28,7 @@ service cloud.firestore {
         || me() in resource.data.friends
         || (exists(profileOf(me())) && resource.data.groups.hasAny(get(profileOf(me())).data.groups)));
       allow create, update: if signedIn() && me() == uid
-        && request.resource.data.keys().hasOnly(['handle', 'name', 'friends', 'groups', 'dex', 'lines', 'streaks', 'today', 'week', 'alltime', 'badges', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['handle', 'name', 'friends', 'groups', 'dex', 'lines', 'streaks', 'today', 'week', 'alltime', 'badges', 'partner', 'updatedAt'])
         && request.resource.data.friends.size() <= 300
         && request.resource.data.groups.size() <= 20;
       allow delete: if signedIn() && me() == uid;

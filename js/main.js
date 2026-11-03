@@ -1,13 +1,15 @@
 // App entry point: wires data, daily answers, storage and the screen together.
 import { GAME, MODES, SPORTS, STATS, CLUE_SCHEDULE, CLOSE, ENABLED_SPORTS, CATCH } from './config.js';
-import { TYPES, typeInfo } from './types.js';
+import { TYPES, typeInfo, athleteTypes } from './types.js';
 import { loadData } from './data.js';
-import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay } from './daily.js';
+import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay, hashString } from './daily.js';
 import { compareGuess, columnsFor } from './compare.js';
 import { cluesFor } from './clues.js';
 import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex, saveDex, sportDex, dexCounts, loadHistory, recordHistory } from './storage.js';
 import { pointsFor, weekTotals, weekStart, allTimeTotals } from './leaderboard.js';
 import { badgeFacts, badgeStatus, badgeById, ALL_BADGES } from './badges.js';
+import { newPartner, feedPartner, levelOf, levelProgress, evolutionOf, XP_PER_LEVEL, MAX_LEVEL } from './partner.js';
+import { drawTrainerCard } from './trainercard.js';
 import { shareText, combinedShareText, shareOrCopy, copyText, guessSquares } from './share.js';
 import { renderCard, esc } from './card.js';
 import { attachAutocomplete } from './autocomplete.js';
@@ -326,6 +328,8 @@ function submitGuess(athlete) {
     S.game.recorded = true;
     const caught = resolveCatch(S.game, answer(), S.key, rareFor(S.mode));
     recordHistory(S.key, S.mode.id, S.game.status, S.game.guesses.length, caught?.outcome === 'caught');
+    const fed = feedMyPartner(S.mode.id, won, S.game.guesses.length);
+    if (fed?.evolved) setTimeout(() => showEvolution(fed.evolved), 2600); // after the catch animation
     S.justFinished = true;
     setTimeout(() => checkBadges(), 1800); // after the catch animation
     setTimeout(pushProgress, 0); // after the save below; syncs to the profile if signed in
@@ -431,6 +435,7 @@ function renderResult(area) {
   area.innerHTML = `
     <div class="panel result ${won ? 'won' : 'lost'}">
       ${catchHtml(S.game.catch, S.justFinished)}
+      ${partnerLineHtml()}
       <h2>${won ? `${praise} Scouted in ${n}/${GAME.maxGuesses}` : 'Out of guesses!'}</h2>
       <p>${won ? 'You named' : 'The mystery athlete was'} <b>${esc(a.name)}</b>${a.comp ? `, whose Gen 1 comp is <b>${esc(a.comp.name)}</b>` : ''}.</p>
       <div class="result-stats">
@@ -591,6 +596,7 @@ function openDex(filter = 'all', sport = dexSport) {
   openDialog($('#dlg-dex'), `
     <h2 id="dex-title">${isTotal ? 'Your 📚 Total Dex' : `Your ${SPORTS[sport].emoji} ${sport} Dex`}</h2>
     <div class="chip-row">${sportTabs}</div>
+    ${isTotal ? dexActionsHtml(all) : ''}
     <p><b>${caughtN}</b> caught · ${seenN} seen · ${CATCH.total} total<br><span class="small">✨ ${shinyN} shiny · 🏅 ${linesDone}/${FAMILIES.length} evolution lines complete</span>${isTotal ? `<br><span class="small">🏆 Grand total: <b>${grandCaught}</b> of ${CATCH.total * ENABLED_SPORTS.length} caught across all ${ENABLED_SPORTS.length} sports</span>` : ''}</p>
     <div class="dex-bar" aria-label="${pct}% caught"><span style="width:${pct}%"></span></div>
     <div class="chip-row">
@@ -601,6 +607,181 @@ function openDex(filter = 'all', sport = dexSport) {
     <p class="small">${isTotal ? `The Total Dex counts each creature once, from any sport. ` : ''}Each sport has its own Dex of ${CATCH.total}. Catches from All Sports go to that athlete's sport. Solve faster for a better ball: ${CATCH.tiers.map((t) => `${t.icon} ${t.name} ${Math.round(t.rate * 100)}%`).join(' · ')}.</p>`);
   $('#dlg-dex').querySelectorAll('[data-dex-filter]').forEach((b) => (b.onclick = () => openDex(b.dataset.dexFilter, sport)));
   $('#dlg-dex').querySelectorAll('[data-dex-sport]').forEach((b) => (b.onclick = () => openDex(filter, b.dataset.dexSport)));
+}
+
+// ---------- partner ----------
+const longDate = (key) => new Date(`${key}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+function partnerInfo(p) {
+  if (!p) return null;
+  const a = S.data.byId.get(p.athleteId);
+  const t = a ? athleteTypes(a)[0] : null;
+  const evo = evolutionOf(p.form);
+  const level = levelOf(p);
+  return {
+    name: GEN1[p.form - 1], base: GEN1[p.n - 1], level, progress: levelProgress(p),
+    toNext: level >= MAX_LEVEL ? 0 : XP_PER_LEVEL - ((p.xp || 0) % XP_PER_LEVEL),
+    emoji: t ? typeInfo(t).emoji : '⭐',
+    via: a ? `Caught via ${a.name} ${SPORTS[p.sport]?.emoji || ''}`.trim() : '',
+    evoNote: evo && level < evo.at ? `Evolves at Lv ${evo.at}` : evo ? 'Ready to evolve' : 'Fully evolved',
+  };
+}
+
+function feedMyPartner(modeId, won, guesses) {
+  const all = loadDex();
+  const r = feedPartner(all.partner, { date: S.key, modeId, won, guesses });
+  if (!r) return null;
+  all.partner = r.partner;
+  saveDex(all);
+  S.partnerGain = { modeId, date: S.key, ...r };
+  return r;
+}
+
+const xpBar = (progress) => `<span class="xp-bar"><span style="width:${Math.round(progress * 100)}%"></span></span>`;
+
+// The partner line under today's catch result.
+function partnerLineHtml() {
+  const all = loadDex();
+  const info = partnerInfo(all.partner);
+  if (!info) {
+    return Object.keys(combinedDex(all).caught).length
+      ? '<button class="partner-line" type="button" data-open-partner>🤝 Pick a partner to level up with every puzzle ›</button>' : '';
+  }
+  const g = S.partnerGain?.modeId === S.mode.id && S.partnerGain.date === S.key ? S.partnerGain : null;
+  const gain = g ? ` · <b class="xp-gain">+${g.gained} XP</b>${g.after > g.before ? ' · Level up! ⬆️' : ''}` : '';
+  return `<button class="partner-line" type="button" data-open-partner><span>${info.emoji} <b>${esc(info.name)}</b> Lv ${info.level}${gain}</span>${xpBar(info.progress)}</button>`;
+}
+
+// Partner + Trainer Card buttons at the top of the Dex.
+function dexActionsHtml(all) {
+  const info = partnerInfo(all.partner);
+  return `<div class="dex-actions">
+    <button class="partner-line" type="button" data-open-partner><span>${info ? `${info.emoji} Partner: <b>${esc(info.name)}</b> Lv ${info.level}` : '🤝 Choose a partner'} ›</span>${info ? xpBar(info.progress) : ''}</button>
+    <button class="btn btn-sm" type="button" data-open-card>🪪 Trainer Card</button>
+  </div>`;
+}
+
+function openPartner() {
+  const all = loadDex();
+  const p = all.partner;
+  const info = partnerInfo(p);
+  const combined = combinedDex(all);
+  const nums = Object.keys(combined.caught).map(Number).sort((x, y) => x - y);
+  const cells = nums.map((n) => {
+    const sports = (combined.from[n] || []).filter((f) => f.caught).map((f) => SPORTS[f.sport].emoji).join(' ');
+    return `<li><button class="dex-cell caught pick${p?.n === n ? ' is-partner' : ''}" type="button" data-pick="${n}">
+      <span class="dex-no">#${dex3(n)}${p?.n === n ? ' 🤝' : ''}</span><span class="dex-name">${esc(GEN1[n - 1])}</span><span class="dex-via">${sports}</span></button></li>`;
+  }).join('');
+  openDialog($('#dlg-partner'), `
+    <h2 id="partner-title">🤝 Your Partner</h2>
+    ${info ? `<div class="partner-hero">
+      <div class="partner-orb" aria-hidden="true">${info.emoji}</div>
+      <div class="partner-body">
+        <p class="partner-name">${esc(info.name)} <span class="partner-lv">Lv ${info.level}</span></p>
+        ${xpBar(info.progress)}
+        <p class="small">${info.toNext ? `${info.toNext} XP to Lv ${info.level + 1} · ` : ''}${info.evoNote}${p.form !== p.n ? ` · Started as ${esc(info.base)}` : ''}</p>
+        <p class="small">${esc(info.via)} · Partner since ${shortDate(p.since)}</p>
+      </div>
+    </div>` : '<p>Pick any creature you\'ve caught to be your partner. It earns XP from every puzzle you finish, levels up and evolves.</p>'}
+    <div class="btn-row"><button class="btn btn-primary" type="button" data-open-card>🪪 Trainer Card</button></div>
+    <p class="small">XP per puzzle: 6 for a 1st-guess solve down to 1 for a 6th, and 1 for trying. Every ${XP_PER_LEVEL} XP is a level.</p>
+    <h3>${info ? 'Change partner' : 'Choose your partner'}</h3>
+    ${nums.length ? `${info ? '<p class="small">Switching starts the new partner at its own level.</p>' : ''}<ul class="dex-grid pick-grid">${cells}</ul>`
+      : '<p class="small">Catch a creature first: solve a puzzle in 5 guesses or fewer to throw a ball.</p>'}`);
+  $('#dlg-partner').querySelectorAll('[data-pick]').forEach((b) => (b.onclick = () => choosePartner(Number(b.dataset.pick))));
+}
+
+function choosePartner(n) {
+  const all = loadDex();
+  const cur = all.partner;
+  if (cur?.n === n) return;
+  const name = GEN1[n - 1];
+  if (cur && !confirm(`Make ${name} your partner? ${GEN1[cur.form - 1]} (Lv ${levelOf(cur)}) goes back to your Dex and its level resets.`)) return;
+  const f = (combinedDex(all).from[n] || []).find((x) => x.caught);
+  if (!f) return;
+  all.partner = newPartner({ n, sport: f.sport, athleteId: f.entry.athleteId }, S.key);
+  saveDex(all);
+  setTimeout(pushProgress, 0);
+  toast(`🤝 ${name} is your partner!`);
+  openPartner();
+  if ($('#dlg-dex').open) openDex('all', dexSport);
+  if (S.data && finished()) renderPlayArea();
+}
+
+function showEvolution([from, to]) {
+  const info = partnerInfo(loadDex().partner);
+  const dlg = $('#dlg-partner');
+  openDialog(dlg, `<h2 id="partner-title" class="sr-only">Evolution</h2>
+    <div class="evolve">
+      <p class="evolve-what">What? <b>${esc(GEN1[from - 1])}</b> is evolving!</p>
+      <div class="evolve-orb" aria-hidden="true">${info?.emoji || '⭐'}</div>
+      <p class="evolve-done">Congratulations! Your ${esc(GEN1[from - 1])} evolved into <b>${esc(GEN1[to - 1])}</b>!</p>
+    </div>`);
+  setTimeout(() => dlg.querySelector('.evolve')?.classList.add('done'), 2200);
+}
+
+function trainerCardData() {
+  const all = loadDex();
+  const { list } = myBadges();
+  const dates = [];
+  const balls = {};
+  let shinies = 0;
+  for (const sp of ENABLED_SPORTS) {
+    const sd = sportDex(all, sp);
+    for (const e of [...Object.values(sd.caught), ...Object.values(sd.seen)]) if (e?.date) dates.push(e.date);
+    for (const e of Object.values(sd.caught)) if (e?.ball) balls[e.ball] = (balls[e.ball] || 0) + 1;
+    shinies += Object.keys(sd.shiny).length;
+  }
+  const fav = Object.entries(balls).sort((x, y) => y[1] - x[1] || (TIER_RANK[x[0]] ?? 9) - (TIER_RANK[y[0]] ?? 9))[0];
+  const uid = currentUser()?.uid;
+  let tid = uid ? hashString(uid) % 100000 : loadPref('trainerId', null);
+  if (tid == null) { tid = Math.floor(Math.random() * 100000); savePref('trainerId', tid); }
+  const info = partnerInfo(all.partner);
+  return {
+    handle: myHandle() || 'trainer',
+    trainerId: String(tid).padStart(5, '0'),
+    since: longDate(dates.length ? dates.sort()[0] : S.key),
+    partner: info ? { name: info.name, level: info.level, emoji: info.emoji, via: info.via, progress: info.progress } : null,
+    total: Object.keys(combinedDex(all).caught).length,
+    totalMax: CATCH.total,
+    perSport: ENABLED_SPORTS.map((sp) => ({ emoji: SPORTS[sp].emoji, label: sp, n: dexCounts(all.sports[sp]).caught })),
+    shinies,
+    bestStreak: Math.max(0, ...MODES.map((m) => loadStats(m.id).maxStreak || 0)),
+    favBall: fav ? ballById(fav[0]) : null,
+    badges: list.map((b) => ({ icon: b.icon, earned: b.earned, gold: b.gold })),
+    badgeCount: list.filter((b) => b.earned).length,
+    url: location.hostname === 'localhost' ? 'playmodidex.com' : location.host,
+    hashtag: GAME.hashtag,
+  };
+}
+
+let cardUrl = null;
+async function openTrainerCard() {
+  const dlg = $('#dlg-partner');
+  openDialog(dlg, '<h2 id="partner-title">🪪 Trainer Card</h2><p class="small">Making your card…</p>');
+  let blob;
+  try {
+    const cv = await drawTrainerCard(trainerCardData());
+    blob = await new Promise((r) => cv.toBlob(r, 'image/png'));
+  } catch (e) {
+    console.warn('[card]', e);
+  }
+  if (!blob) { dlg.querySelector('.small').textContent = "Couldn't make the card on this device."; return; }
+  if (cardUrl) URL.revokeObjectURL(cardUrl);
+  cardUrl = URL.createObjectURL(blob);
+  const file = new File([blob], 'modidex-trainer-card.png', { type: 'image/png' });
+  const canShare = !!navigator.canShare?.({ files: [file] });
+  openDialog(dlg, `<h2 id="partner-title">🪪 Trainer Card</h2>
+    <img class="trainer-card-img" src="${cardUrl}" alt="Your ModiDex trainer card">
+    <div class="btn-row">
+      ${canShare ? '<button class="btn btn-primary" type="button" id="tc-share">Share</button>' : ''}
+      <a class="btn${canShare ? '' : ' btn-primary'}" id="tc-save" href="${cardUrl}" download="modidex-trainer-card.png">Save image</a>
+    </div>
+    ${myHandle() ? '' : '<p class="small">Sign in and pick a username to put your name on the card.</p>'}
+    ${loadDex().partner ? '' : '<p class="small">Choose a partner to show it on your card.</p>'}`);
+  dlg.querySelector('#tc-share')?.addEventListener('click', async () => {
+    try { await navigator.share({ files: [file], text: `My ${GAME.name} Trainer Card! ${siteUrl()} ${GAME.hashtag}` }); } catch { /* cancelled */ }
+  });
 }
 
 // ---------- badges ----------
@@ -671,6 +852,7 @@ function openBadges() {
   openDialog($('#dlg-dex'), `
     <h2 id="dex-title">Your 🎖️ Badges</h2>
     <div class="chip-row">${dexTabsHtml(all, BADGES)}</div>
+    ${dexActionsHtml(all)}
     <p><b>${earned}</b> of ${list.length} earned${gold ? ` · 🥇 ${gold} gold` : ''}</p>
     <h3>Collection</h3>
     <p class="small">Catch every creature in a set, from any sport. Complete it in all ${ENABLED_SPORTS.length} sports for gold.</p>
@@ -707,6 +889,8 @@ function linesHtml(dex) {
 }
 
 document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-open-partner]')) return openPartner();
+  if (e.target.closest('[data-open-card]')) return openTrainerCard();
   const od = e.target.closest('[data-open-dex]');
   if (od) openDex('all', od.dataset.openDex || null);
 });
@@ -739,6 +923,7 @@ function publicSummary() {
     week: weekTotals(loadHistory(), S.key, MODES.map((m) => m.id)),
     alltime: allTimeTotals(Object.fromEntries(MODES.map((m) => [m.id, loadStats(m.id)]))),
     badges: Object.keys(all.badges || {}).sort(),
+    partner: all.partner ? { n: all.partner.form, name: GEN1[all.partner.form - 1], level: levelOf(all.partner) } : null,
   };
 }
 
@@ -835,6 +1020,7 @@ function renderMeTab(body, u, prof, caughtN, needHandle) {
       <button class="btn btn-primary" type="submit">${prof.handle ? 'Change' : 'Save'}</button>
     </form>
     <p class="form-msg" id="handle-msg" role="status" aria-live="polite"></p>
+    <div class="btn-row"><button class="btn" type="button" data-open-card>🪪 Trainer Card</button><button class="btn" type="button" data-open-partner>🤝 Partner</button></div>
     <h3>Sync</h3>
     <p>✅ Your Dex (<b>${caughtN}</b> caught), stats and today's games are saved to your profile and sync on any device where you sign in.</p>
     <p class="small">Signed in as ${esc(u.email || u.displayName || 'you')}. Your username, Dex and daily scores (never the answers) are visible only to your friends and groups.</p>
@@ -978,6 +1164,7 @@ function openPerson(p, { friend = false, sport = null } = {}) {
   openDialog($('#dlg-person'), `
     <h2 id="person-title">@${esc(p.handle || 'player')}</h2>
     <p><b>${dexCount(p)}</b> caught across all sports</p>
+    ${p.partner?.name ? `<p>🤝 Partner: <b>${esc(p.partner.name)}</b> Lv ${Number(p.partner.level) || 1}</p>` : ''}
     <h3>Today</h3><p class="today-row">${todayLine(p)}</p>
     <h3>Current streaks</h3><p>${streaks}</p>
     ${personBadgesHtml(p)}
@@ -1112,7 +1299,7 @@ function openDialog(dlg, html) {
   dlg.innerHTML = `<div class="dialog-inner"><button class="dialog-x" aria-label="Close" autofocus>✕</button>${html}<button class="btn dialog-close">Let's play</button></div>`;
   dlg.querySelectorAll('.dialog-close, .dialog-x').forEach((b) => (b.onclick = () => dlg.close()));
   dlg.onclick = (e) => { if (e.target === dlg) dlg.close(); };
-  dlg.showModal();
+  if (!dlg.open) dlg.showModal();
   dlg.scrollTop = 0;
 }
 
@@ -1242,4 +1429,4 @@ function toast(msg, ms = 2200) {
 init();
 
 // Local testing only: lets the developer preview social screens with sample data.
-if (location.hostname === 'localhost') window.__modidexTest = { openPerson, openGroup, publicSummary, renderMeTab, openDialog, checkBadges, openBadges };
+if (location.hostname === 'localhost') window.__modidexTest = { openPerson, openGroup, publicSummary, renderMeTab, openDialog, checkBadges, openBadges, openPartner, openTrainerCard, showEvolution, feedMyPartner };

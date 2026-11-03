@@ -68,15 +68,18 @@ export async function publishProfile() {
   if (!prof.handle) return;
   const doc = { ...summaryBuilder(), handle: prof.handle, name: prof.handle, updatedAt: a.fsM.serverTimestamp() };
   // merge: friends/groups are changed only by their own actions, never overwritten here
-  // If the Firebase rules haven't been updated for newer fields yet, publish without them.
-  const { badges, ...noBadges } = doc;
+  // If the Firebase rules haven't been updated for newer fields yet, publish without them
+  // (newest first).
+  const { partner, ...noPartner } = doc;
+  const { badges, ...noBadges } = noPartner;
   const { week, alltime, ...basic } = noBadges;
-  for (const [i, attempt] of [doc, noBadges, basic].entries()) {
+  const attempts = [doc, noPartner, noBadges, basic];
+  for (const [i, attempt] of attempts.entries()) {
     try {
       await a.fsM.setDoc(ref(a, 'profiles', a.user.uid), attempt, { merge: true });
       break;
     } catch (e) {
-      if (e?.code !== 'permission-denied' || i === 2) throw e;
+      if (e?.code !== 'permission-denied' || i === attempts.length - 1) throw e;
     }
   }
   await processAnsweredRequests();
