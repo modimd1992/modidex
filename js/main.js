@@ -1,6 +1,6 @@
 // App entry point: wires data, daily answers, storage and the screen together.
 import { GAME, MODES, SPORTS, STATS, CLUE_SCHEDULE, CLOSE, ENABLED_SPORTS } from './config.js';
-import { TYPES } from './types.js';
+import { TYPES, typeInfo } from './types.js';
 import { loadData } from './data.js';
 import { dateKey, puzzleNumber, answersForDate, poolForMode } from './daily.js';
 import { compareGuess, columnsFor } from './compare.js';
@@ -223,7 +223,8 @@ function renderGuesses(animateLast) {
     const correct = r.g.id === S.game.answerId;
     const tiles = r.cells.map((c, j) => {
       const arrow = c.arrow === 'up' ? '<span class="arrow" aria-label="higher">▲</span>' : c.arrow === 'down' ? '<span class="arrow" aria-label="lower">▼</span>' : '';
-      return `<span class="tile ${c.status}${isNew ? ' flip' : ''}" style="--d:${j * 90}ms" title="${esc(c.title || '')}">
+      const typeAttrs = c.types ? ` data-types="${esc(c.types.join(','))}" data-status="${c.status}" role="button" tabindex="0" aria-label="${esc(c.title)}: what it means"` : '';
+      return `<span class="tile ${c.status}${isNew ? ' flip' : ''}${c.types ? ' tappable' : ''}" style="--d:${j * 90}ms" title="${esc(c.title || '')}"${typeAttrs}>
         <span class="tile-val">${esc(c.value)}</span>${arrow}</span>`;
     }).join('');
     return `<div class="guess${correct ? ' is-correct' : ''}">
@@ -333,6 +334,7 @@ function openHelp() {
       <li><span class="tile hit mini">✓</span> Exact match</li>
       <li><span class="tile close mini">~</span> Close: same division (team), same position group, age within ${CLOSE.age}, number within ${CLOSE.number}, or shares one type</li>
       <li><span class="tile miss mini">✗</span> No match</li>
+      <li>👆&nbsp; Tap any type to see what it means</li>
       <li><b class="nowrap">▲ ▼</b>&nbsp; The answer's age or jersey number is higher / lower</li>
     </ul>
     ${CLUE_SCHEDULE.length ? `<h3>Bonus clues</h3>
@@ -366,6 +368,49 @@ function openStats(modeId) {
     <p class="small">Stats are saved in this browser only.</p>`);
   $('#dlg-stats').querySelectorAll('[data-stats]').forEach((b) => (b.onclick = () => openStats(b.dataset.stats)));
 }
+
+// ---------- type info popup (tap a type tile or badge) ----------
+function closeTypePop() {
+  document.querySelector('.type-pop')?.remove();
+}
+
+function openTypePop(el) {
+  closeTypePop();
+  const names = el.dataset.types.split(',').filter(Boolean);
+  const verdict = {
+    hit: 'Same main type as the mystery athlete.',
+    close: 'Shares one type with the mystery athlete.',
+    miss: 'No types in common with the mystery athlete.',
+  }[el.dataset.status] || '';
+  const pop = document.createElement('div');
+  pop.className = 'type-pop';
+  pop.setAttribute('role', 'dialog');
+  pop.innerHTML = names.map((n) => {
+    const t = typeInfo(n);
+    return `<div class="type-pop-row"><span class="type-badge" style="--type:${t.color}">${t.emoji} ${esc(n)}</span><span>${esc(t.fits)}</span></div>`;
+  }).join('') + (verdict ? `<p class="type-pop-verdict ${el.dataset.status}">${verdict}</p>` : '');
+  document.body.appendChild(pop);
+  // place under the tapped element, kept inside the screen
+  const r = el.getBoundingClientRect();
+  const w = pop.offsetWidth;
+  const left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8);
+  let top = r.bottom + 8;
+  if (top + pop.offsetHeight > innerHeight - 8) top = Math.max(8, r.top - pop.offsetHeight - 8);
+  pop.style.left = `${left}px`;
+  pop.style.top = `${top}px`;
+}
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-types]');
+  if (el && !e.target.closest('.type-pop')) openTypePop(el);
+  else if (!e.target.closest('.type-pop')) closeTypePop();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeTypePop();
+  const el = e.target.closest?.('[data-types]');
+  if (el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openTypePop(el); }
+});
+window.addEventListener('scroll', closeTypePop, { passive: true });
 
 // ---------- toast ----------
 let toastTimer;

@@ -38,7 +38,7 @@ export function typeBadges(athlete) {
   return athleteTypes(athlete)
     .map((t) => {
       const info = typeInfo(t);
-      return `<span class="type-badge" style="--type:${info.color}">${info.emoji} ${esc(t)}</span>`;
+      return `<span class="type-badge" style="--type:${info.color}" data-types="${esc(t)}" role="button" tabindex="0" aria-label="${esc(t)} type: what it means">${info.emoji} ${esc(t)}</span>`;
     })
     .join('');
 }

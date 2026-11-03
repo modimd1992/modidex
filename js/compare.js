@@ -69,6 +69,7 @@ export function compareGuess(guess, answer, key, mode) {
     value: gTypes.map((t) => typeInfo(t).emoji).join(''),
     status: typeStatus,
     title: gTypes.join(' / '),
+    types: gTypes,
   };
 
   return columnsFor(mode).map((c) => ({ id: c.id, label: c.label, ...cells[c.id] }));
