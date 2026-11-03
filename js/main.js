@@ -6,7 +6,7 @@ import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay
 import { compareGuess, columnsFor } from './compare.js';
 import { cluesFor } from './clues.js';
 import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref } from './storage.js';
-import { shareText, shareOrCopy, copyText } from './share.js';
+import { shareText, combinedShareText, shareOrCopy, copyText } from './share.js';
 import { renderCard, esc } from './card.js';
 import { attachAutocomplete } from './autocomplete.js';
 
@@ -190,7 +190,7 @@ function renderPlayArea() {
     const input = $('#guess-input');
     // On phones, lift the box to the top so suggestions aren't hidden by the keyboard.
     input.addEventListener('focus', () => {
-      if (matchMedia('(max-width: 700px)').matches) setTimeout(() => $('#guess-form').scrollIntoView({ block: 'start', behavior: 'smooth' }), 250);
+      if (matchMedia('(max-width: 700px)').matches) setTimeout(() => $('#guess-form')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 250);
     });
     S.ac = attachAutocomplete({
       input,
@@ -293,6 +293,26 @@ function currentShareText() {
   return shareText({ mode: S.mode, puzzleNo: S.puzzleNo, won: S.game.status === 'won', rows, cluesUsed, url });
 }
 
+// Every mode's result today, for the combined share.
+function todayEntries() {
+  return MODES.map((m) => {
+    const ans = S.answers[m.id];
+    if (!ans) return { mode: m, status: 'none', rows: [] };
+    const g = loadGame(m.id, S.key, ans.id);
+    const rows = g.guesses.map((id) => S.data.byId.get(id)).filter(Boolean)
+      .map((x) => ({ correct: x.id === ans.id, cells: compareGuess(x, ans, S.key, m) }));
+    return { mode: m, status: g.guesses.length ? g.status : 'none', rows };
+  });
+}
+
+function finishedToday() {
+  return MODES.filter((m) => ['won', 'lost'].includes(modeStatus(m))).length;
+}
+
+function combinedText() {
+  return combinedShareText({ puzzleNo: S.puzzleNo, entries: todayEntries(), url: `${location.origin}${location.pathname}` });
+}
+
 function renderResult(area) {
   const won = S.game.status === 'won';
   const a = answer();
@@ -316,6 +336,14 @@ function renderResult(area) {
         <button class="btn btn-primary" id="btn-share">Share result</button>
         <button class="btn" id="btn-copy">Copy</button>
       </div>
+      ${finishedToday() >= 2 ? `<div class="combined">
+        <h3 class="section-title">All of today's puzzles</h3>
+        <pre class="share-preview" aria-label="Combined share preview">${esc(combinedText())}</pre>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-share-all">Share all</button>
+          <button class="btn" id="btn-copy-all">Copy</button>
+        </div>
+      </div>` : ''}
       <p class="next">Next ${esc(S.mode.label)} puzzle in <b id="countdown">${timeToMidnight()}</b></p>
       ${nextModes.length ? `<div class="next-modes"><span>Play another:</span>${nextModes.map((m) =>
         `<button class="chip" data-go="${m.id}">${m.emoji} ${esc(m.label)}</button>`).join('')}</div>` : '<p class="small">You finished every puzzle today. See you tomorrow!</p>'}
@@ -326,6 +354,14 @@ function renderResult(area) {
     else if (r === 'failed') toast('Could not copy. Long-press the preview to copy.');
   };
   $('#btn-copy').onclick = async () => toast((await copyText(currentShareText())) ? 'Copied!' : 'Could not copy.');
+  if ($('#btn-share-all')) {
+    $('#btn-share-all').onclick = async () => {
+      const r = await shareOrCopy(combinedText());
+      if (r === 'copied') toast('All results copied! Paste it anywhere.');
+      else if (r === 'failed') toast('Could not copy. Long-press the preview to copy.');
+    };
+    $('#btn-copy-all').onclick = async () => toast((await copyText(combinedText())) ? 'Copied!' : 'Could not copy.');
+  }
   area.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => selectMode(b.dataset.go, true)));
 }
 

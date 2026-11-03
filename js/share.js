@@ -44,3 +44,24 @@ export async function copyText(text) {
     return ok;
   }
 }
+
+// One compact post covering every mode played today.
+// Each guess becomes one square: 🟩 correct, 🟨 at least half the tiles green/yellow, ⬛ mostly misses.
+export function combinedShareText({ puzzleNo, entries, url }) {
+  const solved = entries.filter((e) => e.status === 'won').length;
+  const lines = [`${GAME.name} #${puzzleNo} · ${solved}/${entries.length} solved`];
+  for (const e of entries) {
+    const finished = e.status === 'won' || e.status === 'lost';
+    if (!finished) { lines.push(`${e.mode.emoji} —`); continue; }
+    const score = e.status === 'won' ? `${e.rows.length}/${GAME.maxGuesses}` : `X/${GAME.maxGuesses}`;
+    const squares = e.rows.map((r) => {
+      if (r.correct) return '🟩';
+      const near = r.cells.filter((c) => c.status !== 'miss').length;
+      return near * 2 >= r.cells.length ? '🟨' : '⬛';
+    }).join('');
+    lines.push(`${e.mode.emoji} ${score} ${squares}`);
+  }
+  lines.push('');
+  lines.push(`${url}  ${GAME.hashtag}`);
+  return lines.join('\n');
+}
