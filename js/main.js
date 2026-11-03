@@ -7,6 +7,7 @@ import { compareGuess, columnsFor } from './compare.js';
 import { cluesFor } from './clues.js';
 import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex, saveDex, sportDex, dexCounts, loadHistory, recordHistory } from './storage.js';
 import { pointsFor, weekTotals, weekStart, allTimeTotals } from './leaderboard.js';
+import { badgeFacts, badgeStatus, badgeById, ALL_BADGES } from './badges.js';
 import { shareText, combinedShareText, shareOrCopy, copyText, guessSquares } from './share.js';
 import { renderCard, esc } from './card.js';
 import { attachAutocomplete } from './autocomplete.js';
@@ -71,7 +72,7 @@ async function init() {
       }
       renderProfileButton();
       if ($('#dlg-profile').open) openProfile();
-      if (why === 'synced') { backfillHistory(); renderModes(); renderMode(); }
+      if (why === 'synced') { backfillHistory(); checkBadges(); renderModes(); renderMode(); }
       if (why === 'auth' || why === 'synced') handlePendingLink();
     });
     initCloud();
@@ -87,6 +88,7 @@ async function init() {
   backfillHistory();
   renderModes();
   renderMode();
+  setTimeout(() => checkBadges(), 800);
   if (!loadPref('seenHelp', false)) {
     openHelp();
     savePref('seenHelp', true);
@@ -321,10 +323,11 @@ function submitGuess(athlete) {
 
   if (finished() && !S.game.recorded) {
     recordResult(S.mode.id, S.puzzleNo, won, S.game.guesses.length);
-    recordHistory(S.key, S.mode.id, S.game.status, S.game.guesses.length);
     S.game.recorded = true;
     const caught = resolveCatch(S.game, answer(), S.key, rareFor(S.mode));
+    recordHistory(S.key, S.mode.id, S.game.status, S.game.guesses.length, caught?.outcome === 'caught');
     S.justFinished = true;
+    setTimeout(() => checkBadges(), 1800); // after the catch animation
     setTimeout(pushProgress, 0); // after the save below; syncs to the profile if signed in
     // Hook for future features (card collection, leaderboards).
     document.dispatchEvent(new CustomEvent('modidex:complete', {
@@ -388,7 +391,7 @@ function todayEntries() {
 // creature today's games caught or saw is in the Dex (repairs saves from old tabs).
 function backfillHistory() {
   for (const e of todayEntries()) {
-    if (e.status === 'won' || e.status === 'lost') recordHistory(S.key, e.mode.id, e.status, e.rows.length);
+    if (e.status === 'won' || e.status === 'lost') recordHistory(S.key, e.mode.id, e.status, e.rows.length, e.caught);
   }
   const all = loadDex();
   let changed = false;
@@ -511,6 +514,7 @@ function catchHtml(c, animate) {
 
 let dexSport = null;
 const TOTAL = 'TOTAL'; // the combined Dex tab
+const BADGES = 'BADGES'; // the badges tab
 const TIER_RANK = Object.fromEntries(CATCH.tiers.map((t, i) => [t.id, i]));
 
 // One Dex across every sport: a creature counts once, from whichever sport you got it.
@@ -533,7 +537,21 @@ function combinedDex(all) {
   return out;
 }
 
+// The tab row at the top of the Dex window.
+function dexTabsHtml(all, active) {
+  const earned = Object.keys(all.badges || {}).filter((id) => !id.endsWith('.gold')).length;
+  return [
+    `<button class="chip sport-chip${active === TOTAL ? ' is-active' : ''}" data-dex-sport="${TOTAL}">📚 Total <b>${Object.keys(combinedDex(all).caught).length}</b></button>`,
+    ...ENABLED_SPORTS.map((sp) => {
+      const n = dexCounts(all.sports[sp]).caught;
+      return `<button class="chip sport-chip${sp === active ? ' is-active' : ''}" data-dex-sport="${sp}">${SPORTS[sp].emoji} ${sp} <b>${n}</b></button>`;
+    }),
+    `<button class="chip sport-chip${active === BADGES ? ' is-active' : ''}" data-dex-sport="${BADGES}">🎖️ Badges <b>${earned}</b></button>`,
+  ].join('');
+}
+
 function openDex(filter = 'all', sport = dexSport) {
+  if (sport === BADGES) return openBadges();
   if (sport !== TOTAL && (!sport || !ENABLED_SPORTS.includes(sport))) sport = S.mode.sports?.length === 1 ? S.mode.sports[0] : TOTAL;
   dexSport = sport;
   const all = loadDex();
@@ -544,13 +562,7 @@ function openDex(filter = 'all', sport = dexSport) {
   const shinyN = Object.keys(dex.shiny).length;
   const linesDone = FAMILIES.filter((f) => f.every((n) => dex.caught[n])).length;
   const grandCaught = ENABLED_SPORTS.reduce((t, sp) => t + dexCounts(all.sports[sp]).caught, 0);
-  const sportTabs = [
-    `<button class="chip sport-chip${isTotal ? ' is-active' : ''}" data-dex-sport="${TOTAL}">📚 Total <b>${Object.keys(combinedDex(all).caught).length}</b></button>`,
-    ...ENABLED_SPORTS.map((sp) => {
-      const n = dexCounts(all.sports[sp]).caught;
-      return `<button class="chip sport-chip${sp === sport ? ' is-active' : ''}" data-dex-sport="${sp}">${SPORTS[sp].emoji} ${sp} <b>${n}</b></button>`;
-    }),
-  ].join('');
+  const sportTabs = dexTabsHtml(all, sport);
   const cells = GEN1.map((name, i) => {
     const n = i + 1;
     const c = dex.caught[n];
@@ -589,6 +601,92 @@ function openDex(filter = 'all', sport = dexSport) {
     <p class="small">${isTotal ? `The Total Dex counts each creature once, from any sport. ` : ''}Each sport has its own Dex of ${CATCH.total}. Catches from All Sports go to that athlete's sport. Solve faster for a better ball: ${CATCH.tiers.map((t) => `${t.icon} ${t.name} ${Math.round(t.rate * 100)}%`).join(' · ')}.</p>`);
   $('#dlg-dex').querySelectorAll('[data-dex-filter]').forEach((b) => (b.onclick = () => openDex(b.dataset.dexFilter, sport)));
   $('#dlg-dex').querySelectorAll('[data-dex-sport]').forEach((b) => (b.onclick = () => openDex(filter, b.dataset.dexSport)));
+}
+
+// ---------- badges ----------
+const shortDate = (key) => new Date(`${key}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+function myBadges() {
+  const all = loadDex();
+  return { all, list: badgeStatus(badgeFacts(all, MODES.map((m) => loadStats(m.id)), loadHistory()), all.badges) };
+}
+
+// Saves any newly earned badges and announces them. Returns the new ones.
+function checkBadges({ announce = true } = {}) {
+  if (!S.data) return [];
+  const { all, list } = myBadges();
+  const fresh = [];
+  for (const b of list) {
+    if (b.earned && !all.badges[b.id]) { all.badges[b.id] = S.key; fresh.push(`${b.icon} ${b.name}`); }
+    if (b.gold && !all.badges[`${b.id}.gold`]) { all.badges[`${b.id}.gold`] = S.key; fresh.push(`🥇 Gold ${b.name}`); }
+  }
+  if (!fresh.length) return fresh;
+  saveDex(all);
+  setTimeout(pushProgress, 0);
+  if (announce) announceBadges(fresh);
+  return fresh;
+}
+
+function awardBadge(id) {
+  const all = loadDex();
+  if (all.badges[id]) return;
+  all.badges[id] = S.key;
+  saveDex(all);
+  setTimeout(pushProgress, 0);
+  const b = badgeById(id);
+  announceBadges([`${b.icon} ${b.name}`]);
+}
+
+function announceBadges(names) {
+  toast(names.length === 1 ? `🎖️ Badge earned: ${names[0]}!` : `🎖️ ${names.length} badges earned! See them in your Dex.`, 4000);
+  if ($('#dlg-dex').open && dexSport === BADGES) openBadges();
+}
+
+function badgeCard(b) {
+  let hint = b.hint;
+  let prog = `${b.cur}/${b.goal}`;
+  if (b.kind === 'set') {
+    hint = b.set.map((n) => `${b.have.includes(n) ? '✓ ' : ''}${GEN1[n - 1]}`).join(' · ');
+    if (b.earned) prog = b.gold ? `🥇 Gold · ${shortDate(b.goldDate || S.key)}` : `Gold: ${ENABLED_SPORTS.map((sp, i) => `${SPORTS[sp].emoji} ${b.perSport[i]}/${b.goal}`).join(' ')}`;
+  } else if (b.earned) {
+    prog = '';
+  }
+  const when = b.earned && b.date && !(b.kind === 'set' && b.gold) ? `Earned ${shortDate(b.date)}` : '';
+  return `<li class="badge-card${b.earned ? ' earned' : ''}${b.gold ? ' gold' : ''}">
+    <span class="badge-icon" aria-hidden="true">${b.icon}</span>
+    <span class="badge-name">${esc(b.name)}</span>
+    <span class="badge-hint">${esc(hint)}</span>
+    <span class="badge-prog">${[when, prog].filter(Boolean).map(esc).join(' · ')}</span>
+  </li>`;
+}
+
+function openBadges() {
+  dexSport = BADGES;
+  checkBadges({ announce: false });
+  const { all, list } = myBadges();
+  const earned = list.filter((b) => b.earned).length;
+  const gold = list.filter((b) => b.gold).length;
+  const sets = list.filter((b) => b.kind === 'set');
+  const play = list.filter((b) => b.kind === 'play');
+  openDialog($('#dlg-dex'), `
+    <h2 id="dex-title">Your 🎖️ Badges</h2>
+    <div class="chip-row">${dexTabsHtml(all, BADGES)}</div>
+    <p><b>${earned}</b> of ${list.length} earned${gold ? ` · 🥇 ${gold} gold` : ''}</p>
+    <h3>Collection</h3>
+    <p class="small">Catch every creature in a set, from any sport. Complete it in all ${ENABLED_SPORTS.length} sports for gold.</p>
+    <ul class="badge-grid">${sets.map(badgeCard).join('')}</ul>
+    <h3>Play</h3>
+    <ul class="badge-grid">${play.map(badgeCard).join('')}</ul>`);
+  $('#dlg-dex').querySelectorAll('[data-dex-sport]').forEach((b) => (b.onclick = () => openDex('all', b.dataset.dexSport)));
+}
+
+// Top of the Table: you lead the group's weekly board, and someone else has scored too.
+function checkChamp(members) {
+  const me = currentUser()?.uid;
+  const scores = members.filter((p) => !p.pending).map((p) => ({ uid: p.uid, pts: boardScore(p, 'week')?.pts || 0 }));
+  const mine = scores.find((x) => x.uid === me)?.pts || 0;
+  const others = scores.filter((x) => x.uid !== me);
+  if (mine > 0 && others.some((x) => x.pts > 0) && others.every((x) => x.pts < mine)) awardBadge('champ');
 }
 
 // Evolution lines: each family with members caught, unknown ones as ???.
@@ -640,6 +738,7 @@ function publicSummary() {
     today: { date: S.key, puzzleNo: S.puzzleNo, results },
     week: weekTotals(loadHistory(), S.key, MODES.map((m) => m.id)),
     alltime: allTimeTotals(Object.fromEntries(MODES.map((m) => [m.id, loadStats(m.id)]))),
+    badges: Object.keys(all.badges || {}).sort(),
   };
 }
 
@@ -881,6 +980,7 @@ function openPerson(p, { friend = false, sport = null } = {}) {
     <p><b>${dexCount(p)}</b> caught across all sports</p>
     <h3>Today</h3><p class="today-row">${todayLine(p)}</p>
     <h3>Current streaks</h3><p>${streaks}</p>
+    ${personBadgesHtml(p)}
     <h3>Their Dex</h3>
     ${sports.length ? `<div class="chip-row">${tabs}</div>
     <p class="small">${sport}: <b>${caught.size}</b> caught · ${seen.size} seen · ✨ ${shiny.size} shiny · 🏅 ${lines} line${lines === 1 ? '' : 's'}</p>
@@ -891,6 +991,17 @@ function openPerson(p, { friend = false, sport = null } = {}) {
     if (!confirm(`Remove @${p.handle} from your friends?`)) return;
     await removeFriend(p.uid); $('#dlg-person').close(); openProfile('friends');
   });
+}
+
+function personBadgesHtml(p) {
+  const ids = ALL_BADGES.map((b) => b.id).filter((id) => (p.badges || []).includes(id));
+  if (!ids.length) return '';
+  const gold = new Set((p.badges || []).filter((id) => id.endsWith('.gold')).map((id) => id.replace(/\.gold$/, '')));
+  const chips = ids.map((id) => {
+    const b = badgeById(id);
+    return `<span class="badge-chip${gold.has(id) ? ' gold' : ''}" title="${esc(`${gold.has(id) ? 'Gold ' : ''}${b.name}`)}">${b.icon} ${esc(b.name)}</span>`;
+  }).join('');
+  return `<h3>Badges (${ids.length})</h3><div class="badge-chips">${chips}</div>`;
 }
 
 let groupTab = 'today';
@@ -964,6 +1075,7 @@ async function openGroup(g, testMembers = null) {
     const members = testMembers || await groupMembers(g);
     dlg.querySelectorAll('[data-btab]').forEach((b) => (b.onclick = () => { groupTab = b.dataset.btab; renderBoard(dlg, members); }));
     renderBoard(dlg, members);
+    if (!testMembers) checkChamp(members);
   } catch (err) {
     dlg.querySelector('#board').innerHTML = `<li class="small">${esc(socialError(err))}</li>`;
   }
@@ -1116,7 +1228,7 @@ window.addEventListener('scroll', closeTypePop, { passive: true });
 
 // ---------- toast ----------
 let toastTimer;
-function toast(msg) {
+function toast(msg, ms = 2200) {
   const t = $('#toast');
   // An open dialog sits above the page, so show the message inside it.
   const open = [...document.querySelectorAll('dialog[open]')].pop() || document.body;
@@ -1124,10 +1236,10 @@ function toast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms);
 }
 
 init();
 
 // Local testing only: lets the developer preview social screens with sample data.
-if (location.hostname === 'localhost') window.__modidexTest = { openPerson, openGroup, publicSummary, renderMeTab, openDialog };
+if (location.hostname === 'localhost') window.__modidexTest = { openPerson, openGroup, publicSummary, renderMeTab, openDialog, checkBadges, openBadges };
