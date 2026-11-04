@@ -97,7 +97,7 @@ export function savePref(name, value) {
 
 // ---- Dex (collection): one per sport ----
 // { sports: { NFL: { caught: { [dexNo]: { date, athleteId, ball } }, seen: {...}, shiny: {...} }, NBA: {...}, ... },
-//   badges: { [badgeId]: 'YYYY-MM-DD' }, partner: {...} (see partner.js) }
+//   badges: { [badgeId]: 'YYYY-MM-DD' }, partner: {...} (see partner.js), gyms: {...} (see gyms.js) }
 const PARTS = ['caught', 'seen', 'shiny'];
 const sportOfAthleteId = (id) => (typeof id === 'string' && id.includes('-') ? id.split('-')[0].toUpperCase() : null);
 
@@ -107,6 +107,7 @@ const sportOfAthleteId = (id) => (typeof id === 'string' && id.includes('-') ? i
 export function normalizeDex(d) {
   const out = { sports: {}, badges: { ...(d?.badges || {}) } };
   if (d?.partner?.n) out.partner = { ...d.partner };
+  if (d?.gyms) out.gyms = { ...d.gyms, beaten: { ...(d.gyms.beaten || {}) } };
   if (!d) return out;
   for (const [sp, sd] of Object.entries(d.sports || {})) {
     out.sports[sp] = { caught: { ...(sd?.caught || {}) }, seen: { ...(sd?.seen || {}) }, shiny: { ...(sd?.shiny || {}) } };
@@ -182,6 +183,13 @@ export function mergeProgress(a = {}, b = {}) {
     const p = src.partner;
     const cur = dex.partner;
     if (p && (!cur || p.since > cur.since || (p.since === cur.since && p.n === cur.n && (p.xp || 0) > (cur.xp || 0)))) dex.partner = p;
+    // Gyms: every badge won anywhere, and the latest weekly challenge.
+    if (src.gyms) {
+      const g = (dex.gyms ||= { beaten: {} });
+      for (const [no, date] of Object.entries(src.gyms.beaten || {})) if (!g.beaten[no] || date < g.beaten[no]) g.beaten[no] = date;
+      if ((src.gyms.week || '') >= (g.week || '')) { g.week = src.gyms.week; g.last = src.gyms.last; }
+      if (src.gyms.team?.length && !g.team?.length) g.team = src.gyms.team;
+    }
     for (const [id, date] of Object.entries(src.badges)) {
       if (!dex.badges[id] || date < dex.badges[id]) dex.badges[id] = date; // keep the earliest
     }

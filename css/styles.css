@@ -576,3 +576,59 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .archive-banner { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 10px; border-radius: 12px; border: 1px solid var(--accent-2); background: rgba(34, 211, 238, 0.08); }
 .archive-banner > div { display: grid; gap: 2px; }
 .archive-banner .btn { flex: none; }
+
+/* ---------- gyms & battles ---------- */
+.gym-area { margin-top: 22px; }
+.gym-card { padding: 14px; border-radius: var(--radius); border: 1px solid var(--accent-2); background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(198, 255, 61, 0.05)); }
+.gym-card p { margin: 8px 0 10px; }
+.gym-head { display: flex; gap: 10px; align-items: center; }
+.gym-head > div { display: grid; gap: 2px; }
+.gym-icon { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; background: var(--bg); border: 2px solid var(--accent-2); }
+.gym-icon.sm { width: 34px; height: 34px; font-size: 18px; }
+.gym-next { padding: 12px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); margin-bottom: 12px; }
+.gym-taunt { font-style: italic; }
+.gym-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.gym-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-2); opacity: 0.6; }
+.gym-row.is-next { opacity: 1; border-color: var(--accent-2); }
+.gym-row.is-won { opacity: 1; border-color: var(--accent); }
+.gym-row-main { flex: 1; min-width: 0; display: grid; }
+.gym-st { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.gym-st.won { color: var(--accent); }
+.gym-st.next { color: var(--accent-2); font-weight: 800; }
+.pick-bar { position: sticky; top: -1px; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 8px 0; background: var(--panel); }
+.pick-bar span { flex: 1; }
+.pick-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.pick-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-2); cursor: pointer; text-align: left; }
+.pick-row.on { border-color: var(--accent); background: rgba(198, 255, 61, 0.08); }
+.pick-no { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 13px var(--font-display); background: var(--bg); border: 1px solid var(--line); }
+.pick-row.on .pick-no { background: var(--accent); color: #0b1020; border-color: var(--accent); }
+.pick-main { flex: 1; min-width: 0; display: grid; }
+.pick-main b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pick-side { flex: none; display: grid; justify-items: end; gap: 2px; }
+.type-dot { font-size: 14px; }
+.mu { font-size: 11px; font-weight: 700; white-space: nowrap; }
+.mu.good { color: var(--hit); }
+.mu.bad { color: var(--danger); }
+.mu.ok { color: var(--accent-2); }
+.battle { display: grid; gap: 8px; margin: 10px 0; }
+.bt-side { padding: 10px 12px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); }
+.bt-side.foe { border-color: rgba(244, 63, 94, 0.5); }
+.bt-side.me { border-color: rgba(34, 211, 238, 0.6); }
+.bt-name { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.hp { height: 10px; border-radius: 99px; background: var(--bg); overflow: hidden; margin: 6px 0 4px; }
+.hp > span { display: block; height: 100%; background: var(--hit); transition: width 0.4s ease; }
+.hp > span.mid { background: var(--close); }
+.hp > span.low { background: var(--danger); }
+.bt-meta { display: flex; justify-content: space-between; align-items: center; }
+.bench { display: flex; gap: 4px; }
+.bench i { width: 9px; height: 9px; border-radius: 50%; background: var(--hit); }
+.bench i.on { outline: 2px solid var(--text); outline-offset: 1px; }
+.bench i.out { background: var(--miss); }
+.bt-log { min-height: 84px; padding: 8px 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); font-size: 14px; }
+.bt-log p { margin: 2px 0; color: var(--muted); }
+.bt-log p.new { color: var(--text); }
+.bt-final { font: 20px var(--font-display); margin: 8px 0; }
+.bt-final.won { color: var(--accent); }
+.bt-final.lost { color: var(--danger); }
+.badge-earned { font-size: 18px; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid var(--accent); background: rgba(198, 255, 61, 0.08); }
+@media (prefers-reduced-motion: reduce) { .hp > span { transition: none; } }

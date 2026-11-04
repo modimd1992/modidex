@@ -3,6 +3,7 @@
 // dex.badges = { [id]: 'YYYY-MM-DD' }, with gold set badges as `${id}.gold`.
 import { GAME, MODES, ENABLED_SPORTS } from './config.js';
 import { addDays } from './daily.js';
+import { GYMS } from './gyms.js';
 
 const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 
@@ -41,7 +42,10 @@ export const PLAY_BADGES = [
   { id: 'champ', icon: '🥇', name: 'Top of the Table', hint: "Lead a group's weekly leaderboard", progress: () => [0, 1] },
 ];
 
-export const ALL_BADGES = [...SET_BADGES, ...PLAY_BADGES];
+// One per gym leader beaten (see gyms.js).
+export const GYM_BADGES = GYMS.map((g) => ({ id: `gym-${g.no}`, gym: g.no, icon: g.badge.icon, name: g.badge.name, hint: `Beat ${g.leader}, the ${g.type} gym leader` }));
+
+export const ALL_BADGES = [...SET_BADGES, ...PLAY_BADGES, ...GYM_BADGES];
 export const badgeById = (id) => ALL_BADGES.find((b) => b.id === id.replace(/\.gold$/, '')) || null;
 
 // What the badges look at, from a save: dex (normalized), each mode's stats, daily history.
@@ -78,7 +82,7 @@ export function badgeFacts(dex, statsList, history) {
     prev = d;
   }
 
-  return { perSport, caughtAny, triple, shinies, dist, maxStreak, bestSweep, bestPerfectRun };
+  return { perSport, caughtAny, triple, shinies, dist, maxStreak, bestSweep, bestPerfectRun, gymsBeaten: dex.gyms?.beaten || {} };
 }
 
 // Every badge with its state: { ...badge, kind, cur, goal, earned, gold, date }.
@@ -99,5 +103,9 @@ export function badgeStatus(facts, stored = {}) {
     const [cur, goal] = b.progress(facts);
     return { ...b, kind: 'play', cur: Math.min(cur, goal), goal, earned: cur >= goal || !!stored[b.id], gold: false, date: stored[b.id] || null };
   });
-  return [...sets, ...play];
+  const gyms = GYM_BADGES.map((b) => {
+    const earned = !!facts.gymsBeaten[b.gym] || !!stored[b.id];
+    return { ...b, kind: 'gym', cur: earned ? 1 : 0, goal: 1, earned, gold: false, date: stored[b.id] || facts.gymsBeaten[b.gym] || null };
+  });
+  return [...sets, ...play, ...gyms];
 }

@@ -10,6 +10,8 @@ import { pointsFor, weekTotals, weekStart, allTimeTotals } from './leaderboard.j
 import { badgeFacts, badgeStatus, badgeById, ALL_BADGES } from './badges.js';
 import { newPartner, feedPartner, levelOf, levelProgress, evolutionOf, XP_PER_LEVEL, MAX_LEVEL } from './partner.js';
 import { drawTrainerCard } from './trainercard.js';
+import { GYMS, currentGym, leaderTeam, playerTeam, practiceTeam, canChallenge, statTotal } from './gyms.js';
+import { runBattle, effectiveness, typesOf } from './battle.js';
 import { shareText, combinedShareText, shareOrCopy, copyText, guessSquares } from './share.js';
 import { renderCard, esc } from './card.js';
 import { attachAutocomplete } from './autocomplete.js';
@@ -203,11 +205,13 @@ function renderMode() {
     <section id="play-area"></section>
     <section id="clues" class="clues"></section>
     <section id="guesses" class="guesses" aria-label="Your guesses"></section>
+    <section id="gym-area" class="gym-area" aria-label="Gym challenge"></section>
     <section id="archive" class="archive" aria-label="Past puzzles"></section>`;
   renderCardArea();
   renderClues();
   renderPlayArea();
   renderGuesses(false);
+  renderGymCard();
   renderArchive();
 }
 
@@ -825,7 +829,8 @@ function trainerCardData() {
     shinies,
     bestStreak: Math.max(0, ...MODES.map((m) => loadStats(m.id).maxStreak || 0)),
     favBall: fav ? ballById(fav[0]) : null,
-    badges: list.map((b) => ({ icon: b.icon, earned: b.earned, gold: b.gold })),
+    badges: list.filter((b) => b.kind !== 'gym').map((b) => ({ icon: b.icon, earned: b.earned, gold: b.gold })),
+    gymBadges: list.filter((b) => b.kind === 'gym').map((b) => ({ icon: b.icon, earned: b.earned })),
     badgeCount: list.filter((b) => b.earned).length,
     url: location.hostname === 'localhost' ? 'playmodidex.com' : location.host,
     hashtag: GAME.hashtag,
@@ -859,6 +864,238 @@ async function openTrainerCard() {
   dlg.querySelector('#tc-share')?.addEventListener('click', async () => {
     try { await navigator.share({ files: [file], text: `My ${GAME.name} Trainer Card! ${siteUrl()} ${GAME.hashtag}` }); } catch { /* cancelled */ }
   });
+}
+
+// ---------- gyms ----------
+const gymState = () => loadDex().gyms || { beaten: {} };
+const thisWeek = () => weekStart(S.today);
+const nextMonday = () => addDays(thisWeek(), 7);
+const typeEmoji = (t) => typeInfo(t).emoji;
+const typeChips = (types) => types.map((t) => `<span class="type-dot" style="--type:${typeInfo(t).color}" title="${esc(t)}">${typeEmoji(t)}</span>`).join('');
+
+// Athletes you've caught (any sport), strongest first.
+function myRoster() {
+  const all = loadDex();
+  const ids = new Set();
+  for (const sp of ENABLED_SPORTS) for (const e of Object.values(all.sports[sp]?.caught || {})) if (e?.athleteId) ids.add(e.athleteId);
+  return [...ids].map((id) => S.data.byId.get(id)).filter((a) => a?.stats).sort((x, y) => statTotal(y) - statTotal(x));
+}
+
+// The gym card on the main page.
+function renderGymCard() {
+  const el = $('#gym-area');
+  if (!el) return;
+  const st = gymState();
+  const g = currentGym(st);
+  const won = Object.keys(st.beaten || {}).length;
+  if (!g) {
+    el.innerHTML = `<div class="gym-card done"><div class="gym-head"><span class="gym-icon">🏆</span><div><b>All 8 gym badges!</b><span class="small">You beat every gym leader. Practice battles are still open.</span></div></div>
+      <button class="btn btn-block" type="button" data-open-gyms>🏟️ Gyms & practice</button></div>`;
+    return;
+  }
+  const can = canChallenge(st, thisWeek());
+  const last = st.last && st.week === thisWeek() ? st.last : null;
+  const lastLine = last ? (last.won ? `You beat ${gymByNoName(last.gym)} this week!` : `${gymByNoName(last.gym)} won this week's challenge.`) : '';
+  el.innerHTML = `<div class="gym-card">
+    <div class="gym-head"><span class="gym-icon">${typeEmoji(g.type)}</span><div><b>🏟️ Gym ${g.no}: ${esc(g.leader)}</b>
+      <span class="small">${g.type} type · ${g.size} vs ${g.size} · ${won}/8 badges</span></div></div>
+    <p class="small">${can ? 'Your weekly gym challenge is ready.' : `${esc(lastLine)} Next challenge ${esc(dayLabel(nextMonday()))}. Practice anytime.`}</p>
+    <button class="btn ${can ? 'btn-primary' : ''} btn-block" type="button" data-open-gyms>${can ? `Challenge ${esc(g.leader)}` : 'Gyms & practice'}</button>
+  </div>`;
+}
+const gymByNoName = (no) => GYMS.find((x) => x.no === no)?.leader || 'The gym leader';
+
+function openGyms() {
+  const st = gymState();
+  const g = currentGym(st);
+  const can = !!g && canChallenge(st, thisWeek());
+  const rows = GYMS.map((x) => {
+    const beat = st.beaten?.[x.no];
+    const status = beat ? `<span class="gym-st won">${x.badge.icon} ${shortDate(beat)}</span>` : x === g ? '<span class="gym-st next">Next</span>' : '<span class="gym-st">🔒</span>';
+    return `<li class="gym-row${x === g ? ' is-next' : ''}${beat ? ' is-won' : ''}"><span class="gym-icon sm">${typeEmoji(x.type)}</span>
+      <span class="gym-row-main"><b>${x.no}. ${esc(x.leader)}</b><span class="small">${x.type} · ${esc(x.badge.name)} · ${x.size} vs ${x.size}</span></span>${status}</li>`;
+  }).join('');
+  openDialog($('#dlg-gym'), `
+    <h2 id="gym-title">🏟️ Gym Challenge</h2>
+    <p class="small">Beat the 8 gym leaders in order with a team of athletes you've caught. You get <b>one challenge a week</b> (resets Monday at midnight ET). Practice battles are unlimited.</p>
+    ${g ? `<div class="gym-next">
+      <p class="gym-taunt"><b>${esc(g.leader)}:</b> “${esc(g.taunt)}”</p>
+      <p class="small">${typeEmoji(g.type)} ${g.type}-type team · Level ${g.level} · Pick ${g.size} athletes. Types matter: pick athletes strong against ${g.type}.</p>
+      <div class="btn-row">
+        ${can ? `<button class="btn btn-primary" type="button" id="gym-go">Challenge ${esc(g.leader)}</button>` : `<button class="btn" type="button" disabled>Next challenge ${esc(dayLabel(nextMonday()))}</button>`}
+        <button class="btn" type="button" id="gym-practice">Practice</button>
+      </div>
+    </div>` : `<div class="gym-next"><p>🏆 You've earned all 8 gym badges. Practice battles are still open.</p>
+      <div class="btn-row"><button class="btn" type="button" id="gym-practice">Practice</button></div></div>`}
+    <ul class="gym-list">${rows}</ul>`);
+  $('#dlg-gym').querySelector('#gym-go')?.addEventListener('click', () => openTeamPicker('challenge'));
+  $('#dlg-gym').querySelector('#gym-practice')?.addEventListener('click', () => openTeamPicker('practice'));
+}
+
+// Matchup hint for one athlete against a gym's type.
+function matchupTag(a, type) {
+  const types = typesOf(a);
+  const off = Math.max(...types.map((t) => effectiveness(t, [type])));
+  const def = effectiveness(type, types);
+  if (off >= 2 && def <= 1) return '<span class="mu good">💪 Strong</span>';
+  if (def >= 2) return `<span class="mu bad">⚠️ Weak to ${esc(type)}</span>`;
+  if (off >= 2) return '<span class="mu good">💪 Hits hard</span>';
+  if (def < 1) return '<span class="mu ok">🛡️ Resists</span>';
+  if (off < 1) return '<span class="mu bad">Struggles</span>';
+  return '';
+}
+
+function openTeamPicker(mode, picked = null) {
+  const st = gymState();
+  const g = currentGym(st) || GYMS[GYMS.length - 1];
+  const roster = myRoster();
+  const partnerId = loadDex().partner?.athleteId;
+  let team = picked || (st.team || []).filter((id) => roster.some((a) => a.id === id)).slice(0, g.size);
+  const dlg = $('#dlg-gym');
+  const draw = () => {
+    const rows = roster.map((a) => {
+      const i = team.indexOf(a.id);
+      return `<li><button class="pick-row${i >= 0 ? ' on' : ''}" type="button" data-ath="${esc(a.id)}">
+        <span class="pick-no">${i >= 0 ? i + 1 : ''}</span>
+        <span class="pick-main"><b>${esc(a.name)}</b>${a.id === partnerId ? ' 🤝' : ''}<span class="small">${SPORTS[a.sport]?.emoji || ''} ${a.comp ? esc(a.comp.name) : ''} · ${statTotal(a)}</span></span>
+        <span class="pick-side"><span>${typeChips(typesOf(a))}</span>${matchupTag(a, g.type)}</span></button></li>`;
+    }).join('');
+    const ready = team.length === g.size;
+    openDialog(dlg, `
+      <h2 id="gym-title">${mode === 'practice' ? '🥅 Practice battle' : `${typeEmoji(g.type)} Gym ${g.no}: ${esc(g.leader)}`}</h2>
+      <p class="small">${mode === 'practice' ? `Battle a random lineup at gym ${g.no}'s level. Nothing is at stake.` : 'This uses your challenge for this week.'}
+        Pick ${g.size} athletes in batting order: #1 goes first. Your partner 🤝 gets up to 5 bonus levels from its own level.</p>
+      ${roster.length < g.size ? `<p class="invite-note">You need ${g.size} caught athletes and have ${roster.length}. Catch more in today's puzzles or Past puzzles.</p>` : ''}
+      <div class="pick-bar"><span>Team <b>${team.length}/${g.size}</b></span>
+        <button class="btn btn-sm" type="button" id="pick-clear"${team.length ? '' : ' disabled'}>Clear</button>
+        <button class="btn btn-sm btn-primary" type="button" id="pick-go"${ready ? '' : ' disabled'}>${mode === 'practice' ? 'Start practice' : 'Start challenge'}</button></div>
+      <ul class="pick-list">${rows || '<li class="small">No catches yet.</li>'}</ul>`);
+    dlg.querySelectorAll('[data-ath]').forEach((b) => (b.onclick = () => {
+      const id = b.dataset.ath;
+      if (team.includes(id)) team = team.filter((x) => x !== id);
+      else if (team.length < g.size) team = [...team, id];
+      else return toast(`Your team is full (${g.size}). Tap someone to remove them.`);
+      const top = dlg.scrollTop;
+      draw();
+      dlg.scrollTop = top;
+    }));
+    dlg.querySelector('#pick-clear').onclick = () => { team = []; draw(); };
+    dlg.querySelector('#pick-go').onclick = () => startBattle(mode, g, team);
+  };
+  draw();
+}
+
+function startBattle(mode, g, ids) {
+  const all = loadDex();
+  const st = all.gyms || { beaten: {} };
+  if (mode === 'challenge') {
+    if (!canChallenge(st, thisWeek())) return toast('You already used this week\'s challenge.');
+    if (!confirm(`Challenge ${g.leader}? This uses your gym challenge for this week.`)) return;
+  }
+  const athletes = ids.map((id) => S.data.byId.get(id)).filter(Boolean);
+  const p = all.partner;
+  const me = playerTeam(g, athletes, p, p ? levelOf(p) : 0);
+  const foe = mode === 'challenge' ? leaderTeam(g, S.data.athletes) : practiceTeam(g, S.data.athletes, `${Date.now()}`);
+  const who = currentUser()?.uid || loadPref('trainerId', 'local');
+  const seed = mode === 'challenge' ? `${who}:${g.no}:${thisWeek()}:${ids.join(',')}` : `${Math.random()}`;
+  const result = runBattle(me, foe, seed);
+  // Save before the playback, so closing or reloading can't undo a challenge.
+  all.gyms = { ...st, beaten: { ...(st.beaten || {}) }, team: ids };
+  if (mode === 'challenge') {
+    all.gyms.week = thisWeek();
+    all.gyms.last = { gym: g.no, won: result.winner === 'me', date: S.today };
+    if (result.winner === 'me') all.gyms.beaten[g.no] = S.today;
+  }
+  saveDex(all);
+  setTimeout(pushProgress, 0);
+  playBattle(mode, g, me, foe, result);
+}
+
+let battleTimer = null;
+function playBattle(mode, g, me, foe, result) {
+  const dlg = $('#dlg-gym');
+  const foeName = mode === 'practice' ? 'The wild lineup' : g.leader;
+  openDialog(dlg, `
+    <h2 id="gym-title">${mode === 'practice' ? '🥅 Practice battle' : `${typeEmoji(g.type)} ${esc(g.leader)}`}</h2>
+    <p class="gym-taunt">${mode === 'practice' ? 'A wild lineup appeared!' : `“${esc(g.taunt)}”`}</p>
+    <div class="battle">
+      <div class="bt-side foe" id="bt-foe"></div>
+      <div class="bt-log" id="bt-log" aria-live="polite"></div>
+      <div class="bt-side me" id="bt-me"></div>
+    </div>
+    <div class="btn-row" id="bt-controls"><button class="btn btn-block" type="button" id="bt-skip">Skip to result</button></div>
+    <div id="bt-result"></div>`);
+  const teams = { me: me.map((f) => ({ ...f, hp: f.maxHp, out: false })), foe: foe.map((f) => ({ ...f, hp: f.maxHp, out: false })) };
+  const active = { me: 0, foe: 0 };
+  const log = [];
+  const side = (k) => {
+    const f = teams[k][active[k]];
+    const bench = teams[k].map((x, i) => `<i class="${x.out ? 'out' : i === active[k] ? 'on' : ''}"></i>`).join('');
+    const pct = f ? Math.round((100 * f.hp) / f.maxHp) : 0;
+    return f ? `<div class="bt-name"><b>${esc(f.name)}</b>${f.partner ? ' 🤝' : ''} <span class="small">Lv ${f.level}</span> ${typeChips(f.types)}</div>
+      <div class="hp"><span class="${pct <= 20 ? 'low' : pct <= 50 ? 'mid' : ''}" style="width:${pct}%"></span></div>
+      <div class="bt-meta small"><span>${f.hp}/${f.maxHp} HP</span><span class="bench">${bench}</span></div>` : '';
+  };
+  const paint = () => {
+    dlg.querySelector('#bt-foe').innerHTML = side('foe');
+    dlg.querySelector('#bt-me').innerHTML = side('me');
+    dlg.querySelector('#bt-log').innerHTML = log.slice(-3).map((l, i, arr) => `<p class="${i === arr.length - 1 ? 'new' : ''}">${l}</p>`).join('');
+  };
+  const nameOf = (k) => teams[k][active[k]]?.name || '';
+  const apply = (e) => {
+    if (e.t === 'send') {
+      active[e.side] = e.i;
+      log.push(e.side === 'me' ? `Go, <b>${esc(nameOf('me'))}</b>!` : `${esc(foeName)} sends out <b>${esc(nameOf('foe'))}</b>!`);
+    } else if (e.t === 'move') {
+      const target = e.side === 'me' ? 'foe' : 'me';
+      teams[target][active[target]].hp = e.hp;
+      let line = `<b>${esc(nameOf(e.side))}</b> used ${typeEmoji(e.type)} ${esc(e.move)}!`;
+      if (e.crit) line += ' A clutch hit!';
+      if (e.mult >= 2) line += " It's super effective!";
+      else if (e.mult < 1) line += " It's not very effective…";
+      log.push(line);
+    } else if (e.t === 'faint') {
+      teams[e.side][e.i].out = true;
+      log.push(`<b>${esc(teams[e.side][e.i].name)}</b> is out of the game!`);
+    }
+  };
+  let i = 0;
+  const finish = () => {
+    clearInterval(battleTimer);
+    battleTimer = null;
+    while (i < result.events.length) apply(result.events[i++]);
+    paint();
+    dlg.querySelector('#bt-controls').remove();
+    const won = result.winner === 'me';
+    const foeTeam = foe.map((f) => `${esc(f.name)} ${typeChips(f.types)}`).join(' · ');
+    let html;
+    if (mode === 'practice') {
+      html = `<p class="bt-final ${won ? 'won' : 'lost'}">${won ? '🎉 You won the practice battle!' : '😤 The wild lineup won this one.'}</p>
+        <div class="btn-row"><button class="btn btn-primary" type="button" id="bt-again">Battle again</button><button class="btn" type="button" data-open-gyms>Back to gyms</button></div>`;
+    } else if (won) {
+      html = `<p class="bt-final won">🎉 You beat ${esc(g.leader)}!</p>
+        <p class="gym-taunt"><b>${esc(g.leader)}:</b> “${esc(g.win)}”</p>
+        <p class="badge-earned">${g.badge.icon} <b>${esc(g.badge.name)}</b> earned!</p>
+        <p class="small">${g.no < GYMS.length ? `Next up: ${esc(GYMS[g.no].leader)} (${GYMS[g.no].type}), from ${esc(dayLabel(nextMonday()))}.` : "That's all 8 gym badges. Champion!"}</p>`;
+    } else {
+      html = `<p class="bt-final lost">${esc(g.leader)} wins this time.</p>
+        <p class="gym-taunt"><b>${esc(g.leader)}:</b> “${esc(g.lose)}”</p>
+        <p class="small">Their team: ${foeTeam}</p>
+        <p class="small">Rematch from ${esc(dayLabel(nextMonday()))}. Practice battles are open until then.</p>`;
+    }
+    dlg.querySelector('#bt-result').innerHTML = html;
+    dlg.querySelector('#bt-again')?.addEventListener('click', () => openTeamPicker('practice', me.map((f) => f.id)));
+    if (mode === 'challenge') { checkBadges(); renderGymCard(); }
+  };
+  paint();
+  dlg.querySelector('#bt-skip').onclick = finish;
+  clearInterval(battleTimer);
+  battleTimer = setInterval(() => {
+    if (!dlg.open) { clearInterval(battleTimer); battleTimer = null; if (mode === 'challenge') { checkBadges(); renderGymCard(); } return; }
+    if (i >= result.events.length) return finish();
+    apply(result.events[i++]);
+    paint();
+  }, 900);
 }
 
 // ---------- badges ----------
@@ -906,6 +1143,8 @@ function badgeCard(b) {
   if (b.kind === 'set') {
     hint = b.set.map((n) => `${b.have.includes(n) ? '✓ ' : ''}${GEN1[n - 1]}`).join(' · ');
     if (b.earned) prog = b.gold ? `🥇 Gold · ${shortDate(b.goldDate || S.today)}` : `Gold: ${ENABLED_SPORTS.map((sp, i) => `${SPORTS[sp].emoji} ${b.perSport[i]}/${b.goal}`).join(' ')}`;
+  } else if (b.kind === 'gym') {
+    prog = b.earned ? '' : '🔒 Locked';
   } else if (b.earned) {
     prog = '';
   }
@@ -926,6 +1165,7 @@ function openBadges() {
   const gold = list.filter((b) => b.gold).length;
   const sets = list.filter((b) => b.kind === 'set');
   const play = list.filter((b) => b.kind === 'play');
+  const gymList = list.filter((b) => b.kind === 'gym');
   openDialog($('#dlg-dex'), `
     <h2 id="dex-title">Your 🎖️ Badges</h2>
     <div class="chip-row">${dexTabsHtml(all, BADGES)}</div>
@@ -935,7 +1175,10 @@ function openBadges() {
     <p class="small">Catch every creature in a set, from any sport. Complete it in all ${ENABLED_SPORTS.length} sports for gold.</p>
     <ul class="badge-grid">${sets.map(badgeCard).join('')}</ul>
     <h3>Play</h3>
-    <ul class="badge-grid">${play.map(badgeCard).join('')}</ul>`);
+    <ul class="badge-grid">${play.map(badgeCard).join('')}</ul>
+    <h3>Gyms</h3>
+    <p class="small">Beat the 8 gym leaders in order. <button class="link-btn" type="button" data-open-gyms>Open the Gym Challenge</button></p>
+    <ul class="badge-grid">${gymList.map(badgeCard).join('')}</ul>`);
   $('#dlg-dex').querySelectorAll('[data-dex-sport]').forEach((b) => (b.onclick = () => openDex('all', b.dataset.dexSport)));
 }
 
@@ -968,6 +1211,7 @@ function linesHtml(dex) {
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-open-partner]')) return openPartner();
   if (e.target.closest('[data-open-card]')) return openTrainerCard();
+  if (e.target.closest('[data-open-gyms]')) return openGyms();
   const od = e.target.closest('[data-open-dex]');
   if (od) openDex('all', od.dataset.openDex || null);
 });
@@ -1506,4 +1750,4 @@ function toast(msg, ms = 2200) {
 init();
 
 // Local testing only: lets the developer preview social screens with sample data.
-if (location.hostname === 'localhost') window.__modidexTest = { openPerson, openGroup, publicSummary, renderMeTab, openDialog, checkBadges, openBadges, openPartner, openTrainerCard, showEvolution, feedMyPartner };
+if (location.hostname === 'localhost') window.__modidexTest = { openPerson, openGroup, publicSummary, renderMeTab, openDialog, checkBadges, openBadges, openPartner, openTrainerCard, showEvolution, feedMyPartner, openGyms, openTeamPicker };

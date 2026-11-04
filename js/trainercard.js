@@ -30,7 +30,8 @@ function fitText(ctx, text, x, y, maxW, size, family, weight = '') {
 /**
  * data: { handle, trainerId, since, partner: { name, level, emoji, via, progress, note } | null,
  *         total, totalMax, perSport: [{ emoji, label, n }], shinies, bestStreak,
- *         favBall: { icon, name } | null, badges: [{ icon, earned, gold }], badgeCount, url, hashtag }
+ *         favBall: { icon, name } | null, badges: [{ icon, earned, gold }], gymBadges: [{ icon, earned }],
+ *         badgeCount, url, hashtag }
  */
 export async function drawTrainerCard(data) {
   try { await Promise.all([document.fonts.load(`64px ${DISPLAY}`), document.fonts.load(`32px ${BODY}`)]); } catch { /* fonts optional */ }
@@ -132,14 +133,14 @@ export async function drawTrainerCard(data) {
   const tiles = [
     ['📚 Total Dex', `${data.total}/${data.totalMax}`],
     ['🗂️ By sport', data.perSport.map((s) => `${s.emoji}${s.n}`).join(' ')],
-    ['🎖️ Badges', `${data.badgeCount}/${data.badges.length}`],
+    ['🎖️ Badges', `${data.badgeCount}/${data.badges.length + data.gymBadges.length}`],
     ['✨ Shinies', String(data.shinies)],
     ['🔥 Best streak', String(data.bestStreak)],
     ['🎯 Favorite ball', data.favBall ? `${data.favBall.icon} ${data.favBall.name.replace(' Ball', '')}` : '—'],
   ];
-  const gap = 20;
+  const gap = 16;
   const tw = (R - L - 2 * gap) / 3;
-  const th = 140;
+  const th = 124;
   tiles.forEach(([label, value], i) => {
     const tx = L + (i % 3) * (tw + gap);
     const ty = y + Math.floor(i / 3) * (th + gap);
@@ -150,39 +151,47 @@ export async function drawTrainerCard(data) {
     ctx.strokeStyle = C.line;
     ctx.stroke();
     ctx.fillStyle = C.muted;
-    fitText(ctx, label, tx + 22, ty + 50, tw - 44, 26, BODY, '600');
+    fitText(ctx, label, tx + 22, ty + 44, tw - 44, 26, BODY, '600');
     ctx.fillStyle = C.text;
-    fitText(ctx, value, tx + 22, ty + 116, tw - 44, 50, DISPLAY);
+    fitText(ctx, value, tx + 22, ty + 102, tw - 44, 48, DISPLAY);
   });
 
-  // Badge case.
-  y += 2 * th + gap + 60;
-  y = Math.max(y, 990);
-  ctx.fillStyle = C.muted;
-  ctx.font = `800 26px ${BODY}`;
-  ctx.fillText('BADGE CASE', L, y);
-  y += 22;
-  const cols = 14;
-  const cell = (R - L) / cols;
-  const rad = Math.min(cell / 2 - 4, 30);
-  ctx.textAlign = 'center';
-  data.badges.forEach((b, i) => {
-    const bx = L + (i % cols) * cell + cell / 2;
-    const by = y + Math.floor(i / cols) * (2 * rad + 10) + rad + 6;
-    ctx.beginPath();
-    ctx.arc(bx, by, rad, 0, Math.PI * 2);
-    ctx.fillStyle = b.gold ? 'rgba(255,213,74,0.18)' : b.earned ? 'rgba(198,255,61,0.10)' : C.bg;
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = b.gold ? C.gold : b.earned ? C.accent : C.line;
-    ctx.stroke();
-    if (b.earned) {
-      ctx.fillStyle = '#fff'; // opaque, so the emoji isn't drawn faded
-      ctx.font = `${Math.round(rad * 1.3)}px ${BODY}`;
-      ctx.fillText(b.icon, bx, by + rad * 0.46);
-    }
-  });
-  ctx.textAlign = 'left';
+  // A row of badge circles: earned ones lit with their emoji.
+  const badgeRow = (list, top, cols, maxRad) => {
+    const cell = (R - L) / cols;
+    const rad = Math.min(cell / 2 - 4, maxRad);
+    ctx.textAlign = 'center';
+    list.forEach((b, i) => {
+      const bx = L + (i % cols) * cell + cell / 2;
+      const by = top + Math.floor(i / cols) * (2 * rad + 8) + rad;
+      ctx.beginPath();
+      ctx.arc(bx, by, rad, 0, Math.PI * 2);
+      ctx.fillStyle = b.gold ? 'rgba(255,213,74,0.18)' : b.earned ? 'rgba(198,255,61,0.10)' : C.bg;
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = b.gold ? C.gold : b.earned ? C.accent : C.line;
+      ctx.stroke();
+      if (b.earned) {
+        ctx.fillStyle = '#fff'; // opaque, so the emoji isn't drawn faded
+        ctx.font = `${Math.round(rad * 1.3)}px ${BODY}`;
+        ctx.fillText(b.icon, bx, by + rad * 0.46);
+      }
+    });
+    ctx.textAlign = 'left';
+  };
+  const label = (text, at) => {
+    ctx.fillStyle = C.muted;
+    ctx.font = `800 24px ${BODY}`;
+    ctx.fillText(text, L, at);
+  };
+
+  // Gym badges (8), then the badge case (collection + play badges).
+  y += 2 * th + gap + 46;
+  label(`GYM BADGES  ${data.gymBadges.filter((b) => b.earned).length}/8`, y);
+  badgeRow(data.gymBadges, y + 14, 8, 32);
+  y += 14 + 64 + 46;
+  label('BADGE CASE', y);
+  badgeRow(data.badges, y + 14, 14, 24);
 
   // Footer.
   ctx.textAlign = 'center';
