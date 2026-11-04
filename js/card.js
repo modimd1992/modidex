@@ -84,7 +84,9 @@ export function statBars(athlete, compare = null) {
     ? `<div class="stat-cmp-head"><span>vs. <b>${esc(compare.name)}</b></span><span class="stat-cmp-key"><span class="key-marker"></span> your guess · ▲▼ mystery is higher / lower</span></div>`
     : '';
   const totalCmp = compare ? ` ${arrowFor(total, sum(compare))}` : '';
-  return `<div class="stats">${head}${rows}<div class="stat-total">TOTAL <b>${total}</b>${totalCmp}</div></div>`;
+  // These are the athlete's own ratings, not the creature's stats.
+  const label = '<div class="stat-heading">Athlete ratings <span>1–150</span></div>';
+  return `<div class="stats">${label}${head}${rows}<div class="stat-total">TOTAL <b>${total}</b>${totalCmp}</div></div>`;
 }
 
 /**
