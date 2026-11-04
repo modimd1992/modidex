@@ -40,6 +40,8 @@ export function search(pool, query, exclude = new Set(), limit = 8) {
  * getPool() returns athletes to search, getExclude() returns ids already guessed,
  * onPick(athlete) is called when the player chooses someone.
  */
+let outsideTap = null;
+
 export function attachAutocomplete({ input, list, getPool, getExclude, onPick }) {
   let results = [];
   let active = -1;
@@ -103,9 +105,12 @@ export function attachAutocomplete({ input, list, getPool, getExclude, onPick })
     const li = e.target.closest('[data-i]');
     if (li) { e.preventDefault(); pick(Number(li.dataset.i)); }
   });
-  document.addEventListener('pointerdown', (e) => {
+  // One outside-tap listener at a time (the guess box is rebuilt after every guess).
+  if (outsideTap) document.removeEventListener('pointerdown', outsideTap);
+  outsideTap = (e) => {
     if (!list.contains(e.target) && e.target !== input) close();
-  });
+  };
+  document.addEventListener('pointerdown', outsideTap);
 
   return {
     close,

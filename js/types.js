@@ -5,7 +5,7 @@
 export const TYPES = {
   Normal:   { emoji: '⭐', color: '#9a9a8c', fits: 'Do-it-all, well-rounded players' },
   Fire:     { emoji: '🔥', color: '#ff6a2b', fits: 'Hot-hand scorers, flamethrower arms' },
-  Water:    { emoji: '💧', color: '#3a8dff', fits: 'Smooth, fluid shooters and skaters' },
+  Water:    { emoji: '💧', color: '#3a8dff', fits: 'Smooth, fluid shooters and movers' },
   Electric: { emoji: '⚡', color: '#ffd21f', fits: 'Speedsters and explosive athletes' },
   Grass:    { emoji: '🌱', color: '#4cc95a', fits: 'Young risers still growing' },
   Ice:      { emoji: '❄️', color: '#7fe3f2', fits: 'Ice-in-the-veins clutch performers' },

@@ -10,6 +10,7 @@
 //   trades/{id}                -> { from, to, fromName, toName, give, get, status }
 //                                 give/get = { sport, n, athleteId } (get may be null: a gift)
 import { cloudApi, onAfterPush, onBeforeDelete } from './cloud.js';
+import { SPORTS } from './config.js';
 
 export const HANDLE_RE = /^[a-z0-9_]{3,15}$/;
 export const MAX_GROUP = 50;
@@ -47,15 +48,17 @@ export async function claimHandle(raw) {
   if (prof.handle === handle) return handle;
   await a.fsM.runTransaction(a.db, async (tx) => {
     const h = await tx.get(ref(a, 'handles', handle));
+    const p = await tx.get(ref(a, 'profiles', me));
     if (h.exists() && h.data().uid !== me) throw new Error('taken');
     if (!h.exists()) tx.set(ref(a, 'handles', handle), { uid: me });
-    if (prof.handle) tx.delete(ref(a, 'handles', prof.handle));
+    const old = p.exists() ? p.data().handle : null;
+    if (old && old !== handle) tx.delete(ref(a, 'handles', old));
     // Only the basics here; the Dex and scores are published right after, separately,
-    // so a problem with those can never block saving a username.
-    tx.set(ref(a, 'profiles', me), {
-      handle, name: handle, friends: prof.friends || [], groups: prof.groups || [],
-      updatedAt: a.fsM.serverTimestamp(),
-    }, { merge: true });
+    // so a problem with those can never block saving a username. Friends and groups
+    // are never rewritten here (another device may have changed them).
+    tx.set(ref(a, 'profiles', me), p.exists()
+      ? { handle, name: handle, updatedAt: a.fsM.serverTimestamp() }
+      : { handle, name: handle, friends: [], groups: [], updatedAt: a.fsM.serverTimestamp() }, { merge: true });
   });
   mine = { ...prof, handle, name: handle };
   try { await publishProfile(); } catch (e) { console.warn('[profiles] publish after username failed:', e); }
@@ -203,26 +206,79 @@ export async function answerTrade(t, accept) {
   await a.fsM.updateDoc(ref(a, 'trades', t.id), { status: accept ? 'accepted' : 'declined' });
 }
 
+// Withdraws an offer. If the friend accepted it in the meantime, it's not deleted:
+// throws 'trade-accepted' so the caller can finish it instead.
 export async function cancelTrade(t) {
   const a = api();
-  await a.fsM.deleteDoc(ref(a, 'trades', t.id));
+  const r = ref(a, 'trades', t.id);
+  const snap = await a.fsM.getDoc(r);
+  if (!snap.exists()) return;
+  if (snap.data().status === 'accepted') throw new Error('trade-accepted');
+  await a.fsM.deleteDoc(r);
 }
 
 // The sender finishes accepted trades: receive(trade) adds `get` to the Dex. Answered trades are cleared.
-export async function processAnsweredTrades(receive) {
-  const a = cloudApi();
-  if (!a) return [];
-  const done = [];
-  for (const t of await outgoingTrades()) {
-    if (t.status === 'offered') continue;
-    if (t.status === 'accepted' && t.get) { receive(t); done.push(t); }
-    await a.fsM.deleteDoc(ref(a, 'trades', t.id));
-  }
-  return done;
+let finishing = null; // one run at a time (sync and the Friends tab can both ask)
+export function processAnsweredTrades(receive) {
+  finishing ||= (async () => {
+    const a = cloudApi();
+    if (!a) return [];
+    const done = [];
+    for (const t of await outgoingTrades()) {
+      if (t.status === 'offered') continue;
+      if (t.status === 'accepted' && t.get) { receive(t); done.push(t); }
+      await a.fsM.deleteDoc(ref(a, 'trades', t.id));
+    }
+    return done;
+  })().finally(() => { finishing = null; });
+  return finishing;
 }
 
 export async function removeFriend(uid) {
   await addToMine('friends', uid, true);
+}
+
+// Another player's profile can contain anything they wrote, so keep only the
+// expected shapes: numbers as numbers, known sports and modes, safe short strings.
+const num = (v, max = 1e7) => { const n = Math.floor(Number(v)); return Number.isFinite(n) ? Math.max(0, Math.min(max, n)) : 0; };
+const word = (v, re, len = 40) => (typeof v === 'string' && re.test(v) ? v.slice(0, len) : '');
+const dexNums = (v) => (Array.isArray(v) ? [...new Set(v.map(Number).filter((x) => Number.isInteger(x) && x >= 1 && x <= 151))] : []);
+const MODE_RE = /^[a-z]{2,4}$/;
+export function cleanProfile(uid, d = {}) {
+  const dex = {};
+  const src = d.dex && typeof d.dex === 'object' ? d.dex : {};
+  if (Array.isArray(src.caught)) dex.All = { caught: dexNums(src.caught), seen: dexNums(src.seen), shiny: dexNums(src.shiny) };
+  for (const sp of Object.keys(SPORTS)) {
+    const x = src[sp];
+    if (x && typeof x === 'object') dex[sp] = { caught: dexNums(x.caught), seen: dexNums(x.seen), shiny: dexNums(x.shiny) };
+  }
+  const lines = typeof d.lines === 'object' && d.lines
+    ? Object.fromEntries(Object.keys(SPORTS).filter((sp) => sp in d.lines).map((sp) => [sp, num(d.lines[sp], 54)]))
+    : num(d.lines, 54);
+  const streaks = {};
+  for (const [k, v] of Object.entries(d.streaks || {})) if (MODE_RE.test(k)) streaks[k] = num(v, 10000);
+  const results = {};
+  for (const [k, r] of Object.entries(d.today?.results || {})) {
+    if (!MODE_RE.test(k) || !r) continue;
+    results[k] = { status: r.status === 'won' ? 'won' : 'lost', n: num(r.n, 6), squares: String(r.squares || '').replace(/[^🟩🟨⬛]/gu, '').slice(0, 12), caught: !!r.caught, shiny: !!r.shiny };
+  }
+  const date = (v) => word(v, /^\d{4}-\d{2}-\d{2}$/, 10);
+  const totals = (t) => (t && typeof t === 'object' ? { pts: num(t.pts), solved: num(t.solved), played: num(t.played) } : undefined);
+  return {
+    uid,
+    handle: word(d.handle, HANDLE_RE, 15),
+    name: word(d.handle, HANDLE_RE, 15),
+    friends: Array.isArray(d.friends) ? d.friends.filter((x) => typeof x === 'string') : [],
+    groups: Array.isArray(d.groups) ? d.groups.filter((x) => typeof x === 'string') : [],
+    dex, lines, streaks,
+    today: d.today ? { date: date(d.today.date), puzzleNo: num(d.today.puzzleNo), results } : undefined,
+    week: d.week ? { start: date(d.week.start), ...totals(d.week) } : undefined,
+    alltime: totals(d.alltime),
+    badges: Array.isArray(d.badges) ? d.badges.filter((x) => typeof x === 'string' && /^[a-z0-9.-]{1,24}$/.test(x)) : [],
+    partner: d.partner && typeof d.partner === 'object'
+      ? { n: num(d.partner.n, 151), name: word(d.partner.name, /^[A-Za-z0-9 .'♀♂-]{1,20}$/u, 20), level: num(d.partner.level, 100) }
+      : null,
+  };
 }
 
 // A profile you're allowed to see, or null (not a friend yet / no longer shared).
@@ -230,7 +286,7 @@ export async function readProfile(uid) {
   const a = api();
   try {
     const snap = await a.fsM.getDoc(ref(a, 'profiles', uid));
-    return snap.exists() ? { uid, ...snap.data() } : null;
+    return snap.exists() ? cleanProfile(uid, snap.data()) : null;
   } catch {
     return null;
   }

@@ -11,11 +11,11 @@ import { typesOf, fighter } from './battle.js';
 import { hashString, seededShuffle } from './daily.js';
 
 export const GYMS = [
-  { no: 1, pct: 0.15, foeBonus: 2, type: 'Rock', leader: 'Coach Boulder', badge: { name: 'Bedrock Badge', icon: '🪨' }, size: 3, level: 14,
+  { no: 1, pct: 0.15, foeBonus: 2, type: 'Rock', leader: 'Coach Granite', badge: { name: 'Bedrock Badge', icon: '🪨' }, size: 3, level: 14,
     taunt: "My lineup doesn't move. You'll have to go through it.", win: 'Solid. You cracked the wall.', lose: 'Bounced off the wall. Come back stronger.' },
   { no: 2, pct: 0.3, foeBonus: 1, type: 'Water', leader: 'Coach Rapids', badge: { name: 'Riptide Badge', icon: '🌊' }, size: 3, level: 20,
     taunt: 'We play smooth and we never stop flowing.', win: "You rode the wave. Didn't think you had it.", lose: 'Swept out to sea. Try again next week.' },
-  { no: 3, pct: 0.35, foeBonus: -1, type: 'Electric', leader: 'Coach Voltage', badge: { name: 'Surge Badge', icon: '⚡' }, size: 4, level: 26,
+  { no: 3, pct: 0.35, foeBonus: -1, type: 'Electric', leader: 'Coach Amp', badge: { name: 'Spark Badge', icon: '⚡' }, size: 4, level: 26,
     taunt: 'Blink and the play is already over.', win: 'Shocking. You kept up with us.', lose: 'Too slow! Recharge and come back.' },
   { no: 4, pct: 0.4, foeBonus: 2, type: 'Grass', leader: 'Coach Greenway', badge: { name: 'Sprout Badge', icon: '🌿' }, size: 4, level: 32,
     taunt: 'My young squad grows stronger every quarter.', win: 'You outgrew us. Well played.', lose: 'Rooted in place. Next week, then.' },

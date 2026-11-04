@@ -1,12 +1,60 @@
 {
   "_readme": "Optional. Pin an athlete to a date and mode, e.g. to match a video. Format: \"YYYY-MM-DD\": { \"mode\": \"athlete-id\" }. Modes: all, nfl, nba, mlb (nhl when hockey is turned on). Dates not listed use the automatic daily pick.",
-  "2026-12-25": {
-    "nba": "nba-stephen-curry"
-  },
   "2026-11-02": {
     "all": "nba-chet-holmgren",
     "nba": "nba-donovan-mitchell",
     "nfl": "nfl-ceedee-lamb",
     "mlb": "mlb-jose-ramirez"
+  },
+  "2026-11-03": {
+    "all": "nfl-nick-bosa",
+    "nfl": "nfl-geno-smith",
+    "nba": "nba-paolo-banchero",
+    "mlb": "mlb-josh-hader"
+  },
+  "2026-11-04": {
+    "all": "mlb-oneil-cruz",
+    "nfl": "nfl-christian-gonzalez",
+    "nba": "nba-brandon-miller",
+    "mlb": "mlb-drew-rasmussen"
+  },
+  "2026-11-05": {
+    "all": "mlb-randy-arozarena",
+    "nfl": "nfl-jordan-addison",
+    "nba": "nba-stephon-castle",
+    "mlb": "mlb-yusei-kikuchi"
+  },
+  "2026-11-06": {
+    "all": "nba-jerami-grant",
+    "nfl": "nfl-calvin-ridley",
+    "nba": "nba-andrew-wiggins",
+    "mlb": "mlb-dylan-cease"
+  },
+  "2026-11-07": {
+    "all": "mlb-jackson-merrill",
+    "nfl": "nfl-harrison-smith",
+    "nba": "nba-bradley-beal",
+    "mlb": "mlb-christian-yelich"
+  },
+  "2026-11-08": {
+    "all": "mlb-mike-trout",
+    "nfl": "nfl-cameron-jordan",
+    "nba": "nba-victor-wembanyama",
+    "mlb": "mlb-garrett-crochet"
+  },
+  "2026-11-09": {
+    "all": "nfl-budda-baker",
+    "nfl": "nfl-jordan-love",
+    "nba": "nba-scottie-barnes",
+    "mlb": "mlb-reid-detmers"
+  },
+  "2026-11-10": {
+    "all": "mlb-dylan-crews",
+    "nfl": "nfl-josh-jacobs",
+    "nba": "nba-tyrese-maxey",
+    "mlb": "mlb-jacob-degrom"
+  },
+  "2026-12-25": {
+    "nba": "nba-stephen-curry"
   }
 }

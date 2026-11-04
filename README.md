@@ -255,6 +255,8 @@ It's plain static files, so any static host works.
 
 **Custom domain:** all three let you attach your own domain (e.g. `play.jedimodi.com`) for free in their domain settings.
 
+**Before editing `data/athletes.json`, run `node tools/pin-schedule.mjs`.** The automatic daily pick reshuffles when athletes are added or removed; pinning writes every answer from launch through the next 7 days into `data/schedule.json`, so past puzzles, today's puzzle and saved games stay the same.
+
 Before launch, set `launchDate` in `js/config.js` to your real launch day so it becomes puzzle #1.
 
 ---

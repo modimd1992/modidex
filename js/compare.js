@@ -29,7 +29,10 @@ export const COLUMNS = [
 ];
 
 export function columnsFor(mode) {
-  return COLUMNS.filter((c) => !c.mixedOnly || !mode.sports || mode.sports.length > 1);
+  const single = mode.sports?.length === 1 ? SPORTS[mode.sports[0]] : null;
+  return COLUMNS.filter((c) => !c.mixedOnly || !single)
+    // MLB calls it a League (AL/NL); the other sports call it a Conference.
+    .map((c) => (c.id === 'league' && single?.leagueLabel ? { ...c, label: single.leagueLabel === 'League' ? 'Lg' : single.leagueLabel } : c));
 }
 
 export function compareGuess(guess, answer, key, mode) {

@@ -68,7 +68,7 @@ export function badgeFacts(dex, statsList, history) {
   let bestSweep = 0;
   for (const day of Object.values(history || {})) bestSweep = Math.max(bestSweep, modeIds.filter((id) => day?.[id]?.c).length);
   const byDate = {};
-  for (const sd of perSport) for (const e of Object.values(sd.caught || {})) if (e?.date) byDate[e.date] = (byDate[e.date] || 0) + 1;
+  for (const sd of perSport) for (const e of Object.values(sd.caught || {})) if (e?.date && e.ball !== 'trade') byDate[e.date] = (byDate[e.date] || 0) + 1;
   bestSweep = Math.min(MODES.length, Math.max(bestSweep, ...Object.values(byDate), 0));
 
   // Perfect Week: longest run of consecutive days with every mode solved.

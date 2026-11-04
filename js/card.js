@@ -48,7 +48,7 @@ export function compBanner(athlete, { revealWhy = true, status = null, rare = {}
   if (!athlete.comp) return '';
   return `<div class="comp-banner">
     ${rare.legendary || rare.shiny ? `<span class="rare-line">${rare.legendary ? '👑 Legendary encounter' : ''}${rare.legendary && rare.shiny ? ' · ' : ''}${rare.shiny ? '✨ Shiny encounter' : ''}</span>` : ''}
-    <span class="comp-label">Plays like${status ? ` <span class="dex-chip ${status}">${{ caught: '✅ In your Dex', seen: '👁 Seen', new: '✨ New' }[status]}</span>` : ''}</span>
+    <span class="comp-label">Plays like${status ? ` <span class="dex-chip ${status}">${{ caught: '✅ In your Dex', seen: '👁 Seen', new: '🆕 New' }[status]}</span>` : ''}</span>
     <span class="comp-name"><span class="comp-dex">#${String(athlete.comp.dex).padStart(3, '0')}</span> ${esc(athlete.comp.name)}</span>
     ${revealWhy ? `<span class="comp-why">${esc(athlete.comp.why)}</span>` : ''}
   </div>`;

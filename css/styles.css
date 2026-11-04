@@ -515,7 +515,7 @@ main { max-width: 560px; margin: 0 auto; padding: 12px; }
 .dex-cell.mini .dex-name { font-size: 11px; }
 
 /* ---------- badges ---------- */
-.badge-grid { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.badge-grid { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 8px; }
 .badge-card { display: grid; grid-template-columns: 34px 1fr; column-gap: 8px; row-gap: 2px; align-items: start; padding: 9px 10px; border-radius: 12px; background: var(--bg-2); border: 1px dashed var(--line); }
 .badge-icon { grid-row: span 3; font-size: 26px; line-height: 1.1; filter: grayscale(1); opacity: 0.45; }
 .badge-name { font-weight: 700; font-size: 13px; color: var(--muted); }

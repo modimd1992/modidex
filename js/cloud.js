@@ -2,10 +2,11 @@
 // today's games to Firebase, so they follow the player across devices.
 // Does nothing until FIREBASE_CONFIG is filled in (js/firebase-config.js).
 import { FIREBASE_CONFIG } from './firebase-config.js';
-import { exportProgress, importProgress, mergeProgress } from './storage.js';
+import { exportProgress, importProgress, mergeProgress, clearProgress } from './storage.js';
 
 const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
 const EMAIL_KEY = 'modidex:v1:pref:signInEmail';
+const LAST_UID_KEY = 'modidex:v1:pref:lastUid'; // who this device's progress belongs to
 let fb = null;
 let user = null;
 let status = 'off'; // off | loading | ready | error
@@ -62,38 +63,46 @@ export async function initCloud() {
 
 const userDoc = () => fb.fsM.doc(fb.db, 'users', user.uid);
 
+const readLastUid = () => { try { return localStorage.getItem(LAST_UID_KEY); } catch { return null; } };
+const writeLastUid = (uid) => { try { localStorage.setItem(LAST_UID_KEY, uid); } catch { /* ignore */ } };
+
 async function pullAndMerge() {
   try {
-    const snap = await fb.fsM.getDoc(userDoc());
-    const remote = snap.exists() ? snap.data() : {};
-    const merged = mergeProgress(exportProgress(), remote);
-    importProgress(merged);
-    await pushProgress();
-    notify('synced');
+    // Progress on this device from a different account must not leak into this one:
+    // start from the cloud copy instead. (First sign-in on a device keeps guest progress.)
+    const last = readLastUid();
+    if (last && last !== user.uid) clearProgress();
+    writeLastUid(user.uid);
+    await pushProgress({ fromSignIn: true });
   } catch (e) {
     console.warn('[profiles] sync failed:', e);
   }
 }
 
-// Save this device's progress to the profile. Safe to call anytime.
-export async function pushProgress() {
+// Save this device's progress to the profile, merged with what's already there,
+// so another device's newer catches are never overwritten. Safe to call anytime.
+export async function pushProgress({ fromSignIn = false } = {}) {
   if (!fb || !user) return;
+  let changed = false;
   try {
-    const { dex, stats, games, history } = exportProgress();
-    const base = {
-      dex, stats, games,
-      name: user.displayName || (user.email || '').split('@')[0] || 'Trainer',
-      updatedAt: fb.fsM.serverTimestamp(),
-    };
-    try {
-      await fb.fsM.setDoc(userDoc(), { ...base, history });
-    } catch (e) {
-      if (e?.code !== 'permission-denied') throw e;
-      await fb.fsM.setDoc(userDoc(), base); // Firebase rules not updated yet for history
-    }
+    await fb.fsM.runTransaction(fb.db, async (tx) => {
+      const snap = await tx.get(userDoc());
+      const local = exportProgress();
+      const merged = mergeProgress(local, snap.exists() ? snap.data() : {});
+      changed = JSON.stringify(mergeProgress(local, {})) !== JSON.stringify(merged);
+      importProgress(merged);
+      const { dex, stats, games, history } = merged;
+      tx.set(userDoc(), {
+        dex, stats, games, history,
+        name: user.displayName || (user.email || '').split('@')[0] || 'Trainer',
+        updatedAt: fb.fsM.serverTimestamp(),
+      });
+    });
   } catch (e) {
     console.warn('[profiles] save failed:', e);
   }
+  // Another device had progress this one didn't: let the screen catch up.
+  if (fromSignIn || changed) notify('synced');
   for (const fn of afterPush) {
     try { await fn(); } catch (e) { console.warn('[profiles] after-save step failed:', e); }
   }

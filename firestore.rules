@@ -5,6 +5,10 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function me() { return request.auth.uid; }
     function profileOf(uid) { return /databases/$(database)/documents/profiles/$(uid); }
+    function handleOf(h) { return /databases/$(database)/documents/handles/$(h); }
+    function groupOf(gid) { return /databases/$(database)/documents/groups/$(gid); }
+    // The username on my own profile (used to stop fake "from" names).
+    function myHandle() { return get(profileOf(me())).data.handle; }
 
     // Private save: only its owner.
     match /users/{uid} {
@@ -27,10 +31,21 @@ service cloud.firestore {
         me() == uid
         || me() in resource.data.friends
         || (exists(profileOf(me())) && resource.data.groups.hasAny(get(profileOf(me())).data.groups)));
-      allow create, update: if signedIn() && me() == uid
-        && request.resource.data.keys().hasOnly(['handle', 'name', 'friends', 'groups', 'dex', 'lines', 'streaks', 'today', 'week', 'alltime', 'badges', 'partner', 'updatedAt'])
-        && request.resource.data.friends.size() <= 300
-        && request.resource.data.groups.size() <= 20;
+      // A profile's username must be one this player owns, and they can only add a
+      // group they're actually a member of.
+      function profileOk() {
+        return request.resource.data.keys().hasOnly(['handle', 'name', 'friends', 'groups', 'dex', 'lines', 'streaks', 'today', 'week', 'alltime', 'badges', 'partner', 'updatedAt'])
+          && request.resource.data.friends.size() <= 300
+          && request.resource.data.groups.size() <= 20
+          && getAfter(handleOf(request.resource.data.handle)).data.uid == me();
+      }
+      function groupsAddedOk() {
+        let added = request.resource.data.groups.removeAll(resource.data.get('groups', []));
+        return added.size() == 0
+          || (added.size() == 1 && me() in getAfter(groupOf(added[0])).data.members);
+      }
+      allow create: if signedIn() && me() == uid && profileOk() && request.resource.data.groups.size() == 0;
+      allow update: if signedIn() && me() == uid && profileOk() && groupsAddedOk();
       allow delete: if signedIn() && me() == uid;
     }
 
@@ -39,7 +54,8 @@ service cloud.firestore {
       allow read: if signedIn() && (resource.data.from == me() || resource.data.to == me());
       allow create: if signedIn() && request.resource.data.from == me()
         && id == request.resource.data.to + '_' + me()
-        && request.resource.data.status == 'pending';
+        && request.resource.data.status == 'pending'
+        && request.resource.data.fromName == myHandle();
       allow update: if signedIn() && resource.data.to == me()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
         && request.resource.data.status in ['accepted', 'declined'];
@@ -54,7 +70,9 @@ service cloud.firestore {
         && request.resource.data.status == 'offered'
         && request.resource.data.keys().hasOnly(['from', 'to', 'fromName', 'toName', 'give', 'get', 'status', 'createdAt'])
         && exists(profileOf(me()))
-        && request.resource.data.to in get(profileOf(me())).data.friends;
+        && request.resource.data.fromName == myHandle()
+        && request.resource.data.to in get(profileOf(me())).data.friends
+        && me() in get(profileOf(request.resource.data.to)).data.friends;
       allow update: if signedIn() && resource.data.to == me() && resource.data.status == 'offered'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
         && request.resource.data.status in ['accepted', 'declined'];

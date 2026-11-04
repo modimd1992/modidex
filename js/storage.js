@@ -139,6 +139,19 @@ export const dexCounts = (sd) => ({
   caught: Object.keys(sd?.caught || {}).length, seen: Object.keys(sd?.seen || {}).length, shiny: Object.keys(sd?.shiny || {}).length,
 });
 
+// Removes this device's saved progress (not preferences). Used when a different
+// account signs in on this device.
+export function clearProgress() {
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k?.startsWith(`${P}:`) && !k.startsWith(`${P}:pref:`)) keys.push(k);
+    }
+    keys.forEach((k) => localStorage.removeItem(k));
+  } catch { /* storage unavailable */ }
+}
+
 function savedGameIds() {
   const ids = [];
   try {

@@ -56,7 +56,7 @@ async function init() {
       <p class="small">${esc(e.message)}</p></div>`;
     return;
   }
-  if (S.data.dataAsOf) $('#data-asof').textContent = `Rosters as of ${S.data.dataAsOf}.`;
+  if (S.data.dataAsOf) $('#data-asof').textContent = `Rosters as of ${/^\d{4}-\d{2}-\d{2}$/.test(S.data.dataAsOf) ? longDate(S.data.dataAsOf) : S.data.dataAsOf}.`;
   setDay();
   const link = location.hash.match(/^#(add|join)=([A-Za-z0-9_]+)/);
   if (link) {
@@ -150,7 +150,8 @@ function timeToMidnight() {
 function modeStatus(mode, key = S.key, answers = S.answers) {
   const a = answers[mode.id];
   if (!a) return 'none';
-  const g = loadGame(slot(mode.id, key), key, a.id);
+  let g = loadGame(slot(mode.id, key), key, a.id);
+  if (key !== S.today && !g.guesses.length) g = loadGame(mode.id, key, a.id); // started on the day itself
   if (!g.guesses.length) {
     const h = liveResult(mode.id, key);
     if (h) return h.s;
@@ -191,6 +192,11 @@ function renderMode() {
     return;
   }
   S.game = loadGame(slot(S.mode.id), S.key, a.id);
+  // A past day started on the day itself: yesterday's game may still be in today's slot.
+  if (S.archive && !S.game.guesses.length) {
+    const plain = loadGame(S.mode.id, S.key, a.id);
+    if (plain.guesses.length) S.game = plain;
+  }
   // A past day played on the day itself: show that result (its guesses aren't saved).
   const live = !S.game.guesses.length && liveResult(S.mode.id);
   if (live) S.game = { ...S.game, status: live.s, live };
@@ -222,7 +228,7 @@ let archiveShown = 14;
 
 function archiveBannerHtml() {
   return `<div class="archive-banner">
-    <div><b>📅 Past puzzle · ${esc(dayLabel(S.key))}</b><span class="small">No. ${pad3(S.puzzleNo)} · Catches go to your Dex. Doesn't count toward streaks or leaderboards.</span></div>
+    <div><b>📅 Past puzzle · ${esc(dayLabel(S.key))}</b><span class="small">No. ${pad3(S.puzzleNo)} · Catches go to your Dex. This puzzle doesn't count toward streaks or leaderboards.</span></div>
     <button class="btn btn-sm" type="button" data-day="">Back to today</button>
   </div>`;
 }
@@ -510,7 +516,7 @@ function renderResult(area) {
   const stats = loadStats(S.mode.id);
   const streak = displayStreak(stats, S.todayNo);
   const nextModes = MODES.filter((m) => m.id !== S.mode.id && modeStatus(m) === 'playing');
-  const praise = ['Legendary!', 'Incredible!', 'Clutch!', 'Nice scouting!', 'Got it!', 'Phew!'][n - 1] || 'Got it!';
+  const praise = ['Phenomenal!', 'Incredible!', 'Clutch!', 'Nice scouting!', 'Got it!', 'Phew!'][n - 1] || 'Got it!';
   area.innerHTML = `
     <div class="panel result ${won ? 'won' : 'lost'}">
       ${catchHtml(S.game.catch, S.justFinished)}
@@ -679,7 +685,7 @@ function openDex(filter = 'all', sport = dexSport) {
   openDialog($('#dlg-dex'), `
     <h2 id="dex-title">${isTotal ? 'Your 📚 Total Dex' : `Your ${SPORTS[sport].emoji} ${sport} Dex`}</h2>
     <div class="chip-row">${sportTabs}</div>
-    ${isTotal ? dexActionsHtml(all) : ''}
+    ${dexActionsHtml(all)}
     <p><b>${caughtN}</b> caught · ${seenN} seen · ${CATCH.total} total<br><span class="small">✨ ${shinyN} shiny · 🏅 ${linesDone}/${FAMILIES.length} evolution lines complete</span>${isTotal ? `<br><span class="small">🏆 Grand total: <b>${grandCaught}</b> of ${CATCH.total * ENABLED_SPORTS.length} caught across all ${ENABLED_SPORTS.length} sports</span>` : ''}</p>
     <div class="dex-bar" aria-label="${pct}% caught"><span style="width:${pct}%"></span></div>
     <div class="chip-row">
@@ -788,7 +794,7 @@ function choosePartner(n) {
   toast(`🤝 ${name} is your partner!`);
   openPartner();
   if ($('#dlg-dex').open) openDex('all', dexSport);
-  if (S.data && finished()) renderPlayArea();
+  if (S.data && S.game && finished()) { S.justFinished = false; renderPlayArea(); }
 }
 
 function showEvolution([from, to], emoji = null) {
@@ -850,6 +856,7 @@ async function openTrainerCard() {
   } catch (e) {
     console.warn('[card]', e);
   }
+  if (!dlg.open) return; // closed while the card was being drawn
   if (!blob) { dlg.querySelector('.small').textContent = "Couldn't make the card on this device."; return; }
   if (cardUrl) URL.revokeObjectURL(cardUrl);
   cardUrl = URL.createObjectURL(blob);
@@ -896,13 +903,17 @@ function renderGymCard() {
     return;
   }
   const can = canChallenge(st, thisWeek());
+  const have = myRoster().length;
+  const short = have < g.size;
   const last = st.last && st.week === thisWeek() ? st.last : null;
   const lastLine = last ? (last.won ? `You beat ${gymByNoName(last.gym)} this week!` : `${gymByNoName(last.gym)} won this week's challenge.`) : '';
   el.innerHTML = `<div class="gym-card">
     <div class="gym-head"><span class="gym-icon">${typeEmoji(g.type)}</span><div><b>🏟️ Gym ${g.no}: ${esc(g.leader)}</b>
       <span class="small">${g.type} type · ${g.size} vs ${g.size} · ${won}/8 badges</span></div></div>
-    <p class="small">${can ? 'Your weekly gym challenge is ready.' : `${esc(lastLine)} Next challenge ${esc(dayLabel(nextMonday()))}. Practice anytime.`}</p>
-    <button class="btn ${can ? 'btn-primary' : ''} btn-block" type="button" data-open-gyms>${can ? `Challenge ${esc(g.leader)}` : 'Gyms & practice'}</button>
+    <p class="small">${!can ? `${esc(lastLine)} Next challenge ${esc(dayLabel(nextMonday()))}. Practice anytime.`
+      : short ? `You need ${g.size} caught athletes for this gym and have ${have}. Catch more in today's or past puzzles.`
+      : 'Your weekly gym challenge is ready.'}</p>
+    <button class="btn ${can && !short ? 'btn-primary' : ''} btn-block" type="button" data-open-gyms>${can && !short ? `Challenge ${esc(g.leader)}` : 'Gyms & practice'}</button>
   </div>`;
 }
 const gymByNoName = (no) => GYMS.find((x) => x.no === no)?.leader || 'The gym leader';
@@ -922,7 +933,7 @@ function openGyms() {
     <p class="small">Beat the 8 gym leaders in order with a team of athletes you've caught. You get <b>one challenge a week</b> (resets Monday at midnight ET). Practice battles are unlimited.</p>
     ${g ? `<div class="gym-next">
       <p class="gym-taunt"><b>${esc(g.leader)}:</b> “${esc(g.taunt)}”</p>
-      <p class="small">${typeEmoji(g.type)} ${g.type}-type team · Level ${g.level} · Pick ${g.size} athletes. Types matter: pick athletes strong against ${g.type}.</p>
+      <p class="small">${typeEmoji(g.type)} ${g.type}-type team · Their lineup is Lv ${g.level + (g.foeBonus || 0)}–${g.level + (g.foeBonus || 0) + 1}, yours fights at Lv ${g.level} · Pick ${g.size} athletes. Types matter: pick athletes strong against ${g.type}.</p>
       <div class="btn-row">
         ${can ? `<button class="btn btn-primary" type="button" id="gym-go">Challenge ${esc(g.leader)}</button>` : `<button class="btn" type="button" disabled>Next challenge ${esc(dayLabel(nextMonday()))}</button>`}
         <button class="btn" type="button" id="gym-practice">Practice</button>
@@ -966,7 +977,7 @@ function openTeamPicker(mode, picked = null) {
     openDialog(dlg, `
       <h2 id="gym-title">${mode === 'practice' ? '🥅 Practice battle' : `${typeEmoji(g.type)} Gym ${g.no}: ${esc(g.leader)}`}</h2>
       <p class="small">${mode === 'practice' ? `Battle a random lineup at gym ${g.no}'s level. Nothing is at stake.` : 'This uses your challenge for this week.'}
-        Pick ${g.size} athletes in batting order: #1 goes first. Your partner 🤝 gets up to 5 bonus levels from its own level.</p>
+        Pick ${g.size} athletes in lineup order: #1 goes first. If your partner 🤝 is a higher level than the gym, it fights up to 5 levels higher.</p>
       ${roster.length < g.size ? `<p class="invite-note">You need ${g.size} caught athletes and have ${roster.length}. Catch more in today's puzzles or Past puzzles.</p>` : ''}
       <div class="pick-bar"><span>Team <b>${team.length}/${g.size}</b></span>
         <button class="btn btn-sm" type="button" id="pick-clear"${team.length ? '' : ' disabled'}>Clear</button>
@@ -1083,7 +1094,7 @@ function playBattle(mode, g, me, foe, result) {
       html = `<p class="bt-final lost">${esc(g.leader)} wins this time.</p>
         <p class="gym-taunt"><b>${esc(g.leader)}:</b> “${esc(g.lose)}”</p>
         <p class="small">Their team: ${foeTeam}</p>
-        <p class="small">Rematch from ${esc(dayLabel(nextMonday()))}. Practice battles are open until then.</p>`;
+        <p class="small">Rematch from ${esc(dayLabel(nextMonday()))}. Practice anytime.</p>`;
     }
     dlg.querySelector('#bt-result').innerHTML = html;
     dlg.querySelector('#bt-again')?.addEventListener('click', () => openTeamPicker('practice', me.map((f) => f.id)));
@@ -1093,7 +1104,7 @@ function playBattle(mode, g, me, foe, result) {
   dlg.querySelector('#bt-skip').onclick = finish;
   clearInterval(battleTimer);
   battleTimer = setInterval(() => {
-    if (!dlg.open) { clearInterval(battleTimer); battleTimer = null; if (mode === 'challenge') { checkBadges(); renderGymCard(); } return; }
+    if (!dlg.open || !dlg.querySelector('#bt-log')) { clearInterval(battleTimer); battleTimer = null; if (mode === 'challenge') { checkBadges(); renderGymCard(); } return; }
     if (i >= result.events.length) return finish();
     apply(result.events[i++]);
     paint();
@@ -1114,6 +1125,10 @@ const creatureLabel = (it) => `${SPORTS[it.sport]?.emoji || ''} #${dex3(it.n)} $
 
 // Adds a traded creature to your Dex. Returns { evolved: [from, to] | null }.
 function receiveCreature(it, fromName) {
+  const a0 = it && ENABLED_SPORTS.includes(it.sport) ? athleteFor(it.sport, Number(it.n)) : null;
+  if (!a0) return { evolved: null }; // not a real creature in this game: ignore
+  it = { sport: it.sport, n: Number(it.n), athleteId: a0.id };
+  fromName = String(fromName || 'friend').slice(0, 15);
   const all = loadDex();
   const sd = sportDex(all, it.sport);
   const add = (n, athleteId) => {
@@ -1131,6 +1146,7 @@ function receiveCreature(it, fromName) {
 }
 
 function announceTrade(it, fromName, r) {
+  if (!it || !GEN1[it.n - 1]) return;
   toast(`🔁 Trade complete! ${GEN1[it.n - 1]} from @${fromName} is in your ${it.sport} Dex.`, 4000);
   if (r.evolved) {
     const a = S.data.byId.get(it.athleteId);
@@ -1172,16 +1188,27 @@ async function renderTradeOffers(el) {
   el.querySelectorAll('[data-tacc],[data-tdec]').forEach((b) => (b.onclick = async () => {
     const t = inc[Number(b.dataset.tacc ?? b.dataset.tdec)];
     const accept = b.dataset.tacc !== undefined;
-    if (accept && t.get && !sportDex(loadDex(), t.get.sport).caught[t.get.n]) return toast(`You don't have ${GEN1[t.get.n - 1]} in your ${t.get.sport} Dex anymore.`);
+    if (accept && t.get && !(ENABLED_SPORTS.includes(t.get.sport) && sportDex(loadDex(), t.get.sport).caught[t.get.n])) return toast("You don't have the creature they asked for anymore.");
+    el.querySelectorAll('button').forEach((x) => { x.disabled = true; });
     try {
-      await answerTrade(t, accept);
-      if (accept) announceTrade(t.give, t.fromName, receiveCreature(t.give, t.fromName));
-      else toast('Trade declined.');
-      renderTradeOffers(el);
+      if (accept) {
+        const r = receiveCreature(t.give, t.fromName); // safe to repeat if answering fails
+        await answerTrade(t, true);
+        announceTrade(t.give, t.fromName, r);
+      } else {
+        await answerTrade(t, false);
+        toast('Trade declined.');
+      }
     } catch (err) { toast(socialError(err)); }
+    renderTradeOffers(el);
   }));
   el.querySelectorAll('[data-tcan]').forEach((b) => (b.onclick = async () => {
-    try { await cancelTrade(out[Number(b.dataset.tcan)]); toast('Trade cancelled.'); renderTradeOffers(el); } catch (err) { toast(socialError(err)); }
+    try { await cancelTrade(out[Number(b.dataset.tcan)]); toast('Trade cancelled.'); }
+    catch (err) {
+      if (err?.message === 'trade-accepted') await finishTrades(); // they accepted first: finish it
+      else toast(socialError(err));
+    }
+    renderTradeOffers(el);
   }));
 }
 
@@ -1395,7 +1422,7 @@ function renderProfileButton() {
   const b = $('#btn-profile');
   const u = currentUser();
   const label = myHandle() || u?.displayName || u?.email || '?';
-  b.textContent = u ? label.trim()[0].toUpperCase() : '👤';
+  b.textContent = u ? (label.trim()[0] || '?').toUpperCase() : '👤';
   b.classList.toggle('signed-in', !!u);
   b.setAttribute('aria-label', u ? 'Your profile' : 'Sign in');
 }
@@ -1461,7 +1488,7 @@ async function openProfile(tab = profileTab) {
     });
     return;
   }
-  const tabs = [['me', '👤 Me'], ['friends', '🤝 Friends'], ['groups', '👥 Groups']];
+  const tabs = [['me', '👤 Me'], ['friends', '🫂 Friends'], ['groups', '👥 Groups']];
   openDialog(dlg, `<h2 id="profile-title">Profile</h2>
     <div class="chip-row">${tabs.map(([id, l]) => `<button class="chip${id === tab ? ' is-active' : ''}" data-ptab="${id}">${l}</button>`).join('')}</div>
     <div id="profile-body"><p class="small">Loading…</p></div>`);
@@ -1487,7 +1514,7 @@ function renderMeTab(body, u, prof, caughtN, needHandle) {
     <div class="btn-row"><button class="btn" type="button" data-open-card>🪪 Trainer Card</button><button class="btn" type="button" data-open-partner>🤝 Partner</button></div>
     <h3>Sync</h3>
     <p>✅ Your Dex (<b>${caughtN}</b> caught), stats and today's games are saved to your profile and sync on any device where you sign in.</p>
-    <p class="small">Signed in as ${esc(u.email || u.displayName || 'you')}. Your username, Dex and daily scores (never the answers) are visible only to your friends and groups.</p>
+    <p class="small">Signed in as ${esc(u.email || u.displayName || 'you')}. Your username, Dex, badges, partner, streaks and daily scores (never the answers) are visible only to your friends and groups.</p>
     <div class="btn-row"><button class="btn" id="btn-signout">Sign out</button></div>
     <p class="small"><button class="link-btn" id="btn-delete-profile">Delete my profile</button> removes your saved data, username and group memberships from our server. Progress on this device stays.</p>`;
   const input = body.querySelector('#handle-input');
@@ -1765,7 +1792,8 @@ async function handlePendingLink() {
 
 // ---------- dialogs ----------
 function openDialog(dlg, html) {
-  dlg.innerHTML = `<div class="dialog-inner"><button class="dialog-x" aria-label="Close" autofocus>✕</button>${html}<button class="btn dialog-close">Let's play</button></div>`;
+  if (dlg.contains(toastEl)) document.body.appendChild(toastEl); // keep the toast when the dialog re-renders
+  dlg.innerHTML = `<div class="dialog-inner"><button class="dialog-x" aria-label="Close" autofocus>✕</button>${html}<button class="btn dialog-close">${dlg.id === 'dlg-help' ? "Let's play" : 'Close'}</button></div>`;
   dlg.querySelectorAll('.dialog-close, .dialog-x').forEach((b) => (b.onclick = () => dlg.close()));
   dlg.onclick = (e) => { if (e.target === dlg) dlg.close(); };
   if (!dlg.open) dlg.showModal();
@@ -1779,7 +1807,7 @@ function openHelp() {
   const statRows = STATS.map((s) => `<tr><th>${s.label}</th>${sports.map((sp) => `<td>${esc(sp.statHints[s.key])}</td>`).join('')}</tr>`).join('');
   openDialog($('#dlg-help'), `
     <h2 id="help-title">How to play ModiDex</h2>
-    <p>Each day there's a mystery athlete for <b>${ENABLED_SPORTS.join(', ')}</b>, plus an <b>All Sports</b> puzzle. The scouting card tells you which <b>original-151 creature they play like</b>, plus their type, athlete ratings and a field-guide bio. Name the athlete in <b>${GAME.maxGuesses} guesses</b>.</p>
+    <p>Each day there's a mystery athlete for <b>${ENABLED_SPORTS.join(', ').replace(/, ([^,]*)$/, ' and $1')}</b>, plus an <b>All Sports</b> puzzle. The scouting card tells you which <b>original-151 creature they play like</b>, plus their type, athlete ratings and a field-guide bio. Name the athlete in <b>${GAME.maxGuesses} guesses</b>.</p>
     <h3>Reading your guesses</h3>
     <ul class="legend">
       <li><span class="tile hit mini">✓</span> Exact match</li>
@@ -1802,7 +1830,7 @@ function openHelp() {
     <h3>🎖️ Badges</h3>
     <p>Earn badges for collecting sets, like the Starter Trio or the Legendary Birds, and for milestones like streaks, shinies and a first-guess solve. Complete a set in every sport to make it gold. See them all in the Dex under 🎖️ Badges.</p>
     <h3>🤝 Partner</h3>
-    <p>Pick any creature you've caught as your partner (Dex → Partner). Every puzzle you finish gives it XP: 6 for a 1st-guess solve down to 1, and 1 just for trying. It levels up and evolves, and friends can see it.</p>
+    <p>Pick any creature you've caught as your partner (Dex → Partner). Every puzzle you finish gives it XP: 6 for a 1st-guess solve down to 1 for a 6th, and 1 just for trying. It levels up and evolves, and friends can see it.</p>
     <h3>🏟️ Gym Challenge</h3>
     <p>Beat ${GYMS.length} gym leaders in order, from ${esc(GYMS[0].leader)} (${GYMS[0].type}) to ${esc(GYMS[GYMS.length - 1].leader)} (${GYMS[GYMS.length - 1].type}). Pick a team of athletes you've caught. Battles use their ratings and types, so choose athletes strong against the gym's type. You get <b>one challenge a week</b> (resets Monday at midnight ET), and practice battles are unlimited. Each win earns a gym badge.</p>
     <h3>📅 Past puzzles</h3>
@@ -1837,7 +1865,7 @@ function openStats(modeId) {
     </div>
     <h3>Guess distribution</h3>
     <div class="dist">${bars}</div>
-    <p class="small">Stats are saved in this browser only.</p>`);
+    <p class="small">Stats are saved on this device, and sync to your profile when you're signed in.</p>`);
   $('#dlg-stats').querySelectorAll('[data-stats]').forEach((b) => (b.onclick = () => openStats(b.dataset.stats)));
 }
 
@@ -1894,8 +1922,9 @@ window.addEventListener('scroll', closeTypePop, { passive: true });
 
 // ---------- toast ----------
 let toastTimer;
+const toastEl = document.getElementById('toast');
 function toast(msg, ms = 2200) {
-  const t = $('#toast');
+  const t = toastEl;
   // An open dialog sits above the page, so show the message inside it.
   const open = [...document.querySelectorAll('dialog[open]')].pop() || document.body;
   if (t.parentElement !== open) open.appendChild(t);
