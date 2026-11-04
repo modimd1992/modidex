@@ -1337,7 +1337,7 @@ function openHelp() {
     <ul class="type-list">${typeList}</ul>
     <h3>What the stats mean</h3>
     <div class="table-wrap"><table class="stat-table"><thead><tr><th></th>${sports.map((sp) => `<th>${sp.emoji} ${sp.label}</th>`).join('')}</tr></thead><tbody>${statRows}</tbody></table></div>
-    <p class="small">Stats are 1–150 ratings based on real performance. New puzzles drop every day at midnight Eastern Time. Watch more on <a href="${GAME.channelUrl}" target="_blank" rel="noopener">${esc(GAME.channel)}</a>.</p>`);
+    <p class="small">Stats are 1–150 ratings based on real performance. New puzzles drop every day at midnight Eastern Time.</p>`);
 }
 
 function openStats(modeId) {

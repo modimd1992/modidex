@@ -252,7 +252,7 @@ It's plain static files, so any static host works.
 
 **Custom domain:** all three let you attach your own domain (e.g. `play.jedimodi.com`) for free in their domain settings.
 
-Before launch, set `launchDate` in `js/config.js` to your real launch day so it becomes puzzle #1, and set `channelUrl` to your real YouTube link.
+Before launch, set `launchDate` in `js/config.js` to your real launch day so it becomes puzzle #1.
 
 ---
 

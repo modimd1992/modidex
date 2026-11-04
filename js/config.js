@@ -3,8 +3,6 @@
 export const GAME = {
   name: 'ModiDex',
   tagline: 'Daily Athlete Scouting Game',
-  channel: 'JediModi Sports Network',
-  channelUrl: 'https://www.youtube.com/@JediModi', // change to your real channel URL
   hashtag: '#ModiDex',
   // Puzzle #1 is this date. Changing it renumbers every puzzle.
   launchDate: '2026-11-02',
