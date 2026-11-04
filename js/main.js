@@ -1631,7 +1631,7 @@ function openHelp() {
   const statRows = STATS.map((s) => `<tr><th>${s.label}</th>${sports.map((sp) => `<td>${esc(sp.statHints[s.key])}</td>`).join('')}</tr>`).join('');
   openDialog($('#dlg-help'), `
     <h2 id="help-title">How to play ModiDex</h2>
-    <p>Each day there's a mystery athlete for <b>${ENABLED_SPORTS.join(', ')}</b>, plus an <b>All Sports</b> puzzle. The scouting card tells you which <b>original-151 creature they play like</b>, plus their type, base stats and a field-guide bio. Name the athlete in <b>${GAME.maxGuesses} guesses</b>.</p>
+    <p>Each day there's a mystery athlete for <b>${ENABLED_SPORTS.join(', ')}</b>, plus an <b>All Sports</b> puzzle. The scouting card tells you which <b>original-151 creature they play like</b>, plus their type, athlete ratings and a field-guide bio. Name the athlete in <b>${GAME.maxGuesses} guesses</b>.</p>
     <h3>Reading your guesses</h3>
     <ul class="legend">
       <li><span class="tile hit mini">✓</span> Exact match</li>
@@ -1651,14 +1651,24 @@ function openHelp() {
     <p><b>👑 Legendary</b> creatures are tougher to catch: ${CATCH.tiers.map((t) => `${t.icon} ${Math.round(t.legendaryRate * 100)}%`).join(', ')}. About 1 in ${CATCH.shinyOdds} puzzles is a <b>✨ Shiny</b> encounter, the same for every player that day. Catch one to mark it shiny in your Dex. Watch for 👑 and ✨ on the sport tabs.</p>
     <h3>Evolution lines</h3>
     <p>Catch every member of a family, like Charmander, Charmeleon and Charizard, to earn a 🏅. See your progress under 🏅 Lines in the Dex.</p>
+    <h3>🎖️ Badges</h3>
+    <p>Earn badges for collecting sets, like the Starter Trio or the Legendary Birds, and for milestones like streaks, shinies and a first-guess solve. Complete a set in every sport to make it gold. See them all in the Dex under 🎖️ Badges.</p>
+    <h3>🤝 Partner</h3>
+    <p>Pick any creature you've caught as your partner (Dex → Partner). Every puzzle you finish gives it XP: 6 for a 1st-guess solve down to 1, and 1 just for trying. It levels up and evolves, and friends can see it.</p>
+    <h3>🏟️ Gym Challenge</h3>
+    <p>Beat ${GYMS.length} gym leaders in order, from ${esc(GYMS[0].leader)} (${GYMS[0].type}) to ${esc(GYMS[GYMS.length - 1].leader)} (${GYMS[GYMS.length - 1].type}). Pick a team of athletes you've caught. Battles use their ratings and types, so choose athletes strong against the gym's type. You get <b>one challenge a week</b> (resets Monday at midnight ET), and practice battles are unlimited. Each win earns a gym badge.</p>
+    <h3>📅 Past puzzles</h3>
+    <p>Missed a day? Scroll to the bottom to play any earlier puzzle. Catches go to your Dex and your partner earns XP, but past puzzles don't count toward streaks or leaderboards.</p>
+    <h3>👥 Friends, groups & your Trainer Card</h3>
+    <p>Sign in (👤) to sync your progress, add friends and join groups with a daily, weekly and all-time leaderboard. Make a shareable 🪪 Trainer Card from the Dex or your profile.</p>
     <h3>Comparing stats</h3>
     <p>After each guess, the card's stat bars show a marker for your guess, and ▲ / ▼ tells you if the mystery athlete is higher or lower in each stat. Tap any earlier guess to compare against it instead.</p>
     <p>When the puzzle ends you'll also see <b>why</b> they play like that creature.</p>
     <h3>Types</h3>
     <ul class="type-list">${typeList}</ul>
-    <h3>What the stats mean</h3>
+    <h3>What the athlete ratings mean</h3>
     <div class="table-wrap"><table class="stat-table"><thead><tr><th></th>${sports.map((sp) => `<th>${sp.emoji} ${sp.label}</th>`).join('')}</tr></thead><tbody>${statRows}</tbody></table></div>
-    <p class="small">Stats are 1–150 ratings based on real performance. New puzzles drop every day at midnight Eastern Time.</p>`);
+    <p class="small">Athlete ratings are 1–150, based on real performance. They describe the athlete, not the creature. New puzzles drop every day at midnight Eastern Time.</p>`);
 }
 
 function openStats(modeId) {
