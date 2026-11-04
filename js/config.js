@@ -5,7 +5,7 @@ export const GAME = {
   tagline: 'Daily Athlete Scouting Game',
   hashtag: '#ModiDex',
   // Where the footer's Feedback link goes: a form URL or 'mailto:you@example.com'. null hides it.
-  feedbackUrl: null,
+  feedbackUrl: 'https://forms.gle/tth2EbPTuCr1Bf1HA',
   // Puzzle #1 is this date. Changing it renumbers every puzzle.
   launchDate: '2026-11-02',
   // New puzzles for everyone at midnight in this time zone (handles daylight saving).
