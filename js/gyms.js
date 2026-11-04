@@ -11,21 +11,21 @@ import { typesOf, fighter } from './battle.js';
 import { hashString, seededShuffle } from './daily.js';
 
 export const GYMS = [
-  { no: 1, pct: 0.2, foeBonus: -1, type: 'Rock', leader: 'Coach Boulder', badge: { name: 'Bedrock Badge', icon: '🪨' }, size: 3, level: 14,
+  { no: 1, pct: 0.15, foeBonus: 2, type: 'Rock', leader: 'Coach Boulder', badge: { name: 'Bedrock Badge', icon: '🪨' }, size: 3, level: 14,
     taunt: "My lineup doesn't move. You'll have to go through it.", win: 'Solid. You cracked the wall.', lose: 'Bounced off the wall. Come back stronger.' },
-  { no: 2, pct: 0.3, foeBonus: 0, type: 'Water', leader: 'Coach Rapids', badge: { name: 'Riptide Badge', icon: '🌊' }, size: 3, level: 20,
+  { no: 2, pct: 0.3, foeBonus: 1, type: 'Water', leader: 'Coach Rapids', badge: { name: 'Riptide Badge', icon: '🌊' }, size: 3, level: 20,
     taunt: 'We play smooth and we never stop flowing.', win: "You rode the wave. Didn't think you had it.", lose: 'Swept out to sea. Try again next week.' },
-  { no: 3, pct: 0.4, foeBonus: -3, type: 'Electric', leader: 'Coach Voltage', badge: { name: 'Surge Badge', icon: '⚡' }, size: 4, level: 26,
+  { no: 3, pct: 0.35, foeBonus: -1, type: 'Electric', leader: 'Coach Voltage', badge: { name: 'Surge Badge', icon: '⚡' }, size: 4, level: 26,
     taunt: 'Blink and the play is already over.', win: 'Shocking. You kept up with us.', lose: 'Too slow! Recharge and come back.' },
-  { no: 4, pct: 0.45, foeBonus: 1, type: 'Grass', leader: 'Coach Greenway', badge: { name: 'Sprout Badge', icon: '🌿' }, size: 4, level: 32,
+  { no: 4, pct: 0.4, foeBonus: 2, type: 'Grass', leader: 'Coach Greenway', badge: { name: 'Sprout Badge', icon: '🌿' }, size: 4, level: 32,
     taunt: 'My young squad grows stronger every quarter.', win: 'You outgrew us. Well played.', lose: 'Rooted in place. Next week, then.' },
-  { no: 5, pct: 0.5, foeBonus: 0, type: 'Poison', leader: 'Coach Venom', badge: { name: 'Toxin Badge', icon: '🧪' }, size: 5, level: 38,
+  { no: 5, pct: 0.55, foeBonus: 1, type: 'Poison', leader: 'Coach Venom', badge: { name: 'Toxin Badge', icon: '🧪' }, size: 5, level: 38,
     taunt: "We'll get in your head and stay there.", win: "Ugh. You didn't even flinch.", lose: 'Wore you down, just like I said.' },
-  { no: 6, pct: 0.6, foeBonus: 1, type: 'Psychic', leader: 'Coach Mindgame', badge: { name: 'Insight Badge', icon: '🔮' }, size: 5, level: 44,
+  { no: 6, pct: 0.7, foeBonus: 3, type: 'Psychic', leader: 'Coach Mindgame', badge: { name: 'Insight Badge', icon: '🔮' }, size: 5, level: 44,
     taunt: "I've studied the film. I know your next move.", win: "I didn't see that coming. Truly.", lose: 'Predictable. Study up and return.' },
-  { no: 7, pct: 0.7, foeBonus: -1, type: 'Fire', leader: 'Coach Blaze', badge: { name: 'Inferno Badge', icon: '🔥' }, size: 6, level: 50,
+  { no: 7, pct: 0.7, foeBonus: 2, type: 'Fire', leader: 'Coach Blaze', badge: { name: 'Inferno Badge', icon: '🔥' }, size: 6, level: 50,
     taunt: "My team doesn't cool off. Ever.", win: 'You put out the fire. Respect.', lose: 'Burned! Come back when you can take the heat.' },
-  { no: 8, pct: 0.8, foeBonus: 2, type: 'Ground', leader: 'The Commissioner', badge: { name: 'Tectonic Badge', icon: '🌋' }, size: 6, level: 56,
+  { no: 8, pct: 0.8, foeBonus: 5, type: 'Ground', leader: 'The Commissioner', badge: { name: 'Tectonic Badge', icon: '🌋' }, size: 6, level: 56,
     taunt: 'Seven badges. Impressive. This is where it ends.', win: 'The final badge is yours, champion.', lose: 'Not today. The Commissioner always wins.' },
 ];
 export const gymByNo = (no) => GYMS.find((g) => g.no === no) || null;
