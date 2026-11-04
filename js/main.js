@@ -10,7 +10,7 @@ import { pointsFor, weekTotals, weekStart, allTimeTotals } from './leaderboard.j
 import { badgeFacts, badgeStatus, badgeById, ALL_BADGES } from './badges.js';
 import { newPartner, feedPartner, levelOf, levelProgress, evolutionOf, XP_PER_LEVEL, MAX_LEVEL } from './partner.js';
 import { drawTrainerCard } from './trainercard.js';
-import { GYMS, currentGym, leaderTeam, playerTeam, practiceTeam, canChallenge, statTotal } from './gyms.js';
+import { GYMS, currentGym, leaderTeam, playerTeam, practiceTeam, canChallenge, statTotal, catchesNeeded } from './gyms.js';
 import { runBattle, effectiveness, typesOf } from './battle.js';
 import { shareText, combinedShareText, shareOrCopy, copyText, guessSquares } from './share.js';
 import { renderCard, esc } from './card.js';
@@ -904,14 +904,16 @@ function renderGymCard() {
   }
   const can = canChallenge(st, thisWeek());
   const have = myRoster().length;
-  const short = have < g.size;
+  const need = catchesNeeded(g);
+  const short = have < need;
   const last = st.last && st.week === thisWeek() ? st.last : null;
   const lastLine = last ? (last.won ? `You beat ${gymByNoName(last.gym)} this week!` : `${gymByNoName(last.gym)} won this week's challenge.`) : '';
   el.innerHTML = `<div class="gym-card">
     <div class="gym-head"><span class="gym-icon">${typeEmoji(g.type)}</span><div><b>🏟️ Gym ${g.no}: ${esc(g.leader)}</b>
       <span class="small">${g.type} type · ${g.size} vs ${g.size} · ${won}/8 badges</span></div></div>
+    ${can && short ? `<div class="need-bar" aria-label="${have} of ${need} catches"><span style="width:${Math.round((100 * have) / need)}%"></span></div>` : ''}
     <p class="small">${!can ? `${esc(lastLine)} Next challenge ${esc(dayLabel(nextMonday()))}. Practice anytime.`
-      : short ? `You need ${g.size} caught athletes for this gym and have ${have}. Catch more in today's or past puzzles.`
+      : short ? `${esc(g.leader)} accepts challengers with ${need} catches. You have ${have}. Catch more in today's or past puzzles.`
       : 'Your weekly gym challenge is ready.'}</p>
     <button class="btn ${can && !short ? 'btn-primary' : ''} btn-block" type="button" data-open-gyms>${can && !short ? `Challenge ${esc(g.leader)}` : 'Gyms & practice'}</button>
   </div>`;
@@ -921,21 +923,26 @@ const gymByNoName = (no) => GYMS.find((x) => x.no === no)?.leader || 'The gym le
 function openGyms() {
   const st = gymState();
   const g = currentGym(st);
-  const can = !!g && canChallenge(st, thisWeek());
+  const have = myRoster().length;
+  const weekOk = !!g && canChallenge(st, thisWeek());
+  const enough = !!g && have >= catchesNeeded(g);
+  const can = weekOk && enough;
   const rows = GYMS.map((x) => {
     const beat = st.beaten?.[x.no];
     const status = beat ? `<span class="gym-st won">${x.badge.icon} ${shortDate(beat)}</span>` : x === g ? '<span class="gym-st next">Next</span>' : '<span class="gym-st">🔒</span>';
     return `<li class="gym-row${x === g ? ' is-next' : ''}${beat ? ' is-won' : ''}"><span class="gym-icon sm">${typeEmoji(x.type)}</span>
-      <span class="gym-row-main"><b>${x.no}. ${esc(x.leader)}</b><span class="small">${x.type} · ${esc(x.badge.name)} · ${x.size} vs ${x.size}</span></span>${status}</li>`;
+      <span class="gym-row-main"><b>${x.no}. ${esc(x.leader)}</b><span class="small">${x.type} · ${esc(x.badge.name)} · ${x.size} vs ${x.size} · ${catchesNeeded(x)} catches</span></span>${status}</li>`;
   }).join('');
   openDialog($('#dlg-gym'), `
     <h2 id="gym-title">🏟️ Gym Challenge</h2>
-    <p class="small">Beat the 8 gym leaders in order with a team of athletes you've caught. You get <b>one challenge a week</b> (resets Monday at midnight ET). Practice battles are unlimited.</p>
+    <p class="small">Beat the 8 gym leaders in order with a team of athletes you've caught. Each leader only accepts challengers who have caught enough athletes (any sport). You get <b>one challenge a week</b> (resets Monday at midnight ET). Practice battles are unlimited.</p>
     ${g ? `<div class="gym-next">
       <p class="gym-taunt"><b>${esc(g.leader)}:</b> “${esc(g.taunt)}”</p>
       <p class="small">${typeEmoji(g.type)} ${g.type}-type team · Their lineup is Lv ${g.level + (g.foeBonus || 0)}–${g.level + (g.foeBonus || 0) + 1}, yours fights at Lv ${g.level} · Pick ${g.size} athletes. Types matter: pick athletes strong against ${g.type}.</p>
       <div class="btn-row">
-        ${can ? `<button class="btn btn-primary" type="button" id="gym-go">Challenge ${esc(g.leader)}</button>` : `<button class="btn" type="button" disabled>Next challenge ${esc(dayLabel(nextMonday()))}</button>`}
+        ${can ? `<button class="btn btn-primary" type="button" id="gym-go">Challenge ${esc(g.leader)}</button>`
+          : !weekOk ? `<button class="btn" type="button" disabled>Next challenge ${esc(dayLabel(nextMonday()))}</button>`
+          : `<button class="btn" type="button" disabled>${have}/${catchesNeeded(g)} catches</button>`}
         <button class="btn" type="button" id="gym-practice">Practice</button>
       </div>
     </div>` : `<div class="gym-next"><p>🏆 You've earned all 8 gym badges. Practice battles are still open.</p>
@@ -1003,6 +1010,7 @@ function startBattle(mode, g, ids) {
   const st = all.gyms || { beaten: {} };
   if (mode === 'challenge') {
     if (!canChallenge(st, thisWeek())) return toast('You already used this week\'s challenge.');
+    if (myRoster().length < catchesNeeded(g)) return toast(`${g.leader} accepts challengers with ${catchesNeeded(g)} catches.`);
     if (!confirm(`Challenge ${g.leader}? This uses your gym challenge for this week.`)) return;
   }
   const athletes = ids.map((id) => S.data.byId.get(id)).filter(Boolean);
@@ -1832,7 +1840,7 @@ function openHelp() {
     <h3>🤝 Partner</h3>
     <p>Pick any creature you've caught as your partner (Dex → Partner). Every puzzle you finish gives it XP: 6 for a 1st-guess solve down to 1 for a 6th, and 1 just for trying. It levels up and evolves, and friends can see it.</p>
     <h3>🏟️ Gym Challenge</h3>
-    <p>Beat ${GYMS.length} gym leaders in order, from ${esc(GYMS[0].leader)} (${GYMS[0].type}) to ${esc(GYMS[GYMS.length - 1].leader)} (${GYMS[GYMS.length - 1].type}). Pick a team of athletes you've caught. Battles use their ratings and types, so choose athletes strong against the gym's type. You get <b>one challenge a week</b> (resets Monday at midnight ET), and practice battles are unlimited. Each win earns a gym badge.</p>
+    <p>Beat ${GYMS.length} gym leaders in order, from ${esc(GYMS[0].leader)} (${GYMS[0].type}) to ${esc(GYMS[GYMS.length - 1].leader)} (${GYMS[GYMS.length - 1].type}). Each leader needs you to have caught more athletes first (${GYMS.map((x) => catchesNeeded(x)).join(', ')}). Pick a team of athletes you've caught. Battles use their ratings and types, so choose athletes strong against the gym's type. You get <b>one challenge a week</b> (resets Monday at midnight ET), and practice battles are unlimited. Each win earns a gym badge.</p>
     <h3>📅 Past puzzles</h3>
     <p>Missed a day? Scroll to the bottom to play any earlier puzzle. Catches go to your Dex and your partner earns XP, but past puzzles don't count toward streaks or leaderboards.</p>
     <h3>👥 Friends, groups & your Trainer Card</h3>

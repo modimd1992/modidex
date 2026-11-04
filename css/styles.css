@@ -640,3 +640,5 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .trade-summary > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .trade-summary > span { font-size: 20px; color: var(--accent-2); }
 .trade-row .person-name { white-space: normal; }
+.need-bar { height: 6px; border-radius: 99px; background: var(--bg); overflow: hidden; margin-top: 10px; }
+.need-bar > span { display: block; height: 100%; min-width: 6px; background: var(--accent-2); }
