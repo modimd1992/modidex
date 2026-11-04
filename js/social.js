@@ -7,6 +7,8 @@
 //   friendRequests/{to}_{from} -> { from, to, fromName, status }
 //   groups/{gid}               -> { name, owner, code, members: [uid] }
 //   groupCodes/{CODE}          -> { gid }                      join codes
+//   trades/{id}                -> { from, to, fromName, toName, give, get, status }
+//                                 give/get = { sport, n, athleteId } (get may be null: a gift)
 import { cloudApi, onAfterPush, onBeforeDelete } from './cloud.js';
 
 export const HANDLE_RE = /^[a-z0-9_]{3,15}$/;
@@ -166,6 +168,57 @@ export async function processAnsweredRequests() {
     if (r.status === 'accepted') await addToMine('friends', r.to);
     if (r.status !== 'pending') await a.fsM.deleteDoc(ref(a, 'friendRequests', r.id));
   }
+}
+
+// ---------- trades ----------
+// The sender offers one of their catches (give), optionally asking for one of the
+// friend's (get). The friend accepts and adds `give` to their own Dex; the sender's
+// game then adds `get` to theirs (like friend requests, each side writes only its own save).
+export async function sendTrade({ to, toName, give, get = null }) {
+  const a = api();
+  const prof = await loadMyProfile();
+  if (!prof.handle) throw new Error('no-handle');
+  if (!(prof.friends || []).includes(to)) throw new Error('not-friends');
+  const r = a.fsM.doc(a.fsM.collection(a.db, 'trades'));
+  await a.fsM.setDoc(r, {
+    from: a.user.uid, to, fromName: prof.handle, toName, give, get, status: 'offered', createdAt: a.fsM.serverTimestamp(),
+  });
+  return r.id;
+}
+
+export async function incomingTrades() {
+  const a = api();
+  const q = a.fsM.query(a.fsM.collection(a.db, 'trades'), a.fsM.where('to', '==', a.user.uid), a.fsM.where('status', '==', 'offered'));
+  return (await a.fsM.getDocs(q)).docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function outgoingTrades() {
+  const a = api();
+  const q = a.fsM.query(a.fsM.collection(a.db, 'trades'), a.fsM.where('from', '==', a.user.uid));
+  return (await a.fsM.getDocs(q)).docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function answerTrade(t, accept) {
+  const a = api();
+  await a.fsM.updateDoc(ref(a, 'trades', t.id), { status: accept ? 'accepted' : 'declined' });
+}
+
+export async function cancelTrade(t) {
+  const a = api();
+  await a.fsM.deleteDoc(ref(a, 'trades', t.id));
+}
+
+// The sender finishes accepted trades: receive(trade) adds `get` to the Dex. Answered trades are cleared.
+export async function processAnsweredTrades(receive) {
+  const a = cloudApi();
+  if (!a) return [];
+  const done = [];
+  for (const t of await outgoingTrades()) {
+    if (t.status === 'offered') continue;
+    if (t.status === 'accepted' && t.get) { receive(t); done.push(t); }
+    await a.fsM.deleteDoc(ref(a, 'trades', t.id));
+  }
+  return done;
 }
 
 export async function removeFriend(uid) {

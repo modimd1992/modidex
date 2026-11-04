@@ -634,3 +634,9 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .bt-final.lost { color: var(--danger); }
 .badge-earned { font-size: 18px; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid var(--accent); background: rgba(198, 255, 61, 0.08); }
 @media (prefers-reduced-motion: reduce) { .hp > span { transition: none; } }
+
+/* ---------- trades ---------- */
+.trade-summary { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin: 10px 0; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--accent-2); }
+.trade-summary > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.trade-summary > span { font-size: 20px; color: var(--accent-2); }
+.trade-row .person-name { white-space: normal; }

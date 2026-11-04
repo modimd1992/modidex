@@ -108,6 +108,7 @@ export function normalizeDex(d) {
   const out = { sports: {}, badges: { ...(d?.badges || {}) } };
   if (d?.partner?.n) out.partner = { ...d.partner };
   if (d?.gyms) out.gyms = { ...d.gyms, beaten: { ...(d.gyms.beaten || {}) } };
+  if (d?.tradeLog) out.tradeLog = { ...d.tradeLog }; // { week, n }: trade offers sent this week
   if (!d) return out;
   for (const [sp, sd] of Object.entries(d.sports || {})) {
     out.sports[sp] = { caught: { ...(sd?.caught || {}) }, seen: { ...(sd?.seen || {}) }, shiny: { ...(sd?.shiny || {}) } };
@@ -183,6 +184,8 @@ export function mergeProgress(a = {}, b = {}) {
     const p = src.partner;
     const cur = dex.partner;
     if (p && (!cur || p.since > cur.since || (p.since === cur.since && p.n === cur.n && (p.xp || 0) > (cur.xp || 0)))) dex.partner = p;
+    const tl = src.tradeLog;
+    if (tl && (!dex.tradeLog || tl.week > dex.tradeLog.week || (tl.week === dex.tradeLog.week && tl.n > dex.tradeLog.n))) dex.tradeLog = tl;
     // Gyms: every badge won anywhere, and the latest weekly challenge.
     if (src.gyms) {
       const g = (dex.gyms ||= { beaten: {} });

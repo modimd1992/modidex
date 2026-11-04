@@ -46,6 +46,21 @@ service cloud.firestore {
       allow delete: if signedIn() && (resource.data.from == me() || resource.data.to == me());
     }
 
+    // Trades between friends: the sender offers, the recipient accepts or declines,
+    // then either side clears it. Each player adds the creature to their own save.
+    match /trades/{id} {
+      allow read: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+      allow create: if signedIn() && request.resource.data.from == me()
+        && request.resource.data.status == 'offered'
+        && request.resource.data.keys().hasOnly(['from', 'to', 'fromName', 'toName', 'give', 'get', 'status', 'createdAt'])
+        && exists(profileOf(me()))
+        && request.resource.data.to in get(profileOf(me())).data.friends;
+      allow update: if signedIn() && resource.data.to == me() && resource.data.status == 'offered'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status in ['accepted', 'declined'];
+      allow delete: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+    }
+
     // Groups: anyone signed in can see a group's name to join it; members can only
     // add or remove themselves; the owner can delete it.
     match /groups/{gid} {

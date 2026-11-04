@@ -21,6 +21,7 @@ import { cloudEnabled, initCloud, onCloudChange, currentUser, cloudStatus, pushP
 import {
   setSummaryBuilder, loadMyProfile, myHandle, forgetProfile, claimHandle, sendFriendRequest, incomingRequests,
   answerRequest, processAnsweredRequests, listFriends, removeFriend, createGroup, joinGroup, leaveGroup, listGroups, groupMembers, HANDLE_RE,
+  sendTrade, incomingTrades, outgoingTrades, answerTrade, cancelTrade, processAnsweredTrades,
 } from './social.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -79,7 +80,7 @@ async function init() {
       }
       renderProfileButton();
       if ($('#dlg-profile').open) openProfile();
-      if (why === 'synced') { backfillHistory(); checkBadges(); renderModes(); renderMode(); }
+      if (why === 'synced') { backfillHistory(); checkBadges(); renderModes(); renderMode(); checkTrades(); }
       if (why === 'auth' || why === 'synced') handlePendingLink();
     });
     initCloud();
@@ -665,7 +666,8 @@ function openDex(filter = 'all', sport = dexSport) {
       via = dex.from[n].map((f) => SPORTS[f.sport].emoji).join(' ');
       title = dex.from[n].map((f) => `${f.sport}: ${f.caught ? 'caught' : 'seen'} via ${nameOf(f.entry)}`).join('\n');
     }
-    const ball = c ? ballById(c.ball) : null;
+    const ball = c ? (c.ball === 'trade' ? { icon: '🔁' } : ballById(c.ball)) : null;
+    if (c?.from && !isTotal) title += ` (traded from @${c.from})`;
     const shinyMark = dex.shiny[n] ? ' ✨' : '';
     return `<li class="dex-cell ${state}${dex.shiny[n] ? ' shiny' : ''}${CATCH.legendary.includes(n) ? ' legendary' : ''}" title="${esc(title)}">
       <span class="dex-no">#${dex3(n)}${ball ? ` ${ball.icon}` : state === 'seen' ? ' 👁' : ''}${shinyMark}</span>
@@ -789,8 +791,8 @@ function choosePartner(n) {
   if (S.data && finished()) renderPlayArea();
 }
 
-function showEvolution([from, to]) {
-  const info = partnerInfo(loadDex().partner);
+function showEvolution([from, to], emoji = null) {
+  const info = emoji ? { emoji } : partnerInfo(loadDex().partner);
   const dlg = $('#dlg-partner');
   openDialog(dlg, `<h2 id="partner-title" class="sr-only">Evolution</h2>
     <div class="evolve">
@@ -810,7 +812,7 @@ function trainerCardData() {
   for (const sp of ENABLED_SPORTS) {
     const sd = sportDex(all, sp);
     for (const e of [...Object.values(sd.caught), ...Object.values(sd.seen)]) if (e?.date) dates.push(e.date);
-    for (const e of Object.values(sd.caught)) if (e?.ball) balls[e.ball] = (balls[e.ball] || 0) + 1;
+    for (const e of Object.values(sd.caught)) if (e?.ball && e.ball !== 'trade') balls[e.ball] = (balls[e.ball] || 0) + 1;
     shinies += Object.keys(sd.shiny).length;
   }
   const fav = Object.entries(balls).sort((x, y) => y[1] - x[1] || (TIER_RANK[x[0]] ?? 9) - (TIER_RANK[y[0]] ?? 9))[0];
@@ -1098,6 +1100,147 @@ function playBattle(mode, g, me, foe, result) {
   }, 900);
 }
 
+// ---------- trades ----------
+// Trading a creature registers it as caught in the friend's Dex (your Dex keeps it too,
+// like a real creature encyclopedia). Some creatures evolve when traded.
+const TRADE_EVOLVE = { 64: 65, 67: 68, 75: 76, 93: 94 };
+const TRADES_PER_WEEK = 3;
+const athleteFor = (sport, n) => S.data.athletes.find((a) => a.sport === sport && a.comp?.dex === n) || null;
+const tradesLeft = () => {
+  const log = loadDex().tradeLog;
+  return TRADES_PER_WEEK - (log?.week === thisWeek() ? log.n : 0);
+};
+const creatureLabel = (it) => `${SPORTS[it.sport]?.emoji || ''} #${dex3(it.n)} ${GEN1[it.n - 1]}`;
+
+// Adds a traded creature to your Dex. Returns { evolved: [from, to] | null }.
+function receiveCreature(it, fromName) {
+  const all = loadDex();
+  const sd = sportDex(all, it.sport);
+  const add = (n, athleteId) => {
+    if (!sd.caught[n]) sd.caught[n] = { date: S.today, athleteId, ball: 'trade', from: fromName };
+    sd.seen[n] ||= { date: S.today, athleteId };
+  };
+  add(it.n, it.athleteId);
+  let evolved = null;
+  const evo = TRADE_EVOLVE[it.n];
+  const evoAthlete = evo ? athleteFor(it.sport, evo) : null;
+  if (evoAthlete) { add(evo, evoAthlete.id); evolved = [it.n, evo]; }
+  saveDex(all);
+  setTimeout(pushProgress, 0);
+  return { evolved };
+}
+
+function announceTrade(it, fromName, r) {
+  toast(`🔁 Trade complete! ${GEN1[it.n - 1]} from @${fromName} is in your ${it.sport} Dex.`, 4000);
+  if (r.evolved) {
+    const a = S.data.byId.get(it.athleteId);
+    setTimeout(() => showEvolution(r.evolved, a ? typeEmoji(typesOf(a)[0]) : '🔁'), 1200);
+  }
+  setTimeout(() => checkBadges(), 800);
+}
+
+// Sender's side: add what you asked for once the friend accepts.
+async function finishTrades() {
+  try {
+    await processAnsweredTrades((t) => announceTrade(t.get, t.toName, receiveCreature(t.get, t.toName)));
+  } catch (e) { console.warn('[trades]', e); }
+}
+
+// After syncing: finish your accepted trades and mention new offers.
+async function checkTrades() {
+  if (!currentUser() || !myHandle()) return;
+  await finishTrades();
+  try {
+    const n = (await incomingTrades()).length;
+    if (n) toast(`🔁 You have ${n} trade offer${n > 1 ? 's' : ''}. Open Profile → Friends.`, 4000);
+  } catch { /* rules not published yet */ }
+}
+
+async function renderTradeOffers(el) {
+  if (!el) return;
+  let inc = [];
+  let out = [];
+  try { [inc, out] = await Promise.all([incomingTrades(), outgoingTrades()]); } catch { return; }
+  out = out.filter((t) => t.status === 'offered');
+  if (!inc.length && !out.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<h3>🔁 Trades</h3><ul class="people">
+    ${inc.map((t, i) => `<li class="person trade-row"><span class="person-name"><b>@${esc(t.fromName)}</b> offers ${esc(creatureLabel(t.give))}${t.get ? ` for your ${esc(creatureLabel(t.get))}` : ' as a gift'}</span>
+      <span class="person-actions"><button class="btn btn-primary btn-sm" data-tacc="${i}">Accept</button><button class="btn btn-sm" data-tdec="${i}">Decline</button></span></li>`).join('')}
+    ${out.map((t, i) => `<li class="person trade-row"><span class="person-name small">Waiting on @${esc(t.toName)}: your ${esc(creatureLabel(t.give))}${t.get ? ` for their ${esc(creatureLabel(t.get))}` : ' (gift)'}</span>
+      <span class="person-actions"><button class="btn btn-sm" data-tcan="${i}">Cancel</button></span></li>`).join('')}
+  </ul>`;
+  el.querySelectorAll('[data-tacc],[data-tdec]').forEach((b) => (b.onclick = async () => {
+    const t = inc[Number(b.dataset.tacc ?? b.dataset.tdec)];
+    const accept = b.dataset.tacc !== undefined;
+    if (accept && t.get && !sportDex(loadDex(), t.get.sport).caught[t.get.n]) return toast(`You don't have ${GEN1[t.get.n - 1]} in your ${t.get.sport} Dex anymore.`);
+    try {
+      await answerTrade(t, accept);
+      if (accept) announceTrade(t.give, t.fromName, receiveCreature(t.give, t.fromName));
+      else toast('Trade declined.');
+      renderTradeOffers(el);
+    } catch (err) { toast(socialError(err)); }
+  }));
+  el.querySelectorAll('[data-tcan]').forEach((b) => (b.onclick = async () => {
+    try { await cancelTrade(out[Number(b.dataset.tcan)]); toast('Trade cancelled.'); renderTradeOffers(el); } catch (err) { toast(socialError(err)); }
+  }));
+}
+
+// Build a trade with a friend: pick what you get (optional) and what you give.
+function openTrade(p, pick = { get: null, give: null }) {
+  const theirs = personDexes(p);
+  const all = loadDex();
+  const opts = (fromMine) => {
+    const out = [];
+    for (const sp of ENABLED_SPORTS) {
+      const mineCaught = new Set(Object.keys(all.sports[sp]?.caught || {}).map(Number));
+      const theirCaught = new Set(theirs[sp]?.caught || []);
+      const [src, other] = fromMine ? [mineCaught, theirCaught] : [theirCaught, mineCaught];
+      for (const n of [...src].sort((x, y) => x - y)) {
+        if (other.has(n)) continue; // they already have it
+        const a = athleteFor(sp, n);
+        if (a) out.push({ sport: sp, n, athleteId: a.id });
+      }
+    }
+    return out;
+  };
+  const getList = opts(false);
+  const giveList = opts(true);
+  const same = (x, y) => x && y && x.sport === y.sport && x.n === y.n;
+  const cell = (it, kind) => `<li><button class="dex-cell caught pick${same(pick[kind], it) ? ' is-partner' : ''}" type="button" data-${kind}="${it.sport}:${it.n}">
+    <span class="dex-no">${SPORTS[it.sport].emoji} #${dex3(it.n)}</span><span class="dex-name">${esc(GEN1[it.n - 1])}</span>
+    <span class="dex-via">${esc(S.data.byId.get(it.athleteId)?.name || '')}</span></button></li>`;
+  const left = tradesLeft();
+  const dlg = $('#dlg-person');
+  openDialog(dlg, `
+    <h2 id="person-title">🔁 Trade with @${esc(p.handle)}</h2>
+    <p class="small">Pick one of yours to send, and one of theirs to ask for (or leave it as a gift). When they accept, each creature is added to the other's Dex. You keep yours too. Some creatures evolve when traded! You can send ${TRADES_PER_WEEK} trade offers a week (${Math.max(0, left)} left).</p>
+    <div class="trade-summary">
+      <div><span class="small">You send</span><b>${pick.give ? esc(creatureLabel(pick.give)) : '—'}</b></div>
+      <span>⇄</span>
+      <div><span class="small">You get</span><b>${pick.get ? esc(creatureLabel(pick.get)) : 'Nothing (gift)'}</b></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" type="button" id="trade-send"${pick.give && left > 0 ? '' : ' disabled'}>Send offer</button></div>
+    <h3>You get <span class="small">(from @${esc(p.handle)}, ones you don't have)</span></h3>
+    ${getList.length ? `<ul class="dex-grid pick-grid">${getList.map((it) => cell(it, 'get')).join('')}</ul>` : '<p class="small">They haven\'t caught anything you\'re missing.</p>'}
+    <h3>You send <span class="small">(ones they don't have)</span></h3>
+    ${giveList.length ? `<ul class="dex-grid pick-grid">${giveList.map((it) => cell(it, 'give')).join('')}</ul>` : '<p class="small">You haven\'t caught anything they\'re missing.</p>'}`);
+  const find = (list, v) => { const [sp, n] = v.split(':'); return list.find((x) => x.sport === sp && x.n === Number(n)); };
+  dlg.querySelectorAll('[data-get]').forEach((b) => (b.onclick = () => { const it = find(getList, b.dataset.get); openTrade(p, { ...pick, get: same(pick.get, it) ? null : it }); }));
+  dlg.querySelectorAll('[data-give]').forEach((b) => (b.onclick = () => { const it = find(giveList, b.dataset.give); openTrade(p, { ...pick, give: same(pick.give, it) ? null : it }); }));
+  dlg.querySelector('#trade-send').onclick = async () => {
+    if (tradesLeft() <= 0) return toast(`You've sent ${TRADES_PER_WEEK} trade offers this week. More on Monday.`);
+    try {
+      await sendTrade({ to: p.uid, toName: p.handle, give: pick.give, get: pick.get });
+      const d = loadDex();
+      d.tradeLog = { week: thisWeek(), n: (d.tradeLog?.week === thisWeek() ? d.tradeLog.n : 0) + 1 };
+      saveDex(d);
+      setTimeout(pushProgress, 0);
+      toast(`🔁 Trade offer sent to @${p.handle}!`);
+      dlg.close();
+    } catch (err) { toast(socialError(err)); }
+  };
+}
+
 // ---------- badges ----------
 const shortDate = (key) => new Date(`${key}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
@@ -1263,7 +1406,7 @@ function socialError(e) {
   const map = {
     invalid: 'Usernames are 3–15 letters, numbers or _.', taken: 'That username is taken.',
     'not-found': 'No one found. Check the spelling.', self: "That's you!", already: "You're already friends.",
-    'no-handle': 'Pick a username first (Me tab).', pending: "You've already sent them a request. It'll show here once they accept.", 'group-name': 'Group names need at least 2 characters.', full: 'That group is full.', 'too-many': "You're in the maximum number of groups.",
+    'no-handle': 'Pick a username first (Me tab).', pending: "You've already sent them a request. It'll show here once they accept.", 'group-name': 'Group names need at least 2 characters.', full: 'That group is full.', 'too-many': "You're in the maximum number of groups.", 'not-friends': 'You can only trade with friends.',
   };
   const m = map[e?.message];
   if (m) return m;
@@ -1390,6 +1533,7 @@ async function renderFriendsTab(body, prof) {
     </form>
     <p class="small">Or send your friend link: <button class="link-btn plain" id="copy-friend-link">Copy my link</button></p>
     <div id="requests"></div>
+    <div id="trades"></div>
     <h3>Friends</h3>
     <ul class="people" id="friend-list"><li class="small">Loading…</li></ul>`;
   body.querySelector('#add-friend-form').addEventListener('submit', async (e) => {
@@ -1405,7 +1549,9 @@ async function renderFriendsTab(body, prof) {
   });
   try {
     try { await processAnsweredRequests(); } catch { /* finish accepted requests; not critical */ }
+    await finishTrades();
     const [reqs, friends] = await Promise.all([incomingRequests(), listFriends()]);
+    renderTradeOffers(body.querySelector('#trades'));
     const rq = body.querySelector('#requests');
     if (reqs.length) {
       rq.innerHTML = `<h3>Requests</h3><ul class="people">${reqs.map((r, i) => `
@@ -1493,7 +1639,9 @@ function openPerson(p, { friend = false, sport = null } = {}) {
     ${sports.length ? `<div class="chip-row">${tabs}</div>
     <p class="small">${sport}: <b>${caught.size}</b> caught · ${seen.size} seen · ✨ ${shiny.size} shiny · 🏅 ${lines} line${lines === 1 ? '' : 's'}</p>
     <ul class="dex-grid">${cells}</ul>` : '<p class="small">No catches yet.</p>'}
-    ${friend ? '<p class="small"><button class="link-btn" id="btn-unfriend">Remove friend</button></p>' : ''}`);
+    ${friend ? `<div class="btn-row"><button class="btn btn-primary" type="button" id="btn-trade">🔁 Trade with @${esc(p.handle || 'friend')}</button></div>
+    <p class="small"><button class="link-btn" id="btn-unfriend">Remove friend</button></p>` : ''}`);
+  $('#dlg-person').querySelector('#btn-trade')?.addEventListener('click', () => openTrade(p));
   $('#dlg-person').querySelectorAll('[data-person-sport]').forEach((b) => (b.onclick = () => openPerson(p, { friend, sport: b.dataset.personSport })));
   $('#dlg-person').querySelector('#btn-unfriend')?.addEventListener('click', async () => {
     if (!confirm(`Remove @${p.handle} from your friends?`)) return;
@@ -1660,7 +1808,7 @@ function openHelp() {
     <h3>📅 Past puzzles</h3>
     <p>Missed a day? Scroll to the bottom to play any earlier puzzle. Catches go to your Dex and your partner earns XP, but past puzzles don't count toward streaks or leaderboards.</p>
     <h3>👥 Friends, groups & your Trainer Card</h3>
-    <p>Sign in (👤) to sync your progress, add friends and join groups with a daily, weekly and all-time leaderboard. Make a shareable 🪪 Trainer Card from the Dex or your profile.</p>
+    <p>Sign in (👤) to sync your progress, add friends, trade creatures with them (some evolve when traded!) and join groups with a daily, weekly and all-time leaderboard. Make a shareable 🪪 Trainer Card from the Dex or your profile.</p>
     <h3>Comparing stats</h3>
     <p>After each guess, the card's stat bars show a marker for your guess, and ▲ / ▼ tells you if the mystery athlete is higher or lower in each stat. Tap any earlier guess to compare against it instead.</p>
     <p>When the puzzle ends you'll also see <b>why</b> they play like that creature.</p>
@@ -1760,4 +1908,4 @@ function toast(msg, ms = 2200) {
 init();
 
 // Local testing only: lets the developer preview social screens with sample data.
-if (location.hostname === 'localhost') window.__modidexTest = { openPerson, openGroup, publicSummary, renderMeTab, openDialog, checkBadges, openBadges, openPartner, openTrainerCard, showEvolution, feedMyPartner, openGyms, openTeamPicker };
+if (location.hostname === 'localhost') window.__modidexTest = { openTrade, receiveCreature, openPerson, openGroup, publicSummary, renderMeTab, openDialog, checkBadges, openBadges, openPartner, openTrainerCard, showEvolution, feedMyPartner, openGyms, openTeamPicker };
