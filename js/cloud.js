@@ -79,9 +79,38 @@ async function pullAndMerge() {
   }
 }
 
-// Save this device's progress to the profile, merged with what's already there,
-// so another device's newer catches are never overwritten. Safe to call anytime.
-export async function pushProgress({ fromSignIn = false } = {}) {
+// Saves made within a few seconds of each other (a catch, a badge, partner XP...)
+// go to the cloud as one write. Leaving the page saves right away.
+const SAVE_DELAY = 2500;
+let saveTimer = null;
+let saveQueued = null;
+let saveResolve = null;
+// Runs a waiting save right away (or drops it with save = false).
+function flushPending(save = true) {
+  if (!saveQueued) return Promise.resolve();
+  clearTimeout(saveTimer);
+  const resolve = saveResolve;
+  saveTimer = null; saveQueued = null; saveResolve = null;
+  return (save ? saveNow() : Promise.resolve()).then(resolve);
+}
+
+// Save this device's progress to the profile (batched). Safe to call anytime.
+// pushProgress({ now: true }) saves immediately.
+export function pushProgress(opts = {}) {
+  if (!fb || !user) return Promise.resolve();
+  if (opts.now || opts.fromSignIn) return saveNow(opts);
+  saveQueued ||= new Promise((resolve) => { saveResolve = resolve; });
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => flushPending(), SAVE_DELAY);
+  return saveQueued;
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushPending();
+});
+
+// Saves now, merged with what's already in the cloud, so another device's newer
+// catches are never overwritten.
+async function saveNow({ fromSignIn = false } = {}) {
   if (!fb || !user) return;
   let changed = false;
   try {
@@ -122,11 +151,13 @@ export async function emailSignInLink(email) {
 }
 
 export async function signOut() {
+  await flushPending(); // don't drop a pending save
   await fb.authM.signOut(fb.auth);
 }
 
 // Removes the cloud copy and the account. Progress on this device stays.
 export async function deleteProfile() {
+  await flushPending(false); // a pending save must not recreate the deleted copy
   for (const fn of beforeDelete) {
     try { await fn(); } catch (e) { console.warn('[profiles] cleanup failed:', e); }
   }

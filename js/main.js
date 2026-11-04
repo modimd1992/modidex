@@ -56,6 +56,7 @@ async function init() {
       <p class="small">${esc(e.message)}</p></div>`;
     return;
   }
+  if (GAME.feedbackUrl) $('#feedback-link').innerHTML = ` · <a href="${esc(GAME.feedbackUrl)}" target="_blank" rel="noopener">Feedback & bug reports</a>`;
   if (S.data.dataAsOf) $('#data-asof').textContent = `Rosters as of ${/^\d{4}-\d{2}-\d{2}$/.test(S.data.dataAsOf) ? longDate(S.data.dataAsOf) : S.data.dataAsOf}.`;
   setDay();
   const link = location.hash.match(/^#(add|join)=([A-Za-z0-9_]+)/);
@@ -1478,7 +1479,7 @@ async function openProfile(tab = profileTab) {
   if (!u) {
     openDialog(dlg, `<h2 id="profile-title">Profile</h2>
       ${pendingLink ? `<p class="invite-note">${pendingLink.kind === 'add' ? `👋 <b>@${esc(pendingLink.value)}</b> wants to be friends.` : `👥 You've been invited to a group.`} Sign in to continue.</p>` : ''}
-      <p>Sign in to save your Dex (<b>${caughtN}</b> caught so far), add friends and join groups. Your progress syncs on every device, and what you've caught on this device is kept.</p>
+      <p>Sign in to save your Dex (<b>${caughtN}</b> caught so far), add friends and join groups. Your progress syncs on every device, and what you've caught on this device is kept. <a href="privacy.html" target="_blank" rel="noopener">What we store</a></p>
       <button class="btn btn-primary btn-block" id="btn-google">Continue with Google</button>
       <p class="or">or get a sign-in link by email</p>
       <form class="email-form" id="email-form">

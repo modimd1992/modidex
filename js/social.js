@@ -71,7 +71,11 @@ export async function publishProfile() {
   if (!a) return;
   const prof = await loadMyProfile();
   if (!prof.handle) return;
-  const doc = { ...summaryBuilder(), handle: prof.handle, name: prof.handle, updatedAt: a.fsM.serverTimestamp() };
+  const summary = { ...summaryBuilder(), handle: prof.handle, name: prof.handle };
+  // Nothing friends can see has changed since the last publish: skip the write.
+  const key = JSON.stringify(summary);
+  if (key === lastPublished && a.user.uid === lastPublishedUid) { await maybeProcessRequests(); return; }
+  const doc = { ...summary, updatedAt: a.fsM.serverTimestamp() };
   // merge: friends/groups are changed only by their own actions, never overwritten here
   // If the Firebase rules haven't been updated for newer fields yet, publish without them
   // (newest first).
@@ -87,6 +91,17 @@ export async function publishProfile() {
       if (e?.code !== 'permission-denied' || i === attempts.length - 1) throw e;
     }
   }
+  lastPublished = key;
+  lastPublishedUid = a.user.uid;
+  await maybeProcessRequests();
+}
+let lastPublished = null;
+let lastPublishedUid = null;
+// Finishing accepted friend requests needs a query; once a minute is plenty.
+let lastRequestCheck = 0;
+async function maybeProcessRequests() {
+  if (Date.now() - lastRequestCheck < 60000) return;
+  lastRequestCheck = Date.now();
   await processAnsweredRequests();
 }
 onAfterPush(publishProfile);
