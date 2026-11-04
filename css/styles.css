@@ -558,3 +558,21 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .evolve.done .evolve-done { opacity: 1; }
 @keyframes evolve-pulse { from { filter: brightness(1); transform: scale(1); } to { filter: brightness(2.2); transform: scale(1.08); box-shadow: 0 0 30px #fff; } }
 @media (prefers-reduced-motion: reduce) { .evolve-orb { animation: none; } }
+
+/* ---------- past puzzles ---------- */
+.archive { margin-top: 22px; }
+.arch-list { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
+.arch-day { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-2); cursor: pointer; text-align: left; }
+.arch-day:hover { border-color: var(--accent-2); }
+.arch-day.is-active { border-color: var(--accent); background: rgba(198, 255, 61, 0.07); }
+.arch-when { font-size: 14px; }
+.arch-when b { font-family: var(--font-display); font-weight: 400; margin-right: 4px; }
+.arch-marks { display: flex; gap: 6px; flex: none; }
+.arch-mark { position: relative; font-size: 16px; opacity: 0.35; }
+.arch-mark.won, .arch-mark.lost { opacity: 1; }
+.arch-mark i { position: absolute; right: -5px; bottom: -4px; font-style: normal; font-size: 10px; font-weight: 800; }
+.arch-mark.won i { color: var(--hit); }
+.arch-mark.lost i { color: var(--danger); }
+.archive-banner { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 10px; border-radius: 12px; border: 1px solid var(--accent-2); background: rgba(34, 211, 238, 0.08); }
+.archive-banner > div { display: grid; gap: 2px; }
+.archive-banner .btn { flex: none; }

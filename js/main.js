@@ -2,7 +2,7 @@
 import { GAME, MODES, SPORTS, STATS, CLUE_SCHEDULE, CLOSE, ENABLED_SPORTS, CATCH } from './config.js';
 import { TYPES, typeInfo, athleteTypes } from './types.js';
 import { loadData } from './data.js';
-import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay, hashString } from './daily.js';
+import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay, hashString, addDays } from './daily.js';
 import { compareGuess, columnsFor } from './compare.js';
 import { cluesFor } from './clues.js';
 import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex, saveDex, sportDex, dexCounts, loadHistory, recordHistory } from './storage.js';
@@ -25,8 +25,11 @@ const $ = (sel, root = document) => root.querySelector(sel);
 
 const S = {
   data: null,
-  key: null,
+  key: null,       // the day being shown (today, or a past day)
   puzzleNo: 0,
+  today: null,     // today's date: results, streaks and leaderboards always use this
+  todayNo: 0,
+  archive: false,  // true while playing a past day
   answers: {},
   mode: MODES[0],
   game: null,
@@ -97,18 +100,34 @@ async function init() {
   }
 }
 
-function setDay() {
-  S.key = dateKey();
+// Shows today, or a past day (key) from the archive.
+function setDay(key = null) {
+  S.today = dateKey();
+  S.todayNo = puzzleNumber(S.today);
+  S.key = key && key < S.today && key >= GAME.launchDate ? key : S.today;
+  S.archive = S.key !== S.today;
   S.puzzleNo = puzzleNumber(S.key);
-  S.answers = answersForDate(S.data.athletes, S.key, S.data.schedule);
+  S.answers = answersFor(S.key);
+}
+const answersFor = (key) => answersForDate(S.data.athletes, key, S.data.schedule);
+// Each past day gets its own saved game per mode; today's uses the plain mode id.
+const slot = (modeId, key = S.key) => (key === S.today ? modeId : `${modeId}@${key}`);
+// A past day you played on the day itself: its result from the daily history.
+const liveResult = (modeId, key = S.key) => (key !== S.today ? loadHistory()[key]?.[modeId] || null : null);
+
+function openDay(key) {
+  setDay(key);
+  renderModes();
+  renderMode();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // New day while the tab is open: reload the page, so the new puzzles also get
 // the latest version of the game and its data.
 function tick() {
   if (!S.data) return;
-  if (dateKey() !== S.key) {
-    S.key = dateKey(); // only reload once
+  if (dateKey() !== S.today) {
+    S.today = dateKey(); // only reload once
     location.reload();
     return;
   }
@@ -125,10 +144,15 @@ function timeToMidnight() {
 }
 
 // ---------- mode tabs ----------
-function modeStatus(mode) {
-  const a = S.answers[mode.id];
+function modeStatus(mode, key = S.key, answers = S.answers) {
+  const a = answers[mode.id];
   if (!a) return 'none';
-  return loadGame(mode.id, S.key, a.id).status;
+  const g = loadGame(slot(mode.id, key), key, a.id);
+  if (!g.guesses.length) {
+    const h = liveResult(mode.id, key);
+    if (h) return h.s;
+  }
+  return g.status;
 }
 
 function renderModes() {
@@ -163,23 +187,68 @@ function renderMode() {
     $('#app').innerHTML = `<div class="panel"><h2>No athletes yet for ${esc(S.mode.label)}</h2><p>Add some to data/athletes.json.</p></div>`;
     return;
   }
-  S.game = loadGame(S.mode.id, S.key, a.id);
+  S.game = loadGame(slot(S.mode.id), S.key, a.id);
+  // A past day played on the day itself: show that result (its guesses aren't saved).
+  const live = !S.game.guesses.length && liveResult(S.mode.id);
+  if (live) S.game = { ...S.game, status: live.s, live };
   S.compareId = null;
   S.justFinished = false;
-  if (finished() && !S.game.catch) {
+  if (finished() && !S.game.catch && !S.game.live) {
     resolveCatch(S.game, a, S.key, rareFor(S.mode));
-    saveGame(S.mode.id, S.game);
+    saveGame(slot(S.mode.id), S.game);
   }
   $('#app').innerHTML = `
+    ${S.archive ? archiveBannerHtml() : ''}
     <section id="card-area" aria-live="polite"></section>
     <section id="play-area"></section>
     <section id="clues" class="clues"></section>
-    <section id="guesses" class="guesses" aria-label="Your guesses"></section>`;
+    <section id="guesses" class="guesses" aria-label="Your guesses"></section>
+    <section id="archive" class="archive" aria-label="Past puzzles"></section>`;
   renderCardArea();
   renderClues();
   renderPlayArea();
   renderGuesses(false);
+  renderArchive();
 }
+
+// ---------- past puzzles ----------
+const dayLabel = (key) => new Date(`${key}T12:00:00`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+let archiveShown = 14;
+
+function archiveBannerHtml() {
+  return `<div class="archive-banner">
+    <div><b>📅 Past puzzle · ${esc(dayLabel(S.key))}</b><span class="small">No. ${pad3(S.puzzleNo)} · Catches go to your Dex. Doesn't count toward streaks or leaderboards.</span></div>
+    <button class="btn btn-sm" type="button" data-day="">Back to today</button>
+  </div>`;
+}
+
+// The list of past days at the bottom of the page.
+function renderArchive() {
+  const el = $('#archive');
+  if (!el) return;
+  const days = [];
+  for (let k = addDays(S.today, -1); k >= GAME.launchDate; k = addDays(k, -1)) days.push(k);
+  if (!days.length) { el.innerHTML = ''; return; }
+  const rows = days.slice(0, archiveShown).map((k) => {
+    const ans = answersFor(k);
+    const marks = MODES.map((m) => {
+      const st = modeStatus(m, k, ans);
+      return `<span class="arch-mark ${st}" title="${esc(m.label)}">${m.emoji}<i>${st === 'won' ? '✓' : st === 'lost' ? '✗' : ''}</i></span>`;
+    }).join('');
+    return `<li><button class="arch-day${k === S.key ? ' is-active' : ''}" type="button" data-day="${k}">
+      <span class="arch-when"><b>No. ${pad3(puzzleNumber(k))}</b> ${esc(dayLabel(k))}</span><span class="arch-marks">${marks}</span></button></li>`;
+  }).join('');
+  el.innerHTML = `<h3 class="section-title">📅 Past puzzles</h3>
+    <p class="small">Missed a day? Play any past puzzle. Catches go to your Dex and your partner earns XP, but past puzzles don't count toward streaks or leaderboards.</p>
+    <ul class="arch-list">${S.archive ? `<li><button class="arch-day" type="button" data-day=""><span class="arch-when"><b>Today</b> ${esc(dayLabel(S.today))}</span><span class="arch-marks">›</span></button></li>` : ''}${rows}</ul>
+    ${days.length > archiveShown ? '<button class="btn btn-block" type="button" id="arch-more">Show older puzzles</button>' : ''}`;
+  el.querySelector('#arch-more')?.addEventListener('click', () => { archiveShown += 14; renderArchive(); });
+}
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-day]');
+  if (b) openDay(b.dataset.day || null);
+});
 
 function renderCardArea() {
   const a = answer();
@@ -284,6 +353,7 @@ function renderGuesses(animateLast) {
   const rows = guessRows();
   const cols = columnsFor(S.mode);
   const el = $('#guesses');
+  if (S.game.live) { el.innerHTML = ''; return; }
   if (!rows.length) {
     el.innerHTML = `<p class="hint">Start typing a name. Each guess shows how close you are, and the card's stat bars compare against it.</p>${legendHtml()}`;
     return;
@@ -324,10 +394,11 @@ function submitGuess(athlete) {
   else if (S.game.guesses.length >= GAME.maxGuesses) S.game.status = 'lost';
 
   if (finished() && !S.game.recorded) {
-    recordResult(S.mode.id, S.puzzleNo, won, S.game.guesses.length);
+    // Past puzzles never touch streaks, stats or the leaderboard history.
+    if (!S.archive) recordResult(S.mode.id, S.puzzleNo, won, S.game.guesses.length);
     S.game.recorded = true;
     const caught = resolveCatch(S.game, answer(), S.key, rareFor(S.mode));
-    recordHistory(S.key, S.mode.id, S.game.status, S.game.guesses.length, caught?.outcome === 'caught');
+    if (!S.archive) recordHistory(S.key, S.mode.id, S.game.status, S.game.guesses.length, caught?.outcome === 'caught');
     const fed = feedMyPartner(S.mode.id, won, S.game.guesses.length);
     if (fed?.evolved) setTimeout(() => showEvolution(fed.evolved), 2600); // after the catch animation
     S.justFinished = true;
@@ -335,10 +406,10 @@ function submitGuess(athlete) {
     setTimeout(pushProgress, 0); // after the save below; syncs to the profile if signed in
     // Hook for future features (card collection, leaderboards).
     document.dispatchEvent(new CustomEvent('modidex:complete', {
-      detail: { modeId: S.mode.id, puzzleNo: S.puzzleNo, athleteId: S.game.answerId, won, guesses: S.game.guesses.length, catch: caught },
+      detail: { modeId: S.mode.id, puzzleNo: S.puzzleNo, athleteId: S.game.answerId, won, guesses: S.game.guesses.length, catch: caught, archive: S.archive },
     }));
   }
-  saveGame(S.mode.id, S.game);
+  saveGame(slot(S.mode.id), S.game);
 
   const before = cluesFor(answer(), S.mode, wrongCount() - (won ? 0 : 1), false).filter((c) => c.unlocked).length;
   renderGuesses(true);
@@ -347,6 +418,7 @@ function submitGuess(athlete) {
   if (finished()) {
     renderPlayArea();
     renderModes();
+    renderArchive();
     setTimeout(() => $('#card-area').scrollIntoView({ behavior: 'smooth', block: 'start' }), 650);
   } else {
     renderPlayArea();
@@ -380,13 +452,14 @@ function currentShareText() {
 }
 
 // Every mode's result today, for the combined share.
-function todayEntries() {
+function todayEntries(key = S.today) {
+  const answers = key === S.key ? S.answers : answersFor(key);
   return MODES.map((m) => {
-    const ans = S.answers[m.id];
+    const ans = answers[m.id];
     if (!ans) return { mode: m, status: 'none', rows: [] };
-    const g = loadGame(m.id, S.key, ans.id);
+    const g = loadGame(slot(m.id, key), key, ans.id);
     const rows = g.guesses.map((id) => S.data.byId.get(id)).filter(Boolean)
-      .map((x) => ({ correct: x.id === ans.id, cells: compareGuess(x, ans, S.key, m) }));
+      .map((x) => ({ correct: x.id === ans.id, cells: compareGuess(x, ans, key, m) }));
     return { mode: m, status: g.guesses.length ? g.status : 'none', rows, caught: g.catch?.outcome === 'caught', shiny: g.catch?.outcome === 'caught' && !!g.catch?.shiny };
   });
 }
@@ -395,17 +468,18 @@ function todayEntries() {
 // creature today's games caught or saw is in the Dex (repairs saves from old tabs).
 function backfillHistory() {
   for (const e of todayEntries()) {
-    if (e.status === 'won' || e.status === 'lost') recordHistory(S.key, e.mode.id, e.status, e.rows.length, e.caught);
+    if (e.status === 'won' || e.status === 'lost') recordHistory(S.today, e.mode.id, e.status, e.rows.length, e.caught);
   }
   const all = loadDex();
   let changed = false;
+  const answers = answersFor(S.today);
   for (const m of MODES) {
-    const ans = S.answers[m.id];
+    const ans = answers[m.id];
     if (!ans) continue;
-    const c = loadGame(m.id, S.key, ans.id).catch;
+    const c = loadGame(m.id, S.today, ans.id).catch;
     if (!c?.dex || c.outcome === 'fled') continue;
     const sd = sportDex(all, c.sport || ans.sport);
-    const entry = { date: S.key, athleteId: ans.id };
+    const entry = { date: S.today, athleteId: ans.id };
     if (!sd.seen[c.dex]) { sd.seen[c.dex] = entry; changed = true; }
     if (c.outcome === 'caught' && !sd.caught[c.dex]) { sd.caught[c.dex] = { ...entry, ball: c.ball }; changed = true; }
     if (c.outcome === 'caught' && c.shiny && !sd.shiny[c.dex]) { sd.shiny[c.dex] = entry; changed = true; }
@@ -421,15 +495,15 @@ function finishedToday() {
 }
 
 function combinedText() {
-  return combinedShareText({ puzzleNo: S.puzzleNo, entries: todayEntries(), url: `${location.origin}${location.pathname}` });
+  return combinedShareText({ puzzleNo: S.puzzleNo, entries: todayEntries(S.key), url: `${location.origin}${location.pathname}` });
 }
 
 function renderResult(area) {
   const won = S.game.status === 'won';
   const a = answer();
-  const n = S.game.guesses.length;
+  const n = S.game.live ? S.game.live.n : S.game.guesses.length;
   const stats = loadStats(S.mode.id);
-  const streak = displayStreak(stats, S.puzzleNo);
+  const streak = displayStreak(stats, S.todayNo);
   const nextModes = MODES.filter((m) => m.id !== S.mode.id && modeStatus(m) === 'playing');
   const praise = ['Legendary!', 'Incredible!', 'Clutch!', 'Nice scouting!', 'Got it!', 'Phew!'][n - 1] || 'Got it!';
   area.innerHTML = `
@@ -438,35 +512,38 @@ function renderResult(area) {
       ${partnerLineHtml()}
       <h2>${won ? `${praise} Scouted in ${n}/${GAME.maxGuesses}` : 'Out of guesses!'}</h2>
       <p>${won ? 'You named' : 'The mystery athlete was'} <b>${esc(a.name)}</b>${a.comp ? `, whose Gen 1 comp is <b>${esc(a.comp.name)}</b>` : ''}.</p>
-      <div class="result-stats">
+      ${S.game.live ? `<p class="small">You played this puzzle on ${esc(dayLabel(S.key))}.</p>` : ''}
+      ${S.archive ? '' : `<div class="result-stats">
         <div><b>${stats.played}</b><span>Played</span></div>
         <div><b>${stats.played ? Math.round((stats.wins / stats.played) * 100) : 0}%</b><span>Win %</span></div>
         <div><b>${streak}</b><span>Streak</span></div>
         <div><b>${stats.maxStreak}</b><span>Best</span></div>
-      </div>
-      <pre class="share-preview" aria-label="Share preview">${esc(currentShareText())}</pre>
+      </div>`}
+      ${S.game.live ? '' : `<pre class="share-preview" aria-label="Share preview">${esc(currentShareText())}</pre>
       <div class="btn-row">
         <button class="btn btn-primary" id="btn-share">Share result</button>
         <button class="btn" id="btn-copy">Copy</button>
-      </div>
+      </div>`}
       ${finishedToday() >= 2 ? `<div class="combined">
-        <h3 class="section-title">All of today's puzzles</h3>
+        <h3 class="section-title">${S.archive ? `All puzzles from ${esc(dayLabel(S.key))}` : "All of today's puzzles"}</h3>
         <pre class="share-preview" aria-label="Combined share preview">${esc(combinedText())}</pre>
         <div class="btn-row">
           <button class="btn btn-primary" id="btn-share-all">Share all</button>
           <button class="btn" id="btn-copy-all">Copy</button>
         </div>
       </div>` : ''}
-      <p class="next">Next ${esc(S.mode.label)} puzzle in <b id="countdown">${timeToMidnight()}</b></p>
+      ${S.archive ? '' : `<p class="next">Next ${esc(S.mode.label)} puzzle in <b id="countdown">${timeToMidnight()}</b></p>`}
       ${nextModes.length ? `<div class="next-modes"><span>Play another:</span>${nextModes.map((m) =>
-        `<button class="chip" data-go="${m.id}">${m.emoji} ${esc(m.label)}</button>`).join('')}</div>` : '<p class="small">You finished every puzzle today. See you tomorrow!</p>'}
+        `<button class="chip" data-go="${m.id}">${m.emoji} ${esc(m.label)}</button>`).join('')}</div>`
+        : S.archive ? `<p class="small">You finished every puzzle from ${esc(dayLabel(S.key))}. <button class="link-btn" type="button" data-day="">Back to today</button></p>`
+        : '<p class="small">You finished every puzzle today. See you tomorrow!</p>'}
     </div>`;
-  $('#btn-share').onclick = async () => {
+  if ($('#btn-share')) $('#btn-share').onclick = async () => {
     const r = await shareOrCopy(currentShareText());
     if (r === 'copied') toast('Result copied! Paste it anywhere.');
     else if (r === 'failed') toast('Could not copy. Long-press the preview to copy.');
   };
-  $('#btn-copy').onclick = async () => toast((await copyText(currentShareText())) ? 'Copied!' : 'Could not copy.');
+  if ($('#btn-copy')) $('#btn-copy').onclick = async () => toast((await copyText(currentShareText())) ? 'Copied!' : 'Could not copy.');
   if ($('#btn-share-all')) {
     $('#btn-share-all').onclick = async () => {
       const r = await shareOrCopy(combinedText());
@@ -699,7 +776,7 @@ function choosePartner(n) {
   if (cur && !confirm(`Make ${name} your partner? ${GEN1[cur.form - 1]} (Lv ${levelOf(cur)}) goes back to your Dex and its level resets.`)) return;
   const f = (combinedDex(all).from[n] || []).find((x) => x.caught);
   if (!f) return;
-  all.partner = newPartner({ n, sport: f.sport, athleteId: f.entry.athleteId }, S.key);
+  all.partner = newPartner({ n, sport: f.sport, athleteId: f.entry.athleteId }, S.today);
   saveDex(all);
   setTimeout(pushProgress, 0);
   toast(`🤝 ${name} is your partner!`);
@@ -740,7 +817,7 @@ function trainerCardData() {
   return {
     handle: myHandle() || 'trainer',
     trainerId: String(tid).padStart(5, '0'),
-    since: longDate(dates.length ? dates.sort()[0] : S.key),
+    since: longDate(dates.length ? dates.sort()[0] : S.today),
     partner: info ? { name: info.name, level: info.level, emoji: info.emoji, via: info.via, progress: info.progress } : null,
     total: Object.keys(combinedDex(all).caught).length,
     totalMax: CATCH.total,
@@ -798,8 +875,8 @@ function checkBadges({ announce = true } = {}) {
   const { all, list } = myBadges();
   const fresh = [];
   for (const b of list) {
-    if (b.earned && !all.badges[b.id]) { all.badges[b.id] = S.key; fresh.push(`${b.icon} ${b.name}`); }
-    if (b.gold && !all.badges[`${b.id}.gold`]) { all.badges[`${b.id}.gold`] = S.key; fresh.push(`🥇 Gold ${b.name}`); }
+    if (b.earned && !all.badges[b.id]) { all.badges[b.id] = S.today; fresh.push(`${b.icon} ${b.name}`); }
+    if (b.gold && !all.badges[`${b.id}.gold`]) { all.badges[`${b.id}.gold`] = S.today; fresh.push(`🥇 Gold ${b.name}`); }
   }
   if (!fresh.length) return fresh;
   saveDex(all);
@@ -811,7 +888,7 @@ function checkBadges({ announce = true } = {}) {
 function awardBadge(id) {
   const all = loadDex();
   if (all.badges[id]) return;
-  all.badges[id] = S.key;
+  all.badges[id] = S.today;
   saveDex(all);
   setTimeout(pushProgress, 0);
   const b = badgeById(id);
@@ -828,7 +905,7 @@ function badgeCard(b) {
   let prog = `${b.cur}/${b.goal}`;
   if (b.kind === 'set') {
     hint = b.set.map((n) => `${b.have.includes(n) ? '✓ ' : ''}${GEN1[n - 1]}`).join(' · ');
-    if (b.earned) prog = b.gold ? `🥇 Gold · ${shortDate(b.goldDate || S.key)}` : `Gold: ${ENABLED_SPORTS.map((sp, i) => `${SPORTS[sp].emoji} ${b.perSport[i]}/${b.goal}`).join(' ')}`;
+    if (b.earned) prog = b.gold ? `🥇 Gold · ${shortDate(b.goldDate || S.today)}` : `Gold: ${ENABLED_SPORTS.map((sp, i) => `${SPORTS[sp].emoji} ${b.perSport[i]}/${b.goal}`).join(' ')}`;
   } else if (b.earned) {
     prog = '';
   }
@@ -911,7 +988,7 @@ function publicSummary() {
     }
   }
   const streaks = {};
-  for (const m of MODES) streaks[m.id] = displayStreak(loadStats(m.id), S.puzzleNo);
+  for (const m of MODES) streaks[m.id] = displayStreak(loadStats(m.id), S.todayNo);
   return {
     dex: Object.fromEntries(ENABLED_SPORTS.map((sp) => {
       const sd = sportDex(all, sp);
@@ -919,8 +996,8 @@ function publicSummary() {
     })),
     lines: Object.fromEntries(ENABLED_SPORTS.map((sp) => [sp, FAMILIES.filter((f) => f.every((n) => sportDex(all, sp).caught[n])).length])),
     streaks,
-    today: { date: S.key, puzzleNo: S.puzzleNo, results },
-    week: weekTotals(loadHistory(), S.key, MODES.map((m) => m.id)),
+    today: { date: S.today, puzzleNo: S.todayNo, results },
+    week: weekTotals(loadHistory(), S.today, MODES.map((m) => m.id)),
     alltime: allTimeTotals(Object.fromEntries(MODES.map((m) => [m.id, loadStats(m.id)]))),
     badges: Object.keys(all.badges || {}).sort(),
     partner: all.partner ? { n: all.partner.form, name: GEN1[all.partner.form - 1], level: levelOf(all.partner) } : null,
@@ -952,7 +1029,7 @@ function socialError(e) {
 
 function todayLine(p, compact = false) {
   const t = p.today;
-  if (!t || t.date !== S.key || !Object.keys(t.results || {}).length) return '<span class="small">Hasn\'t played today</span>';
+  if (!t || t.date !== S.today || !Object.keys(t.results || {}).length) return '<span class="small">Hasn\'t played today</span>';
   return MODES.filter((m) => t.results[m.id]).map((m) => {
     const r = t.results[m.id];
     const score = r.status === 'won' ? `${r.n}/${GAME.maxGuesses}` : `X/${GAME.maxGuesses}`;
@@ -1197,12 +1274,12 @@ const BOARD_TABS = [['today', 'Today'], ['week', 'This week'], ['alltime', 'All-
 // A member's score on one leaderboard tab, or null if they haven't published it yet.
 function boardScore(p, tab) {
   if (tab === 'today') {
-    const r = p.today?.date === S.key ? Object.values(p.today.results || {}) : [];
+    const r = p.today?.date === S.today ? Object.values(p.today.results || {}) : [];
     return { pts: r.reduce((t, x) => t + pointsFor(x), 0), solved: r.filter((x) => x.status === 'won').length, played: r.length };
   }
   if (tab === 'week') {
     if (!p.week) return null;
-    return p.week.start === weekStart(S.key) ? p.week : { pts: 0, solved: 0, played: 0 };
+    return p.week.start === weekStart(S.today) ? p.week : { pts: 0, solved: 0, played: 0 };
   }
   return p.alltime || null;
 }
@@ -1237,7 +1314,7 @@ function renderBoard(dlg, members) {
   board.querySelectorAll('[data-member]').forEach((li) => (li.onclick = () => openPerson(members[Number(li.dataset.member)])));
   const notes = {
     today: "Today's puzzles across every mode.",
-    week: `Monday ${weekStart(S.key).slice(5).replace('-', '/')} through Sunday. Resets every Monday at midnight ET.`,
+    week: `Monday ${weekStart(S.today).slice(5).replace('-', '/')} through Sunday. Resets every Monday at midnight ET.`,
     alltime: 'Every puzzle since joining ModiDex.',
   };
   dlg.querySelector('#board-note').textContent = notes[groupTab];
@@ -1353,7 +1430,7 @@ function openStats(modeId) {
     <div class="result-stats">
       <div><b>${s.played}</b><span>Played</span></div>
       <div><b>${s.played ? Math.round((s.wins / s.played) * 100) : 0}%</b><span>Win %</span></div>
-      <div><b>${displayStreak(s, S.puzzleNo)}</b><span>Streak</span></div>
+      <div><b>${displayStreak(s, S.todayNo)}</b><span>Streak</span></div>
       <div><b>${s.maxStreak}</b><span>Best</span></div>
     </div>
     <h3>Guess distribution</h3>

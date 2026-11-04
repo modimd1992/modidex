@@ -137,6 +137,17 @@ export const dexCounts = (sd) => ({
   caught: Object.keys(sd?.caught || {}).length, seen: Object.keys(sd?.seen || {}).length, shiny: Object.keys(sd?.shiny || {}).length,
 });
 
+function savedGameIds() {
+  const ids = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k?.startsWith(`${P}:game:`)) ids.push(k.slice(`${P}:game:`.length));
+    }
+  } catch { /* storage unavailable */ }
+  return ids;
+}
+
 // ---- Whole save (for syncing to a profile) ----
 const MODE_IDS = ['all', 'nfl', 'nba', 'mlb', 'nhl'];
 
@@ -146,6 +157,9 @@ export function exportProgress() {
   for (const id of MODE_IDS) {
     const s = read(`stats:${id}`, null);
     if (s) stats[id] = s;
+  }
+  // Today's games ('nfl') and past-day games from the archive ('nfl@2026-11-02').
+  for (const id of savedGameIds()) {
     const g = read(`game:${id}`, null);
     if (g) games[id] = g;
   }
