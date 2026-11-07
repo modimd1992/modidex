@@ -264,7 +264,9 @@ main { max-width: 560px; margin: 0 auto; padding: 12px; }
 .type-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .type-list li { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
 .table-wrap { overflow-x: auto; }
-.stat-table { border-collapse: collapse; font-size: 12px; min-width: 520px; }
+.stat-table { border-collapse: collapse; font-size: 12px; width: 100%; table-layout: fixed; } /* fits phones: text wraps instead of scrolling off-screen */
+.stat-table th:first-child { width: 38px; }
+.stat-table td { overflow-wrap: anywhere; }
 .stat-table th, .stat-table td { padding: 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
 .stat-table th { font-family: var(--font-display); color: var(--muted); font-weight: 400; }
 .dist { display: grid; gap: 4px; }
@@ -643,3 +645,10 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .trade-row .person-name { white-space: normal; }
 .need-bar { height: 6px; border-radius: 99px; background: var(--bg); overflow: hidden; margin-top: 10px; }
 .need-bar > span { display: block; height: 100%; min-width: 6px; background: var(--accent-2); }
+
+/* ---------- first visit & tips ---------- */
+.quick-start { padding-left: 20px; display: grid; gap: 8px; }
+.quick-start .tile.mini { display: inline-grid; vertical-align: middle; }
+.tip { margin-bottom: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--accent); background: rgba(198, 255, 61, 0.08); }
+.tip p { margin: 0 0 8px; font-size: 14px; }
+.tip-actions { display: flex; gap: 8px; justify-content: flex-end; }

@@ -99,9 +99,14 @@ async function init() {
   renderMode();
   setTimeout(() => checkBadges(), 800);
   if (!loadPref('seenHelp', false)) {
-    openHelp();
+    savePref('tipsSeen', []); // brand-new player: features are introduced one at a time
+    openQuickStart();
     savePref('seenHelp', true);
+  } else if (loadPref('tipsSeen', null) === null) {
+    // Existing players already know the features; only introduce what's new to them.
+    savePref('tipsSeen', TIPS.map((t) => t.id).filter((id) => id !== 'shiny'));
   }
+  renderTip();
 }
 
 // Shows today, or a past day (key) from the archive.
@@ -209,6 +214,7 @@ function renderMode() {
   }
   $('#app').innerHTML = `
     ${S.archive ? archiveBannerHtml() : ''}
+    <div id="tip-area"></div>
     <section id="card-area" aria-live="polite"></section>
     <section id="play-area"></section>
     <section id="clues" class="clues"></section>
@@ -221,6 +227,7 @@ function renderMode() {
   renderGuesses(false);
   renderGymCard();
   renderArchive();
+  renderTip();
 }
 
 // ---------- past puzzles ----------
@@ -431,6 +438,7 @@ function submitGuess(athlete) {
     renderPlayArea();
     renderModes();
     renderArchive();
+    setTimeout(renderTip, 2500); // after the catch animation
     setTimeout(() => $('#card-area').scrollIntoView({ behavior: 'smooth', block: 'start' }), 650);
   } else {
     renderPlayArea();
@@ -898,6 +906,8 @@ function renderGymCard() {
   const st = gymState();
   const g = currentGym(st);
   const won = Object.keys(st.beaten || {}).length;
+  // New players see the gyms once they have a few catches (the full guide still explains them).
+  if (myRoster().length < 3 && !won && !st.week) { el.innerHTML = ''; return; }
   if (!g) {
     el.innerHTML = `<div class="gym-card done"><div class="gym-head"><span class="gym-icon">🏆</span><div><b>All 8 gym badges!</b><span class="small">You beat every gym leader. Practice battles are still open.</span></div></div>
       <button class="btn btn-block" type="button" data-open-gyms>🏟️ Gyms & practice</button></div>`;
@@ -1809,6 +1819,62 @@ function openDialog(dlg, html) {
   dlg.scrollTop = 0;
 }
 
+// ---------- first visit & tips ----------
+// A short welcome for new players; everything else is introduced by one tip at a
+// time as it becomes useful. The full guide stays behind the ? button.
+function openQuickStart() {
+  openDialog($('#dlg-help'), `
+    <h2 id="help-title">Welcome to ModiDex!</h2>
+    <p>Every day there's a mystery athlete for each sport. Name them in <b>${GAME.maxGuesses} guesses</b>.</p>
+    <ol class="quick-start">
+      <li><b>Read the scouting card.</b> It shows the creature the athlete plays like, their type and their ratings.</li>
+      <li><b>Guess an athlete.</b> Each guess shows how close you are:
+        <span class="tile hit mini">✓</span> match, <span class="tile close mini">~</span> close, <span class="tile miss mini">✗</span> miss, and ▲▼ for higher or lower.</li>
+      <li><b>Solve it to catch the creature</b> for your collection. Faster solves throw better balls.</li>
+    </ol>
+    <p class="small">New puzzles every day at midnight ET. There's more to discover as you play. <button class="link-btn" type="button" id="qs-full">Read the full guide</button></p>`);
+  $('#dlg-help').querySelector('#qs-full').onclick = openHelp;
+}
+
+const caughtCount = () => myRoster().length;
+const TIPS = [
+  { id: 'shiny', when: () => !finished() && rareFor(S.mode).shiny,
+    text: "✨ <b>Shiny encounter!</b> About 1 in 25 puzzles, and different for every player. Solve it and catch it to mark it shiny in your Dex." },
+  { id: 'dex', when: () => caughtCount() >= 1,
+    text: '📕 <b>You caught your first creature!</b> Every athlete you catch goes into your Dex. One Dex per sport, 151 creatures each.',
+    action: ['Open my Dex', () => openDex('all', TOTAL)] },
+  { id: 'partner', when: () => caughtCount() >= 2 && !loadDex().partner,
+    text: '🤝 <b>Pick a partner.</b> Choose one of your catches. It earns XP from every puzzle you finish, levels up and evolves.',
+    action: ['Choose a partner', () => openPartner()] },
+  { id: 'badges', when: () => Object.keys(loadDex().badges || {}).length >= 1,
+    text: '🎖️ <b>You earned a badge!</b> Badges reward collecting sets (like the Starter Trio) and milestones like streaks.',
+    action: ['See badges', () => openBadges()] },
+  { id: 'past', when: () => Object.keys(loadHistory()).length >= 1 && S.today > GAME.launchDate,
+    text: "📅 <b>Missed a day?</b> Past puzzles are at the bottom of the page. They count for your Dex, not your streak.",
+    action: ['Show me', () => $('#archive')?.scrollIntoView({ behavior: 'smooth' })] },
+  { id: 'gyms', when: () => caughtCount() >= 5,
+    text: '🏟️ <b>Gym Challenge unlocked!</b> Battle Coach Granite with a team of your catches. One challenge a week.',
+    action: ['Open gyms', () => openGyms()] },
+  { id: 'friends', when: () => cloudEnabled() && !currentUser() && MODES.reduce((t, m) => t + loadStats(m.id).played, 0) >= 4,
+    text: '👤 <b>Play with friends.</b> Sign in to save progress on every device, add friends, trade creatures and join group leaderboards.',
+    action: ['Sign in', () => openProfile('me')] },
+];
+
+// Shows the next tip the player hasn't dismissed, if any applies right now.
+function renderTip() {
+  const el = $('#tip-area');
+  if (!el || !S.data || !S.game) return;
+  const seen = new Set(loadPref('tipsSeen', []));
+  const tip = TIPS.find((t) => !seen.has(t.id) && t.when());
+  if (!tip) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="tip" role="status"><p>${tip.text}</p><div class="tip-actions">
+    ${tip.action ? `<button class="btn btn-sm btn-primary" type="button" id="tip-go">${esc(tip.action[0])}</button>` : ''}
+    <button class="btn btn-sm" type="button" id="tip-ok">Got it</button></div></div>`;
+  const done = () => { savePref('tipsSeen', [...seen, tip.id]); renderTip(); };
+  el.querySelector('#tip-ok').onclick = done;
+  el.querySelector('#tip-go')?.addEventListener('click', () => { done(); tip.action[1](); });
+}
+
 function openHelp() {
   const typeList = Object.entries(TYPES).map(([name, t]) =>
     `<li><span class="type-badge" style="--type:${t.color}">${t.emoji} ${esc(name)}</span><span>${esc(t.fits)}</span></li>`).join('');
@@ -1820,7 +1886,7 @@ function openHelp() {
     <h3>Reading your guesses</h3>
     <ul class="legend">
       <li><span class="tile hit mini">✓</span> Exact match</li>
-      <li><span class="tile close mini">~</span> Close: same division (team), same position group, age within ${CLOSE.age}, number within ${CLOSE.number}, or shares one type</li>
+      <li><span class="tile close mini">~</span> Close: same division (team), a related position (like PF and C, or DE and LB), age within ${CLOSE.age}, number within ${CLOSE.number}, or shares one type</li>
       <li><span class="tile miss mini">✗</span> No match</li>
       <li>👆&nbsp; Tap any type to see what it means</li>
       <li><b class="nowrap">▲ ▼</b>&nbsp; The answer's age or jersey number is higher / lower</li>

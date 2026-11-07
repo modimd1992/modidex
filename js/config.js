@@ -54,11 +54,12 @@ export const SPORTS = {
     label: 'NFL', emoji: '🏈',
     leagueLabel: 'Conf', // what "league" means for this sport
     leagues: { AFC: ['East', 'North', 'South', 'West'], NFC: ['East', 'North', 'South', 'West'] },
-    // Positions in the same group show yellow ("close").
+    // Positions that share a group show yellow ("close"). A position can be in
+    // more than one group (a list), e.g. edge rushers overlap with linebackers.
     positionGroups: {
-      QB: 'QB', RB: 'RB', FB: 'RB', WR: 'REC', TE: 'REC',
-      OT: 'OL', OG: 'OL', C: 'OL', DE: 'DL', DT: 'DL', EDGE: 'DL',
-      LB: 'LB', CB: 'DB', S: 'DB', K: 'ST', P: 'ST',
+      QB: 'QB', RB: 'RB', FB: 'RB', WR: 'REC', TE: ['REC', 'OL'],
+      OT: 'OL', OG: 'OL', C: 'OL', DE: ['DL', 'EDGE'], DT: 'DL', EDGE: ['DL', 'EDGE'],
+      LB: ['LB', 'EDGE'], CB: 'DB', S: ['DB', 'LB'], K: 'ST', P: 'ST',
     },
     statHints: {
       hp: 'Durability and availability', atk: 'Big-play power: yards, TDs, sacks',
@@ -70,7 +71,10 @@ export const SPORTS = {
     label: 'NBA', emoji: '🏀',
     leagueLabel: 'Conf',
     leagues: { East: ['Atlantic', 'Central', 'Southeast'], West: ['Northwest', 'Pacific', 'Southwest'] },
-    positionGroups: { PG: 'G', SG: 'G', G: 'G', SF: 'F', PF: 'F', F: 'F', C: 'C' },
+    // Neighboring positions are close: PG–SG–SF–PF–C (so PF is close to both SF and C).
+    positionGroups: {
+      PG: ['G'], SG: ['G', 'W'], G: ['G', 'W'], SF: ['W', 'F'], PF: ['F', 'B'], F: ['W', 'F', 'B'], C: ['B'],
+    },
     statHints: {
       hp: 'Durability, minutes, motor', atk: 'Scoring volume and power',
       def: 'On-ball defense, rim protection, rebounding', skl: 'Shooting touch and ball skills',
@@ -83,7 +87,8 @@ export const SPORTS = {
     leagues: { AL: ['East', 'Central', 'West'], NL: ['East', 'Central', 'West'] },
     // TWP = two-way player; it counts as both pitcher and hitter.
     positionGroups: {
-      SP: 'P', RP: 'P', CP: 'P', C: 'C', '1B': 'IF', '2B': 'IF', '3B': 'IF', SS: 'IF',
+      // 1B and DH overlap (most DHs are first-base types).
+      SP: 'P', RP: 'P', CP: 'P', C: 'C', '1B': ['IF', 'DH'], '2B': 'IF', '3B': 'IF', SS: 'IF',
       LF: 'OF', CF: 'OF', RF: 'OF', DH: 'DH', TWP: ['P', 'DH'],
     },
     statHints: {
