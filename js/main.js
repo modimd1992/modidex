@@ -5,7 +5,7 @@ import { loadData } from './data.js';
 import { dateKey, puzzleNumber, answersForDate, poolForMode, secondsUntilNextDay, hashString, addDays } from './daily.js';
 import { compareGuess, columnsFor } from './compare.js';
 import { cluesFor } from './clues.js';
-import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex, saveDex, sportDex, dexCounts, loadHistory, recordHistory } from './storage.js';
+import { loadGame, saveGame, loadStats, recordResult, displayStreak, loadPref, savePref, loadDex, saveDex, sportDex, dexCounts, loadHistory, recordHistory, shinySeed } from './storage.js';
 import { pointsFor, weekTotals, weekStart, allTimeTotals } from './leaderboard.js';
 import { badgeFacts, badgeStatus, badgeById, ALL_BADGES } from './badges.js';
 import { newPartner, feedPartner, levelOf, levelProgress, evolutionOf, XP_PER_LEVEL, MAX_LEVEL } from './partner.js';
@@ -342,7 +342,7 @@ function renderPlayArea() {
 // Is today's puzzle in this mode a shiny and/or legendary encounter?
 function rareFor(mode) {
   const a = S.answers[mode.id];
-  return { shiny: !!a && isShiny(mode.id, S.key), legendary: isLegendary(a) };
+  return { shiny: !!a && isShiny(mode.id, S.key, shinySeed()), legendary: isLegendary(a) };
 }
 
 function nextThrowHtml(n) {
@@ -1833,7 +1833,7 @@ function openHelp() {
       <li>👁&nbsp; Guess 6 · registered as Seen</li></ul>
     <p>If it breaks free it's still registered as Seen. If you run out of guesses, it flees. Each sport has its own 📕 Dex of ${CATCH.total}, one player for every creature, so you can complete the NFL, NBA and MLB Dexes separately. All Sports catches count toward that athlete's sport.</p>
     <h3>Rare encounters</h3>
-    <p><b>👑 Legendary</b> creatures are tougher to catch: ${CATCH.tiers.map((t) => `${t.icon} ${Math.round(t.legendaryRate * 100)}%`).join(', ')}. About 1 in ${CATCH.shinyOdds} puzzles is a <b>✨ Shiny</b> encounter, the same for every player that day. Catch one to mark it shiny in your Dex. Watch for 👑 and ✨ on the sport tabs.</p>
+    <p><b>👑 Legendary</b> creatures are tougher to catch: ${CATCH.tiers.map((t) => `${t.icon} ${Math.round(t.legendaryRate * 100)}%`).join(', ')}. About 1 in ${CATCH.shinyOdds} puzzles is a <b>✨ Shiny</b> encounter, and everyone's luck is different, so your shiny may not be your friend's. Catch one to mark it shiny in your Dex. Watch for 👑 and ✨ on the sport tabs.</p>
     <h3>Evolution lines</h3>
     <p>Catch every member of a family, like Charmander, Charmeleon and Charizard, to earn a 🏅. See your progress under 🏅 Lines in the Dex.</p>
     <h3>🎖️ Badges</h3>

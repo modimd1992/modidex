@@ -31,7 +31,7 @@ export const CATCH = {
   total: 151,
   // Legendary creatures are tougher to catch (legendaryRate above).
   legendary: [144, 145, 146, 150, 151],
-  // About 1 in this many puzzles is a shiny encounter (same for every player that day).
+  // About 1 in this many puzzles is a shiny encounter (different for each player).
   shinyOdds: 25,
 };
 

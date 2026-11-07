@@ -15,8 +15,9 @@ export function ballById(id) {
 
 export const isLegendary = (athlete) => !!athlete?.comp && CATCH.legendary.includes(athlete.comp.dex);
 
-// Same answer for every player: decided by the date and mode.
-export const isShiny = (modeId, key) => hashString(`${GAME.name}:shiny:${key}:${modeId}`) % CATCH.shinyOdds === 0;
+// Each player has their own shiny luck: decided by the date, the mode and that
+// player's seed (saved with their progress, so reloading can't reroll it).
+export const isShiny = (modeId, key, seed) => hashString(`${GAME.name}:shiny:${seed}:${key}:${modeId}`) % CATCH.shinyOdds === 0;
 
 export const catchRate = (tier, legendary) => (legendary ? tier.legendaryRate : tier.rate);
 

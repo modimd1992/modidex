@@ -109,6 +109,7 @@ export function normalizeDex(d) {
   if (d?.partner?.n) out.partner = { ...d.partner };
   if (d?.gyms) out.gyms = { ...d.gyms, beaten: { ...(d.gyms.beaten || {}) } };
   if (d?.tradeLog) out.tradeLog = { ...d.tradeLog }; // { week, n }: trade offers sent this week
+  if (typeof d?.seed === 'string') out.seed = d.seed; // this player's shiny luck (catch.js)
   if (!d) return out;
   for (const [sp, sd] of Object.entries(d.sports || {})) {
     out.sports[sp] = { caught: { ...(sd?.caught || {}) }, seen: { ...(sd?.seen || {}) }, shiny: { ...(sd?.shiny || {}) } };
@@ -126,6 +127,15 @@ export function normalizeDex(d) {
 
 export function loadDex() {
   return normalizeDex(read('dex', null));
+}
+// This player's shiny seed, created the first time it's needed.
+export function shinySeed() {
+  const d = loadDex();
+  if (!d.seed) {
+    d.seed = Math.random().toString(36).slice(2, 10);
+    saveDex(d);
+  }
+  return d.seed;
 }
 export function saveDex(dex) {
   write('dex', dex);
@@ -192,6 +202,9 @@ export function importProgress({ dex, stats = {}, games = {}, history }) {
 // the more-played stats per mode, and the further-along game for the same day.
 export function mergeProgress(a = {}, b = {}) {
   const dex = { sports: {}, badges: {} };
+  // Shiny seed: the cloud copy's (b) wins, so every device shares the same luck.
+  const seed = normalizeDex(b.dex).seed || normalizeDex(a.dex).seed;
+  if (seed) dex.seed = seed;
   for (const src of [normalizeDex(a.dex), normalizeDex(b.dex)]) {
     // Partner: the most recently chosen one, and the furthest along if it's the same.
     const p = src.partner;

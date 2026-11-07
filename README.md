@@ -38,7 +38,7 @@ Each puzzle is a wild encounter with the creature on the card. Solve it to throw
 
 **Rare encounters**
 - **👑 Legendary** (Articuno, Zapdos, Moltres, Mewtwo, Mew): tougher to catch, at 🏆 100%, ⭐ 50%, 🎖️ 30% and 🔰 15%. Set `legendaryRate` in `CATCH`.
-- **✨ Shiny**: about 1 in 25 puzzles (`CATCH.shinyOdds`), decided by the date so it's the same for every player. A shiny catch is marked ✨ in the Dex.
+- **✨ Shiny**: about 1 in 25 puzzles (`CATCH.shinyOdds`), different for each player: decided by the date, mode and a random per-player seed saved with their progress (`dex.seed`; the cloud copy's seed wins, so all of a player's devices agree). A shiny catch is marked ✨ in the Dex.
 - The sport tabs show 👑 or ✨ while a rare puzzle is unplayed. `node tools/validate.mjs --upcoming 30` marks upcoming rare days.
 
 **Evolution lines**
